@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useLanguage } from '../context/LanguageContext'
 import { useAuth } from '../context/AuthContext'
+import { useWorkflowStore } from '../stores/workflowStore'
+import { AI_TEMPLATES, AI_TEMPLATE_CATEGORIES } from '../config/aiTemplates'
 
 // Temas disponibles
 const availableThemes = [
@@ -186,117 +188,9 @@ const availableThemes = [
   }
 ]
 
-// Plantillas de IA predefinidas
-const aiTemplates = [
-  {
-    id: 1,
-    name: 'Extractor de Datos',
-    icon: 'fa-file-export',
-    description: 'Extrae información estructurada de documentos, PDFs y páginas web',
-    prompt: 'Analiza el siguiente contenido y extrae los datos relevantes en formato JSON estructurado...',
-    category: 'extraction',
-    color: '#4CAF50'
-  },
-  {
-    id: 2,
-    name: 'Clasificador de Documentos',
-    icon: 'fa-folder-tree',
-    description: 'Clasifica documentos automáticamente según su contenido y tipo',
-    prompt: 'Clasifica el siguiente documento en una de estas categorías: factura, contrato, memo, reporte...',
-    category: 'classification',
-    color: '#2196F3'
-  },
-  {
-    id: 3,
-    name: 'Generador de Resúmenes',
-    icon: 'fa-compress-alt',
-    description: 'Crea resúmenes ejecutivos de textos largos',
-    prompt: 'Resume el siguiente texto en máximo 3 párrafos, destacando los puntos clave...',
-    category: 'summarization',
-    color: '#9C27B0'
-  },
-  {
-    id: 4,
-    name: 'Analizador de Sentimientos',
-    icon: 'fa-smile',
-    description: 'Detecta el tono y sentimiento en textos y conversaciones',
-    prompt: 'Analiza el sentimiento del siguiente texto y clasifícalo como positivo, negativo o neutral...',
-    category: 'analysis',
-    color: '#FF9800'
-  },
-  {
-    id: 5,
-    name: 'Traductor Multilenguaje',
-    icon: 'fa-language',
-    description: 'Traduce textos entre múltiples idiomas manteniendo el contexto',
-    prompt: 'Traduce el siguiente texto al idioma especificado, manteniendo el tono y contexto original...',
-    category: 'translation',
-    color: '#00BCD4'
-  },
-  {
-    id: 6,
-    name: 'Corrector de Texto',
-    icon: 'fa-spell-check',
-    description: 'Corrige errores ortográficos, gramaticales y de estilo',
-    prompt: 'Revisa y corrige el siguiente texto, mejorando gramática, ortografía y claridad...',
-    category: 'correction',
-    color: '#E91E63'
-  },
-  {
-    id: 7,
-    name: 'Generador de Código',
-    icon: 'fa-code',
-    description: 'Genera código en varios lenguajes de programación',
-    prompt: 'Genera código funcional en el lenguaje especificado para realizar la siguiente tarea...',
-    category: 'generation',
-    color: '#673AB7'
-  },
-  {
-    id: 8,
-    name: 'Asistente de Email',
-    icon: 'fa-envelope',
-    description: 'Redacta y mejora correos electrónicos profesionales',
-    prompt: 'Redacta un correo electrónico profesional con el siguiente objetivo y tono...',
-    category: 'communication',
-    color: '#3F51B5'
-  },
-  {
-    id: 9,
-    name: 'Analizador de Logs',
-    icon: 'fa-terminal',
-    description: 'Analiza logs de sistema para detectar errores y patrones',
-    prompt: 'Analiza los siguientes logs e identifica errores, advertencias y patrones anómalos...',
-    category: 'analysis',
-    color: '#607D8B'
-  },
-  {
-    id: 10,
-    name: 'Validador de Datos',
-    icon: 'fa-check-double',
-    description: 'Valida y verifica la consistencia de datos estructurados',
-    prompt: 'Valida los siguientes datos según las reglas especificadas y reporta inconsistencias...',
-    category: 'validation',
-    color: '#795548'
-  },
-  {
-    id: 11,
-    name: 'Generador de Reportes',
-    icon: 'fa-chart-bar',
-    description: 'Crea reportes ejecutivos a partir de datos',
-    prompt: 'Genera un reporte ejecutivo basado en los siguientes datos, incluyendo métricas clave...',
-    category: 'generation',
-    color: '#FF5722'
-  },
-  {
-    id: 12,
-    name: 'Extractor de Entidades',
-    icon: 'fa-tags',
-    description: 'Identifica nombres, fechas, lugares y otras entidades en textos',
-    prompt: 'Extrae todas las entidades nombradas del siguiente texto: personas, organizaciones, fechas, lugares...',
-    category: 'extraction',
-    color: '#009688'
-  }
-]
+// Las plantillas de IA se importan de aiTemplates.js (AI_TEMPLATES)
+// Referencia local para usar en este componente
+const aiTemplates = AI_TEMPLATES
 
 // Plantillas de Agentes predefinidas
 const agentTemplates = [
@@ -413,6 +307,7 @@ const agentTemplates = [
 function SettingsView() {
   const { t } = useLanguage()
   const { user, isAdmin, authFetch, updateProfile, changePassword } = useAuth()
+  const { addStep } = useWorkflowStore()
   const [activeTab, setActiveTab] = useState('general')
 
   // Estados para gestión de usuarios
@@ -1494,7 +1389,28 @@ function SettingsView() {
                     <button className="btn btn-secondary" onClick={() => setSelectedAITemplate(null)}>
                       Cancelar
                     </button>
-                    <button className="btn btn-primary">
+                    <button
+                      className="btn btn-primary"
+                      onClick={() => {
+                        // Agregar la plantilla como paso en el workflow
+                        addStep({
+                          type: `ai_template_${selectedAITemplate.id}`,
+                          label: selectedAITemplate.name,
+                          icon: selectedAITemplate.icon,
+                          properties: {
+                            provider: 'openai',
+                            model: 'gpt-4-turbo',
+                            input: '',
+                            temperature: 0.7,
+                            maxTokens: 2000,
+                            outputVariable: `${selectedAITemplate.id}_result`
+                          }
+                        })
+                        setSelectedAITemplate(null)
+                        // Mostrar notificación de éxito
+                        alert(`Plantilla "${selectedAITemplate.name}" agregada al workflow`)
+                      }}
+                    >
                       <i className="fas fa-plus"></i> Usar Plantilla
                     </button>
                   </div>

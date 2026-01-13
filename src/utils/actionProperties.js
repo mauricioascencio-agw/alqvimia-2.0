@@ -1,7 +1,10 @@
 // Configuración de propiedades para cada tipo de acción del Workflow Studio
 // Cada acción tiene campos específicos con tipos, opciones y validaciones
 
-export const ACTION_PROPERTIES = {
+import { generateActionProperties } from '../config/aiTemplates'
+
+// Propiedades base de todas las acciones
+const BASE_ACTION_PROPERTIES = {
   // ==========================================
   // NAVEGADOR WEB
   // ==========================================
@@ -11549,8 +11552,8 @@ export const COMMON_FIELDS = [
 // OMNICANALIDAD - PROPIEDADES DE ACCIONES
 // ==========================================
 
-// Agregar propiedades de Twilio al objeto ACTION_PROPERTIES
-Object.assign(ACTION_PROPERTIES, {
+// Agregar propiedades de Twilio al objeto BASE_ACTION_PROPERTIES
+Object.assign(BASE_ACTION_PROPERTIES, {
   // ==========================================
   // TWILIO - SMS, VOZ, VIDEO, WHATSAPP
   // ==========================================
@@ -13190,3 +13193,12 @@ Object.assign(ACTION_PROPERTIES, {
     ]
   }
 })
+
+// Genera las propiedades de las plantillas AI dinámicamente
+const AI_TEMPLATE_PROPERTIES = generateActionProperties()
+
+// Combina las propiedades base con las de plantillas AI
+export const ACTION_PROPERTIES = {
+  ...BASE_ACTION_PROPERTIES,
+  ...AI_TEMPLATE_PROPERTIES
+}

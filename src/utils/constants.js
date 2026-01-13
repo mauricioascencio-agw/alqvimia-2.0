@@ -1,5 +1,7 @@
+import { generateWorkflowActions, AI_TEMPLATES } from '../config/aiTemplates'
+
 // Categorías de acciones para el Workflow Studio
-export const ACTION_CATEGORIES = [
+const BASE_ACTION_CATEGORIES = [
   {
     id: 'web-browser',
     name: 'Navegador Web',
@@ -365,6 +367,17 @@ export const ACTION_CATEGORIES = [
     ]
   }
 ]
+
+// Genera la categoría de plantillas AI dinámicamente
+const aiTemplatesCategory = {
+  id: 'ai-templates',
+  name: 'Plantillas de IA',
+  icon: 'fa-brain',
+  actions: generateWorkflowActions()
+}
+
+// Combina las categorías base con las plantillas AI
+export const ACTION_CATEGORIES = [...BASE_ACTION_CATEGORIES, aiTemplatesCategory]
 
 // Estados de ejecución
 export const EXECUTION_STATUS = {

@@ -25,7 +25,10 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(xargs:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(npx esbuild:*)",
+      "Bash(npx eslint:*)",
+      "Bash(node --check:*)"
     ]
   }
 }

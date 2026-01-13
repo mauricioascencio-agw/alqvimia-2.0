@@ -82,6 +82,51 @@ function ExecutorView() {
 
   useEffect(() => {
     if (socket) {
+      // Eventos del executor backend
+      socket.on('executor:started', (data) => {
+        addLog('info', `Workflow iniciado: ${data.workflowName}`)
+        setTotalSteps(data.totalSteps)
+      })
+
+      socket.on('executor:step', (data) => {
+        setCurrentStep(data.step)
+        setCurrentStepName(data.action?.label || data.action?.type)
+        setProgress(Math.round((data.step / data.totalSteps) * 100))
+      })
+
+      socket.on('executor:log', ({ log }) => {
+        setExecutionLogs(prev => [...prev, log])
+      })
+
+      socket.on('executor:completed', (data) => {
+        setIsExecuting(false)
+        setProgress(100)
+        addLog('success', `Workflow completado en ${(data.duration / 1000).toFixed(1)}s`)
+        showWindowsMessageBox('Workflow Completado', `Ejecución completada exitosamente en ${(data.duration / 1000).toFixed(1)} segundos.`, 'success')
+      })
+
+      socket.on('executor:error', (data) => {
+        setIsExecuting(false)
+        addLog('error', `Error en paso ${data.step}: ${data.message}`)
+      })
+
+      socket.on('executor:paused', (data) => {
+        addLog('warning', `Workflow pausado en paso ${data.step}`)
+      })
+
+      socket.on('executor:stopped', (data) => {
+        setIsExecuting(false)
+        addLog('warning', `Workflow detenido en paso ${data.step}`)
+      })
+
+      // Evento para mostrar MessageBox desde el backend
+      socket.on('executor:message-box', (data) => {
+        showWindowsMessageBox(data.title, data.message, data.type).then(() => {
+          socket.emit('executor:message-box-closed', { executionId: data.executionId })
+        })
+      })
+
+      // Eventos legacy para compatibilidad
       socket.on('execution-progress', (data) => {
         setProgress(data.progress)
         setCurrentStep(data.currentStep)
@@ -104,6 +149,14 @@ function ExecutorView() {
       })
 
       return () => {
+        socket.off('executor:started')
+        socket.off('executor:step')
+        socket.off('executor:log')
+        socket.off('executor:completed')
+        socket.off('executor:error')
+        socket.off('executor:paused')
+        socket.off('executor:stopped')
+        socket.off('executor:message-box')
         socket.off('execution-progress')
         socket.off('execution-log')
         socket.off('execution-complete')
@@ -186,26 +239,29 @@ function ExecutorView() {
       return
     }
 
-    // Minimizar ventana
-    try {
-      if (window.electronAPI?.minimizeWindow) {
-        window.electronAPI.minimizeWindow()
-      } else {
-        window.blur()
-      }
-    } catch (e) {
-      console.log('Ejecutando workflow')
-    }
-
-    // Esperar 1 segundo
-    await new Promise(resolve => setTimeout(resolve, 1000))
-
     setIsExecuting(true)
     setProgress(0)
     setExecutionLogs([])
     setTotalSteps(steps.length)
 
     addLog('info', `Iniciando workflow: ${selectedWorkflow.name}`)
+
+    // Si hay socket conectado, usar el backend para ejecución real
+    if (socket && isConnected) {
+      // Enviar workflow al backend para ejecución real
+      socket.emit('executor:run', {
+        workflow: {
+          id: selectedWorkflow.id,
+          name: selectedWorkflow.name,
+          actions: steps,
+          variables: selectedWorkflow.variables || []
+        }
+      })
+      return // El resto se maneja por eventos de socket
+    }
+
+    // Fallback: Ejecución local (simulada) si no hay conexión al backend
+    addLog('warning', 'Ejecutando en modo local (sin backend)')
 
     // Variables del workflow
     const workflowVariables = selectedWorkflow.variables || []
@@ -214,27 +270,27 @@ function ExecutorView() {
     for (let i = 0; i < steps.length; i++) {
       const step = steps[i]
       setCurrentStep(i + 1)
-      setCurrentStepName(step.label || step.action)
+      setCurrentStepName(step.label || step.action || step.type)
       setProgress(Math.round(((i + 1) / steps.length) * 100))
 
-      addLog('info', `Ejecutando: ${step.label || step.action}`)
+      addLog('info', `Ejecutando: ${step.label || step.action || step.type}`)
 
       // Resolver variables en los parámetros
-      const resolvedParams = resolveStepParams(step.params, workflowVariables)
+      const resolvedParams = resolveStepParams(step.params || step.properties, workflowVariables)
 
       // Si es un message_box, mostrar el diálogo
-      if (step.action === 'message_box' || step.action === 'pause') {
+      if (step.action === 'message_box' || step.type === 'message_box' || step.action === 'pause' || step.type === 'pause') {
         const title = resolvedParams?.title || 'Mensaje'
         const message = resolvedParams?.message || resolveVariables(step.label, workflowVariables)
         const type = resolvedParams?.type || 'info'
 
         await showWindowsMessageBox(title, message, type)
       } else {
-        // Simular ejecución del paso
-        await new Promise(resolve => setTimeout(resolve, 800))
+        // Simular ejecución del paso (modo local)
+        await new Promise(resolve => setTimeout(resolve, 500))
       }
 
-      addLog('success', `Completado: ${step.label || step.action}`)
+      addLog('success', `Completado: ${step.label || step.action || step.type}`)
     }
 
     setIsExecuting(false)

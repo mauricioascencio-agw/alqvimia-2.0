@@ -2,8 +2,10 @@ import { useState, useCallback, useEffect, useRef } from 'react'
 import ActionPropertyEditor from '../components/workflow/ActionPropertyEditor'
 import VariablesPanel from '../components/workflow/VariablesPanel'
 import { useLanguage } from '../context/LanguageContext'
+import { useSocket } from '../context/SocketContext'
 import { resolveVariables } from '../components/workflow/VariableInput'
 import { systemService } from '../services/api'
+import { importers, exporters } from '../utils/workflowMigration'
 
 // Categorías expandidas con más acciones
 const WORKFLOW_CATEGORIES = [
@@ -1260,6 +1262,7 @@ const createCustomComponent = (label, description = '', params = {}) => {
 
 function WorkflowsView() {
   const { t } = useLanguage()
+  const { socket, isConnected, connect } = useSocket()
   const [workflowName, setWorkflowName] = useState('Mi Workflow')
   const [workflowSteps, setWorkflowSteps] = useState([])
   const [selectedStep, setSelectedStep] = useState(null)
@@ -1325,6 +1328,14 @@ function WorkflowsView() {
   const [customComponents, setCustomComponents] = useState([])
   const [showCustomComponentModal, setShowCustomComponentModal] = useState(false)
   const [newCustomComponent, setNewCustomComponent] = useState({ label: '', description: '', params: {} })
+
+  // Conectar Socket.IO automáticamente para ejecución real
+  useEffect(() => {
+    if (socket && !isConnected) {
+      console.log('[WorkflowsView] Conectando Socket.IO para ejecución real...')
+      connect()
+    }
+  }, [socket, isConnected, connect])
 
   // Manejar resize de paneles
   useEffect(() => {
@@ -1926,7 +1937,6 @@ function WorkflowsView() {
 
     // Minimizar la ventana de Alqvimia (enviar al fondo)
     try {
-      // Intentar minimizar usando la API de Electron si está disponible
       if (window.electronAPI && window.electronAPI.minimizeWindow) {
         window.electronAPI.minimizeWindow()
       } else if (window.require) {
@@ -1934,17 +1944,126 @@ function WorkflowsView() {
         ipcRenderer.send('minimize-window')
       }
     } catch (e) {
-      // Si no está en Electron, intentar blur de la ventana
       window.blur()
       console.log('Ejecutando workflow - ventana minimizada')
     }
 
-    // Esperar 1 segundo antes de iniciar la ejecución
-    await new Promise(resolve => setTimeout(resolve, 1000))
-
     setIsExecuting(true)
     setShowExecutionBar(true)
     setExecutionProgress(0)
+
+    // ========================================================
+    // EJECUCIÓN VIA SOCKET (Backend con Playwright)
+    // ========================================================
+    if (socket && isConnected) {
+      console.log('[Workflow] Ejecutando via Socket.IO (backend con Playwright)')
+
+      // Conectar si no está conectado
+      if (!socket.connected) {
+        connect()
+        await new Promise(resolve => setTimeout(resolve, 500))
+      }
+
+      // Preparar workflow para enviar al backend
+      const workflowData = {
+        workflow: {
+          id: currentWorkflowId || `wf_${Date.now()}`,
+          name: workflowName,
+          actions: workflowSteps.map(step => ({
+            type: step.action,
+            label: step.label,
+            properties: step.params || {},
+            params: step.params || {}
+          })),
+          variables: variables.map(v => ({
+            name: v.name,
+            value: v.value,
+            type: v.type
+          }))
+        }
+      }
+
+      console.log('[Workflow] Enviando workflow al backend:', workflowData)
+
+      // Crear promesa para esperar resultado
+      const executionPromise = new Promise((resolve, reject) => {
+        const handleStep = (data) => {
+          console.log('[Workflow] Paso:', data)
+          setExecutionCurrentStep({ label: data.action?.label || `Paso ${data.step}`, action: data.action?.type })
+          setExecutionProgress(Math.round((data.step / data.totalSteps) * 100))
+        }
+
+        const handleLog = (data) => {
+          const { log } = data
+          if (log.type === 'success') {
+            console.log(`%c[Workflow] ✅ ${log.message}`, 'color: #34d399')
+          } else if (log.type === 'error') {
+            console.error(`%c[Workflow] ❌ ${log.message}`, 'color: #f87171')
+          } else if (log.type === 'warning') {
+            console.warn(`%c[Workflow] ⚠️ ${log.message}`, 'color: #fbbf24')
+          } else {
+            console.log(`%c[Workflow] ℹ️ ${log.message}`, 'color: #60a5fa')
+          }
+        }
+
+        const handleCompleted = (data) => {
+          console.log('[Workflow] Ejecución completada:', data)
+          cleanup()
+          resolve(data)
+        }
+
+        const handleError = (data) => {
+          console.error('[Workflow] Error de ejecución:', data)
+          cleanup()
+          reject(new Error(data.message || 'Error desconocido'))
+        }
+
+        const cleanup = () => {
+          socket.off('executor:step', handleStep)
+          socket.off('executor:log', handleLog)
+          socket.off('executor:completed', handleCompleted)
+          socket.off('executor:error', handleError)
+        }
+
+        // Registrar listeners
+        socket.on('executor:step', handleStep)
+        socket.on('executor:log', handleLog)
+        socket.on('executor:completed', handleCompleted)
+        socket.on('executor:error', handleError)
+
+        // Timeout de 5 minutos
+        setTimeout(() => {
+          cleanup()
+          reject(new Error('Timeout: La ejecución tardó demasiado'))
+        }, 300000)
+      })
+
+      // Enviar comando de ejecución
+      socket.emit('executor:run', workflowData)
+
+      try {
+        const result = await executionPromise
+        setIsExecuting(false)
+        setExecutionCurrentStep(null)
+        setExecutionProgress(100)
+        setTimeout(() => setShowExecutionBar(false), 2000)
+        showWindowsMessageBox('Workflow Completado', `El workflow "${workflowName}" se ha ejecutado correctamente.\n\nDuración: ${result.duration}ms`, 'success')
+      } catch (error) {
+        setIsExecuting(false)
+        setExecutionCurrentStep(null)
+        setTimeout(() => setShowExecutionBar(false), 2000)
+        showWindowsMessageBox('Error de Ejecución', `Error: ${error.message}`, 'error')
+      }
+      return
+    }
+
+    // ========================================================
+    // EJECUCIÓN LOCAL (Fallback sin Socket)
+    // ========================================================
+    console.log('[Workflow] Ejecutando localmente (sin backend)')
+
+    // Esperar 1 segundo antes de iniciar la ejecución
+    await new Promise(resolve => setTimeout(resolve, 1000))
 
     // Ejecutar el workflow paso a paso
     for (let i = 0; i < workflowSteps.length; i++) {
@@ -2693,6 +2812,130 @@ function WorkflowsView() {
   }
 
   const [showMigrateModal, setShowMigrateModal] = useState(false)
+  const [migrateMode, setMigrateMode] = useState(null) // 'import' | 'export'
+  const [migrateFormat, setMigrateFormat] = useState(null)
+  const [migrateStep, setMigrateStep] = useState(1) // 1: selección, 2: archivo/config, 3: progreso, 4: resultado
+  const [migrateProgress, setMigrateProgress] = useState(0)
+  const [migrateStatus, setMigrateStatus] = useState('')
+  const [migrateResult, setMigrateResult] = useState(null)
+  const [importFileContent, setImportFileContent] = useState('')
+  const [exportWorkflowName, setExportWorkflowName] = useState('')
+  const [exportSavePath, setExportSavePath] = useState('')
+  const migrateFileInputRef = useRef(null)
+
+  // Funciones de migración
+  const handleMigration = async (content) => {
+    setMigrateProgress(0)
+    setMigrateStatus('Analizando archivo...')
+
+    try {
+      // Simular progreso
+      for (let i = 0; i <= 30; i += 10) {
+        await new Promise(r => setTimeout(r, 200))
+        setMigrateProgress(i)
+      }
+      setMigrateStatus('Parseando contenido...')
+
+      // Obtener el parser correcto
+      const parser = importers[migrateFormat]
+      if (!parser) {
+        throw new Error(`Formato no soportado: ${migrateFormat}`)
+      }
+
+      for (let i = 30; i <= 70; i += 10) {
+        await new Promise(r => setTimeout(r, 150))
+        setMigrateProgress(i)
+      }
+      setMigrateStatus('Convirtiendo acciones...')
+
+      // Parsear el contenido
+      const parsedSteps = parser(content)
+
+      for (let i = 70; i <= 100; i += 10) {
+        await new Promise(r => setTimeout(r, 100))
+        setMigrateProgress(i)
+      }
+      setMigrateStatus('Completado')
+
+      setMigrateResult({
+        success: true,
+        steps: parsedSteps,
+        format: migrateFormat
+      })
+      setMigrateStep(4)
+
+    } catch (error) {
+      console.error('Error en migración:', error)
+      setMigrateResult({
+        success: false,
+        error: error.message
+      })
+      setMigrateStep(4)
+    }
+  }
+
+  const handleExportMigration = async () => {
+    setMigrateProgress(0)
+    setMigrateStatus('Preparando exportación...')
+
+    try {
+      // Simular progreso
+      for (let i = 0; i <= 30; i += 10) {
+        await new Promise(r => setTimeout(r, 200))
+        setMigrateProgress(i)
+      }
+      setMigrateStatus('Convirtiendo workflow...')
+
+      // Obtener el exportador correcto
+      const exporter = exporters[migrateFormat]
+      if (!exporter) {
+        throw new Error(`Formato de exportación no soportado: ${migrateFormat}`)
+      }
+
+      for (let i = 30; i <= 70; i += 10) {
+        await new Promise(r => setTimeout(r, 150))
+        setMigrateProgress(i)
+      }
+      setMigrateStatus('Generando código...')
+
+      // Preparar el workflow para exportar
+      const workflow = {
+        name: exportWorkflowName || workflowName,
+        steps: workflowSteps.map(s => ({
+          type: s.action,
+          label: s.label,
+          icon: s.icon,
+          properties: s.params
+        })),
+        variables
+      }
+
+      // Exportar
+      const code = exporter(workflow)
+
+      for (let i = 70; i <= 100; i += 10) {
+        await new Promise(r => setTimeout(r, 100))
+        setMigrateProgress(i)
+      }
+      setMigrateStatus('Completado')
+
+      setMigrateResult({
+        success: true,
+        code,
+        format: migrateFormat
+      })
+      setMigrateStep(4)
+
+    } catch (error) {
+      console.error('Error en exportación:', error)
+      setMigrateResult({
+        success: false,
+        error: error.message
+      })
+      setMigrateStep(4)
+    }
+  }
+
   const [showAIModal, setShowAIModal] = useState(false)
   const [aiPrompt, setAIPrompt] = useState('')
   const [isGeneratingAI, setIsGeneratingAI] = useState(false)
@@ -4756,42 +4999,337 @@ function WorkflowsView() {
           </div>
         )}
 
-        {/* Modal de Migrar */}
+        {/* Modal de Migrar - Completo con funcionalidad */}
         {showMigrateModal && (
-          <div className="modal-overlay" onClick={() => setShowMigrateModal(false)}>
+          <div className="modal-overlay" onClick={() => { setShowMigrateModal(false); setMigrateStep(1); setMigrateMode(null); setMigrateFormat(null); }}>
             <div className="modal-content modal-lg" onClick={(e) => e.stopPropagation()}>
               <div className="modal-header">
-                <h3><i className="fas fa-exchange-alt"></i> Migrar Workflow</h3>
-                <button className="modal-close" onClick={() => setShowMigrateModal(false)}><i className="fas fa-times"></i></button>
+                <h3>
+                  <i className="fas fa-exchange-alt"></i> Migrar Workflow
+                  {migrateStep > 1 && (
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginLeft: '1rem' }}>
+                      Paso {migrateStep} de 4
+                    </span>
+                  )}
+                </h3>
+                <button className="modal-close" onClick={() => { setShowMigrateModal(false); setMigrateStep(1); setMigrateMode(null); setMigrateFormat(null); }}>
+                  <i className="fas fa-times"></i>
+                </button>
               </div>
               <div className="modal-body">
-                <div className="migrate-options">
-                  <div className="migrate-section">
-                    <h4><i className="fas fa-file-import"></i> Importar desde</h4>
-                    <div className="migrate-grid">
-                      <button className="migrate-option"><i className="fas fa-robot" style={{color: '#ff6d00'}}></i><span>UiPath</span></button>
-                      <button className="migrate-option"><i className="fas fa-cogs" style={{color: '#0078d4'}}></i><span>Power Automate</span></button>
-                      <button className="migrate-option"><i className="fas fa-bolt" style={{color: '#00a1e0'}}></i><span>Automation Anywhere</span></button>
-                      <button className="migrate-option"><i className="fas fa-cube" style={{color: '#1976d2'}}></i><span>Blue Prism</span></button>
-                      <button className="migrate-option"><i className="fas fa-code" style={{color: '#3776ab'}}></i><span>Python Script</span></button>
-                      <button className="migrate-option"><i className="fas fa-file-code" style={{color: '#f7df1e'}}></i><span>JavaScript</span></button>
+                {/* Input oculto para seleccionar archivo */}
+                <input
+                  type="file"
+                  ref={migrateFileInputRef}
+                  style={{ display: 'none' }}
+                  accept={migrateFormat === 'uipath' ? '.xaml,.xml' : migrateFormat === 'power-automate' || migrateFormat === 'automation-anywhere' ? '.json' : '.py,.js,.txt'}
+                  onChange={(e) => {
+                    const file = e.target.files[0]
+                    if (file) {
+                      const reader = new FileReader()
+                      reader.onload = (event) => {
+                        setImportFileContent(event.target.result)
+                        setMigrateStep(3)
+                        handleMigration(event.target.result)
+                      }
+                      reader.readAsText(file)
+                    }
+                  }}
+                />
+
+                {/* PASO 1: Selección de modo y formato */}
+                {migrateStep === 1 && (
+                  <div className="migrate-options">
+                    <div className="migrate-section">
+                      <h4><i className="fas fa-file-import"></i> Importar desde</h4>
+                      <div className="migrate-grid">
+                        <button className="migrate-option" onClick={() => { setMigrateMode('import'); setMigrateFormat('uipath'); setMigrateStep(2); }}>
+                          <i className="fas fa-robot" style={{color: '#ff6d00'}}></i><span>UiPath</span>
+                        </button>
+                        <button className="migrate-option" onClick={() => { setMigrateMode('import'); setMigrateFormat('power-automate'); setMigrateStep(2); }}>
+                          <i className="fas fa-cogs" style={{color: '#0078d4'}}></i><span>Power Automate</span>
+                        </button>
+                        <button className="migrate-option" onClick={() => { setMigrateMode('import'); setMigrateFormat('automation-anywhere'); setMigrateStep(2); }}>
+                          <i className="fas fa-bolt" style={{color: '#00a1e0'}}></i><span>Automation Anywhere</span>
+                        </button>
+                        <button className="migrate-option" onClick={() => { setMigrateMode('import'); setMigrateFormat('blue-prism'); setMigrateStep(2); }}>
+                          <i className="fas fa-cube" style={{color: '#1976d2'}}></i><span>Blue Prism</span>
+                        </button>
+                        <button className="migrate-option" onClick={() => { setMigrateMode('import'); setMigrateFormat('python'); setMigrateStep(2); }}>
+                          <i className="fas fa-code" style={{color: '#3776ab'}}></i><span>Python Script</span>
+                        </button>
+                        <button className="migrate-option" onClick={() => { setMigrateMode('import'); setMigrateFormat('javascript'); setMigrateStep(2); }}>
+                          <i className="fas fa-file-code" style={{color: '#f7df1e'}}></i><span>JavaScript</span>
+                        </button>
+                      </div>
+                    </div>
+                    <div className="migrate-section">
+                      <h4><i className="fas fa-file-export"></i> Exportar a</h4>
+                      <div className="migrate-grid">
+                        <button className="migrate-option" onClick={() => { setMigrateMode('export'); setMigrateFormat('uipath'); setMigrateStep(2); }} disabled={steps.length === 0}>
+                          <i className="fas fa-robot" style={{color: '#ff6d00'}}></i><span>UiPath XAML</span>
+                        </button>
+                        <button className="migrate-option" onClick={() => { setMigrateMode('export'); setMigrateFormat('power-automate'); setMigrateStep(2); }} disabled={steps.length === 0}>
+                          <i className="fas fa-cogs" style={{color: '#0078d4'}}></i><span>Power Automate</span>
+                        </button>
+                        <button className="migrate-option" onClick={() => { setMigrateMode('export'); setMigrateFormat('python'); setMigrateStep(2); }} disabled={steps.length === 0}>
+                          <i className="fas fa-code" style={{color: '#3776ab'}}></i><span>Python</span>
+                        </button>
+                        <button className="migrate-option" onClick={() => { setMigrateMode('export'); setMigrateFormat('javascript'); setMigrateStep(2); }} disabled={steps.length === 0}>
+                          <i className="fas fa-file-code" style={{color: '#f7df1e'}}></i><span>JavaScript</span>
+                        </button>
+                        <button className="migrate-option" onClick={() => { setMigrateMode('export'); setMigrateFormat('bash'); setMigrateStep(2); }} disabled={steps.length === 0}>
+                          <i className="fas fa-terminal" style={{color: '#4eaa25'}}></i><span>Bash Script</span>
+                        </button>
+                        <button className="migrate-option" onClick={() => { setMigrateMode('export'); setMigrateFormat('pseudocode'); setMigrateStep(2); }} disabled={steps.length === 0}>
+                          <i className="fas fa-file-alt" style={{color: '#6c757d'}}></i><span>Pseudocódigo</span>
+                        </button>
+                      </div>
+                      {steps.length === 0 && (
+                        <p style={{ color: 'var(--warning-color)', fontSize: '0.85rem', marginTop: '0.5rem' }}>
+                          <i className="fas fa-exclamation-triangle"></i> Necesitas tener un workflow con pasos para exportar
+                        </p>
+                      )}
                     </div>
                   </div>
-                  <div className="migrate-section">
-                    <h4><i className="fas fa-file-export"></i> Exportar a</h4>
-                    <div className="migrate-grid">
-                      <button className="migrate-option"><i className="fas fa-robot" style={{color: '#ff6d00'}}></i><span>UiPath XAML</span></button>
-                      <button className="migrate-option"><i className="fas fa-cogs" style={{color: '#0078d4'}}></i><span>Power Automate</span></button>
-                      <button className="migrate-option"><i className="fas fa-code" style={{color: '#3776ab'}}></i><span>Python</span></button>
-                      <button className="migrate-option"><i className="fas fa-file-code" style={{color: '#f7df1e'}}></i><span>JavaScript</span></button>
-                      <button className="migrate-option"><i className="fas fa-terminal" style={{color: '#4eaa25'}}></i><span>Bash Script</span></button>
-                      <button className="migrate-option"><i className="fas fa-file-alt" style={{color: '#6c757d'}}></i><span>Pseudocódigo</span></button>
+                )}
+
+                {/* PASO 2: Configuración de importación/exportación */}
+                {migrateStep === 2 && migrateMode === 'import' && (
+                  <div className="migrate-config">
+                    <div style={{ textAlign: 'center', padding: '2rem' }}>
+                      <div style={{ fontSize: '4rem', marginBottom: '1rem', color: 'var(--primary-color)' }}>
+                        <i className="fas fa-file-import"></i>
+                      </div>
+                      <h4>Importar desde {migrateFormat?.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</h4>
+                      <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>
+                        Selecciona el archivo de workflow que deseas importar
+                      </p>
+                      <button
+                        className="btn btn-primary btn-lg"
+                        onClick={() => migrateFileInputRef.current?.click()}
+                      >
+                        <i className="fas fa-folder-open"></i> Seleccionar Archivo
+                      </button>
+                      <div style={{ marginTop: '1rem' }}>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>
+                          Nombre del workflow (opcional):
+                        </label>
+                        <input
+                          type="text"
+                          value={exportWorkflowName}
+                          onChange={(e) => setExportWorkflowName(e.target.value)}
+                          placeholder="Workflow Importado"
+                          style={{
+                            width: '100%',
+                            maxWidth: '400px',
+                            padding: '0.75rem',
+                            borderRadius: '8px',
+                            border: '1px solid var(--border-color)',
+                            background: 'var(--bg-secondary)',
+                            color: 'var(--text-primary)'
+                          }}
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
+
+                {migrateStep === 2 && migrateMode === 'export' && (
+                  <div className="migrate-config">
+                    <div style={{ textAlign: 'center', padding: '2rem' }}>
+                      <div style={{ fontSize: '4rem', marginBottom: '1rem', color: 'var(--success-color)' }}>
+                        <i className="fas fa-file-export"></i>
+                      </div>
+                      <h4>Exportar a {migrateFormat?.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</h4>
+                      <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>
+                        Se exportará el workflow actual: <strong>{workflowName}</strong> ({steps.length} pasos)
+                      </p>
+                      <div style={{ marginBottom: '1rem' }}>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>
+                          Nombre del archivo:
+                        </label>
+                        <input
+                          type="text"
+                          value={exportWorkflowName || workflowName}
+                          onChange={(e) => setExportWorkflowName(e.target.value)}
+                          placeholder={workflowName}
+                          style={{
+                            width: '100%',
+                            maxWidth: '400px',
+                            padding: '0.75rem',
+                            borderRadius: '8px',
+                            border: '1px solid var(--border-color)',
+                            background: 'var(--bg-secondary)',
+                            color: 'var(--text-primary)'
+                          }}
+                        />
+                      </div>
+                      <button
+                        className="btn btn-primary btn-lg"
+                        onClick={() => {
+                          setMigrateStep(3)
+                          handleExportMigration()
+                        }}
+                      >
+                        <i className="fas fa-download"></i> Exportar Workflow
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* PASO 3: Progreso de migración */}
+                {migrateStep === 3 && (
+                  <div className="migrate-progress" style={{ textAlign: 'center', padding: '2rem' }}>
+                    <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>
+                      <i className="fas fa-cogs fa-spin" style={{ color: 'var(--primary-color)' }}></i>
+                    </div>
+                    <h4>{migrateMode === 'import' ? 'Importando workflow...' : 'Exportando workflow...'}</h4>
+                    <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>{migrateStatus}</p>
+                    <div style={{
+                      width: '100%',
+                      maxWidth: '400px',
+                      height: '8px',
+                      background: 'var(--bg-tertiary)',
+                      borderRadius: '4px',
+                      margin: '0 auto',
+                      overflow: 'hidden'
+                    }}>
+                      <div style={{
+                        width: `${migrateProgress}%`,
+                        height: '100%',
+                        background: 'linear-gradient(90deg, var(--primary-color), var(--accent-color))',
+                        borderRadius: '4px',
+                        transition: 'width 0.3s ease'
+                      }}></div>
+                    </div>
+                    <p style={{ marginTop: '0.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+                      {migrateProgress}%
+                    </p>
+                  </div>
+                )}
+
+                {/* PASO 4: Resultado */}
+                {migrateStep === 4 && (
+                  <div className="migrate-result" style={{ padding: '1rem' }}>
+                    {migrateResult?.success ? (
+                      <>
+                        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+                          <div style={{ fontSize: '4rem', color: 'var(--success-color)' }}>
+                            <i className="fas fa-check-circle"></i>
+                          </div>
+                          <h4 style={{ color: 'var(--success-color)' }}>
+                            {migrateMode === 'import' ? 'Importación completada' : 'Exportación completada'}
+                          </h4>
+                        </div>
+                        {migrateMode === 'import' && migrateResult.steps && (
+                          <div style={{
+                            background: 'var(--bg-secondary)',
+                            borderRadius: '8px',
+                            padding: '1rem',
+                            maxHeight: '300px',
+                            overflow: 'auto'
+                          }}>
+                            <p style={{ marginBottom: '0.5rem' }}>
+                              <strong>{migrateResult.steps.length}</strong> pasos importados:
+                            </p>
+                            <ul style={{ margin: 0, paddingLeft: '1.5rem' }}>
+                              {migrateResult.steps.slice(0, 10).map((step, i) => (
+                                <li key={i} style={{ marginBottom: '0.25rem', fontSize: '0.9rem' }}>
+                                  <i className={`fas ${step.icon || 'fa-cog'}`} style={{ marginRight: '0.5rem', color: 'var(--primary-color)' }}></i>
+                                  {step.label || step.type}
+                                </li>
+                              ))}
+                              {migrateResult.steps.length > 10 && (
+                                <li style={{ color: 'var(--text-secondary)' }}>... y {migrateResult.steps.length - 10} más</li>
+                              )}
+                            </ul>
+                          </div>
+                        )}
+                        {migrateMode === 'export' && migrateResult.code && (
+                          <div style={{
+                            background: '#1e1e1e',
+                            borderRadius: '8px',
+                            padding: '1rem',
+                            maxHeight: '300px',
+                            overflow: 'auto'
+                          }}>
+                            <pre style={{
+                              margin: 0,
+                              fontSize: '0.8rem',
+                              color: '#d4d4d4',
+                              whiteSpace: 'pre-wrap',
+                              wordBreak: 'break-word'
+                            }}>
+                              {migrateResult.code.substring(0, 2000)}{migrateResult.code.length > 2000 ? '\n\n... (truncado)' : ''}
+                            </pre>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: '4rem', color: 'var(--error-color)' }}>
+                          <i className="fas fa-times-circle"></i>
+                        </div>
+                        <h4 style={{ color: 'var(--error-color)' }}>Error en la migración</h4>
+                        <p style={{ color: 'var(--text-secondary)' }}>{migrateResult?.error || 'Error desconocido'}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
               <div className="modal-footer">
-                <button className="btn btn-secondary" onClick={() => setShowMigrateModal(false)}>Cancelar</button>
+                {migrateStep > 1 && migrateStep < 4 && (
+                  <button className="btn btn-secondary" onClick={() => setMigrateStep(migrateStep - 1)}>
+                    <i className="fas fa-arrow-left"></i> Atrás
+                  </button>
+                )}
+                {migrateStep === 4 && migrateResult?.success && migrateMode === 'import' && (
+                  <button className="btn btn-primary" onClick={() => {
+                    // Aplicar los pasos importados al workflow actual
+                    if (migrateResult.steps) {
+                      migrateResult.steps.forEach(step => {
+                        addStep({
+                          action: step.type,
+                          label: step.label,
+                          icon: step.icon || 'fa-cog',
+                          params: step.properties
+                        })
+                      })
+                    }
+                    setShowMigrateModal(false)
+                    setMigrateStep(1)
+                    setMigrateMode(null)
+                    setMigrateFormat(null)
+                  }}>
+                    <i className="fas fa-check"></i> Aplicar al Workflow
+                  </button>
+                )}
+                {migrateStep === 4 && migrateResult?.success && migrateMode === 'export' && (
+                  <button className="btn btn-primary" onClick={() => {
+                    // Descargar el archivo exportado
+                    const extensions = {
+                      'uipath': 'xaml',
+                      'power-automate': 'json',
+                      'python': 'py',
+                      'javascript': 'js',
+                      'bash': 'sh',
+                      'pseudocode': 'txt'
+                    }
+                    const blob = new Blob([migrateResult.code], { type: 'text/plain' })
+                    const url = URL.createObjectURL(blob)
+                    const a = document.createElement('a')
+                    a.href = url
+                    a.download = `${(exportWorkflowName || workflowName).replace(/\s+/g, '_')}.${extensions[migrateFormat] || 'txt'}`
+                    a.click()
+                    URL.revokeObjectURL(url)
+                  }}>
+                    <i className="fas fa-download"></i> Descargar Archivo
+                  </button>
+                )}
+                <button className="btn btn-secondary" onClick={() => { setShowMigrateModal(false); setMigrateStep(1); setMigrateMode(null); setMigrateFormat(null); }}>
+                  {migrateStep === 4 ? 'Cerrar' : 'Cancelar'}
+                </button>
               </div>
             </div>
           </div>
