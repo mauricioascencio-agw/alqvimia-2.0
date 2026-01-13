@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl:*)",
+      "Bash(if exist \"c:\\\\Git\\\\alqvimia-2.0\\\\server\\\\.env\" del \"c:\\\\Git\\\\alqvimia-2.0\\\\server\\\\.env\")",
+      "Bash(npm install)",
+      "Bash(dir:*)",
+      "Bash(npm run build:*)",
+      "Bash(timeout 10 npm run dev:*)",
+      "Bash(if not exist \"C:\\\\Alqvimia\" mkdir \"C:\\\\Alqvimia\")",
+      "Bash(if not exist \"C:\\\\Alqvimia\\\\Agents\" mkdir \"C:\\\\Alqvimia\\\\Agents\")",
+      "Bash(powershell:*)",
+      "Bash(node server.js:*)",
+      "Bash(npm install:*)",
+      "Bash(docker compose:*)",
+      "Bash(docker exec:*)",
+      "Bash(node -e:*)",
+      "Bash(if not exist \"c:\\\\Git\\\\alqvimia-2.0\\\\agents\\\\api\" mkdir \"c:\\\\Git\\\\alqvimia-2.0\\\\agents\\\\api\")",
+      "Bash(if not exist \"c:\\\\Git\\\\alqvimia-2.0\\\\agents\\\\payments\" mkdir \"c:\\\\Git\\\\alqvimia-2.0\\\\agents\\\\payments\")",
+      "Bash(if not exist \"c:\\\\Git\\\\alqvimia-2.0\\\\agents\\\\storage\" mkdir \"c:\\\\Git\\\\alqvimia-2.0\\\\agents\\\\storage\")",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(git rm:*)",
+      "Bash(git reset:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(xargs:*)",
+      "Bash(git push:*)"
+    ]
+  }
+}
