@@ -6,11 +6,16 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node --watch server.js"
+    "dev": "node --watch server.js",
+    "db:init": "mysql -u root -p < ../bd/schema.sql"
   },
   "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
     "express": "^4.18.2",
-    "socket.io": "^4.6.1",
-    "cors": "^2.8.5"
+    "jsonwebtoken": "^9.0.3",
+    "mysql2": "^3.6.5",
+    "socket.io": "^4.6.1"
   }
 }

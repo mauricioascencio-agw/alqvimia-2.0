@@ -1,0 +1,36 @@
+# Dependencias
+node_modules
+server/node_modules
+
+# Logs
+*.log
+npm-debug.log*
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# Git
+.git
+.gitignore
+
+# Build
+dist
+build
+
+# Desarrollo
+*.md
+LICENSE
+scripts/
+
+# Archivos de ambiente
+.env
+.env.local
+.env.*.local
+server/.env

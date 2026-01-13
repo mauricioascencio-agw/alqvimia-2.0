@@ -1,0 +1,39 @@
+{
+  "name": "@alqvimia/developer-hub-backend",
+  "version": "2.0.0",
+  "description": "Developer Hub Backend - Multi-environment API",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js",
+    "start:dev": "cross-env NODE_ENV=development node src/server.js",
+    "start:qa": "cross-env NODE_ENV=qa node src/server.js",
+    "start:prod": "cross-env NODE_ENV=production node src/server.js",
+    "test": "cross-env NODE_ENV=test jest",
+    "test:coverage": "jest --coverage",
+    "lint": "eslint src/"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "bcryptjs": "^2.4.3",
+    "mysql2": "^3.6.5",
+    "dotenv": "^16.3.1",
+    "express-rate-limit": "^7.1.5",
+    "express-validator": "^7.0.1",
+    "winston": "^3.11.0",
+    "socket.io": "^4.7.2",
+    "uuid": "^9.0.1",
+    "archiver": "^6.0.1",
+    "dockerode": "^4.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2",
+    "jest": "^29.7.0",
+    "cross-env": "^7.0.3",
+    "eslint": "^8.56.0"
+  }
+}

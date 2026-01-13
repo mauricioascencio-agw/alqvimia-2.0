@@ -1,0 +1,245 @@
+version: '3.8'
+
+services:
+  # ===========================================
+  # INFRASTRUCTURE SERVICES
+  # ===========================================
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: alqvimia-postgres
+    environment:
+      POSTGRES_USER: alqvimia
+      POSTGRES_PASSWORD: alqvimia_password
+      POSTGRES_DB: alqvimia
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U alqvimia"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - alqvimia-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: alqvimia-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - alqvimia-network
+
+  # ===========================================
+  # SHARED SERVICES
+  # ===========================================
+
+  auth-service:
+    build:
+      context: ./shared/auth
+      dockerfile: Dockerfile
+    container_name: alqvimia-auth
+    environment:
+      AUTH_PORT: 4001
+      JWT_SECRET: ${JWT_SECRET:-alqvimia-super-secret-key-change-in-production}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-alqvimia-refresh-secret-key-change-in-production}
+      REDIS_URL: redis://redis:6379
+    ports:
+      - "4001:4001"
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - alqvimia-network
+    restart: unless-stopped
+
+  database-service:
+    build:
+      context: ./shared/database
+      dockerfile: Dockerfile
+    container_name: alqvimia-database
+    environment:
+      DATABASE_PORT: 4002
+      PG_HOST: postgres
+      PG_PORT: 5432
+      PG_USER: alqvimia
+      PG_PASSWORD: alqvimia_password
+      PG_DATABASE: alqvimia
+      REDIS_URL: redis://redis:6379
+      INTERNAL_SERVICE_KEYS: alqvimia-internal-key
+    ports:
+      - "4002:4002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - alqvimia-network
+    restart: unless-stopped
+
+  # ===========================================
+  # API GATEWAY
+  # ===========================================
+
+  gateway:
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile
+    container_name: alqvimia-gateway
+    environment:
+      GATEWAY_PORT: 4000
+      JWT_SECRET: ${JWT_SECRET:-alqvimia-super-secret-key-change-in-production}
+      ADMIN_URL: http://admin-backend:3001
+      MARKETPLACE_URL: http://marketplace-backend:3002
+      DEVELOPER_URL: http://developer-backend:3003
+      AUTH_URL: http://auth-service:4001
+      DATABASE_URL: http://database-service:4002
+      INTERNAL_SERVICE_KEY: alqvimia-internal-key
+      ALLOWED_ORIGINS: http://localhost:3000,http://localhost:5173,http://localhost:5174,http://localhost:5175
+    ports:
+      - "4000:4000"
+    depends_on:
+      - auth-service
+      - database-service
+    networks:
+      - alqvimia-network
+    restart: unless-stopped
+
+  # ===========================================
+  # ADMIN PORTAL MODULE
+  # ===========================================
+
+  admin-backend:
+    build:
+      context: ./admin-portal/backend
+      dockerfile: Dockerfile
+    container_name: alqvimia-admin-backend
+    environment:
+      PORT: 3001
+      JWT_SECRET: ${JWT_SECRET:-alqvimia-super-secret-key-change-in-production}
+      DATABASE_URL: http://database-service:4002
+      AUTH_URL: http://auth-service:4001
+      INTERNAL_SERVICE_KEY: alqvimia-internal-key
+    ports:
+      - "3001:3001"
+    depends_on:
+      - database-service
+      - auth-service
+    networks:
+      - alqvimia-network
+    restart: unless-stopped
+
+  admin-frontend:
+    build:
+      context: ./admin-portal/frontend
+      dockerfile: Dockerfile
+    container_name: alqvimia-admin-frontend
+    environment:
+      VITE_API_URL: http://localhost:4000/api/admin
+      VITE_AUTH_URL: http://localhost:4000/api/auth
+    ports:
+      - "5173:80"
+    depends_on:
+      - gateway
+    networks:
+      - alqvimia-network
+    restart: unless-stopped
+
+  # ===========================================
+  # MARKETPLACE MODULE
+  # ===========================================
+
+  marketplace-backend:
+    build:
+      context: ./marketplace/backend
+      dockerfile: Dockerfile
+    container_name: alqvimia-marketplace-backend
+    environment:
+      PORT: 3002
+      JWT_SECRET: ${JWT_SECRET:-alqvimia-super-secret-key-change-in-production}
+      DATABASE_URL: http://database-service:4002
+      AUTH_URL: http://auth-service:4001
+      INTERNAL_SERVICE_KEY: alqvimia-internal-key
+    ports:
+      - "3002:3002"
+    depends_on:
+      - database-service
+      - auth-service
+    networks:
+      - alqvimia-network
+    restart: unless-stopped
+
+  marketplace-frontend:
+    build:
+      context: ./marketplace/frontend
+      dockerfile: Dockerfile
+    container_name: alqvimia-marketplace-frontend
+    environment:
+      VITE_API_URL: http://localhost:4000/api/marketplace
+      VITE_AUTH_URL: http://localhost:4000/api/auth
+    ports:
+      - "5174:80"
+    depends_on:
+      - gateway
+    networks:
+      - alqvimia-network
+    restart: unless-stopped
+
+  # ===========================================
+  # DEVELOPER HUB MODULE
+  # ===========================================
+
+  developer-backend:
+    build:
+      context: ./developer-hub/backend
+      dockerfile: Dockerfile
+    container_name: alqvimia-developer-backend
+    environment:
+      PORT: 3003
+      JWT_SECRET: ${JWT_SECRET:-alqvimia-super-secret-key-change-in-production}
+      DATABASE_URL: http://database-service:4002
+      AUTH_URL: http://auth-service:4001
+      INTERNAL_SERVICE_KEY: alqvimia-internal-key
+      ALLOWED_ENVIRONMENTS: dev,qa,prod,test
+    ports:
+      - "3003:3003"
+    depends_on:
+      - database-service
+      - auth-service
+    networks:
+      - alqvimia-network
+    restart: unless-stopped
+
+  developer-frontend:
+    build:
+      context: ./developer-hub/frontend
+      dockerfile: Dockerfile
+    container_name: alqvimia-developer-frontend
+    environment:
+      VITE_API_URL: http://localhost:4000/api/developer
+      VITE_AUTH_URL: http://localhost:4000/api/auth
+    ports:
+      - "5175:80"
+    depends_on:
+      - gateway
+    networks:
+      - alqvimia-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  alqvimia-network:
+    driver: bridge

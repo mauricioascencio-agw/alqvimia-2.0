@@ -1,0 +1,124 @@
+version: '3.8'
+
+# =====================================================
+# ALQVIMIA RPA 2.0 - DOCKER COMPOSE
+# =====================================================
+# Puertos configurables desde .env:
+#   VITE_PORT=4200      (Frontend)
+#   BACKEND_PORT=4000   (Backend)
+#   MYSQL_PORT=3307     (MySQL)
+#   PHPMYADMIN_PORT=8081 (phpMyAdmin)
+# =====================================================
+
+services:
+  # =====================================================
+  # BASE DE DATOS MYSQL
+  # =====================================================
+  mysql:
+    image: mysql:8.0
+    container_name: alqvimia-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-alqvimia2024}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-alqvimia_rpa}
+    ports:
+      - "${MYSQL_PORT:-3307}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./bd/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    networks:
+      - alqvimia-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-alqvimia2024}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # =====================================================
+  # PHPMYADMIN (Opcional - Administración de BD)
+  # =====================================================
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: alqvimia-phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_USER: root
+      PMA_PASSWORD: ${MYSQL_ROOT_PASSWORD:-alqvimia2024}
+    ports:
+      - "${PHPMYADMIN_PORT:-8081}:80"
+    networks:
+      - alqvimia-network
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  # =====================================================
+  # BACKEND NODE.JS
+  # =====================================================
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: alqvimia-backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      BACKEND_PORT: ${BACKEND_PORT:-4000}
+      VITE_PORT: ${VITE_PORT:-4200}
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_USER: ${MYSQL_USER:-root}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-alqvimia2024}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-alqvimia_rpa}
+    ports:
+      - "${BACKEND_PORT:-4000}:${BACKEND_PORT:-4000}"
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+    networks:
+      - alqvimia-network
+    depends_on:
+      mysql:
+        condition: service_healthy
+    command: npm start
+
+  # =====================================================
+  # FRONTEND VITE (Desarrollo)
+  # =====================================================
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: alqvimia-frontend
+    restart: unless-stopped
+    environment:
+      VITE_PORT: ${VITE_PORT:-4200}
+      BACKEND_PORT: ${BACKEND_PORT:-4000}
+      VITE_BACKEND_URL: http://localhost:${BACKEND_PORT:-4000}
+    ports:
+      - "${VITE_PORT:-4200}:${VITE_PORT:-4200}"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    networks:
+      - alqvimia-network
+    depends_on:
+      - backend
+    command: npm run dev -- --host 0.0.0.0 --port ${VITE_PORT:-4200}
+
+# =====================================================
+# REDES
+# =====================================================
+networks:
+  alqvimia-network:
+    driver: bridge
+
+# =====================================================
+# VOLUMENES PERSISTENTES
+# =====================================================
+volumes:
+  mysql_data:
+    driver: local

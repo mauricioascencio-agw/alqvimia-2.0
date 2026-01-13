@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+*/node_modules/
+**/node_modules/
+
+# Build outputs
+dist/
+build/
+*.log
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Credentials and secrets
+*.pem
+*.key
+id_rsa*
+*.p12
+*.pfx
+
+# Temporary files
+*.tmp
+*.temp
+nul

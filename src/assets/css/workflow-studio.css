@@ -1,23 +1,25 @@
 /*
- * Workflow Studio - Diseño inspirado en UiPath y Automation Anywhere
+ * Workflow Studio - Diseño inspirado en UiPath y Power Automate
  */
 
 /* Layout principal de 3 paneles */
 .workflow-studio {
     display: grid;
-    grid-template-columns: 250px 1fr 300px;
+    grid-template-columns: 180px 1fr 180px;
     grid-template-rows: auto 1fr auto;
     height: calc(100vh - 140px);
+    max-height: calc(100vh - 140px);
     gap: 0;
     background: var(--bg-primary);
+    overflow: hidden;
 }
 
 .workflow-studio.left-collapsed {
-    grid-template-columns: 50px 1fr 300px;
+    grid-template-columns: 50px 1fr 180px;
 }
 
 .workflow-studio.right-collapsed {
-    grid-template-columns: 250px 1fr 50px;
+    grid-template-columns: 180px 1fr 50px;
 }
 
 .workflow-studio.both-collapsed {
@@ -27,22 +29,23 @@
 /* Header con tabs */
 .studio-header {
     grid-column: 1 / -1;
+    grid-row: 1;
     background: var(--dark-bg);
     border-bottom: 1px solid var(--border-color);
     display: flex;
     align-items: center;
-    padding: 0.5rem 1rem;
-    gap: 1rem;
+    padding: 0.35rem 0.75rem;
+    gap: 0.75rem;
 }
 
 .workflow-tabs {
     display: flex;
-    gap: 0.25rem;
+    gap: 0.2rem;
     flex: 1;
 }
 
 .workflow-tab {
-    padding: 0.5rem 1rem;
+    padding: 0.35rem 0.75rem;
     background: transparent;
     border: none;
     color: var(--text-secondary);
@@ -50,8 +53,9 @@
     border-radius: 4px 4px 0 0;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.4rem;
     transition: all 0.2s;
+    font-size: 0.8rem;
 }
 
 .workflow-tab:hover {
@@ -81,15 +85,20 @@
 
 /* Panel izquierdo - Acciones */
 .studio-left-panel {
+    grid-column: 1;
+    grid-row: 2;
     background: var(--card-bg);
     border-right: 1px solid var(--border-color);
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    min-height: 0;
+    height: 100%;
+    position: relative;
 }
 
 .panel-header {
-    padding: 1rem;
+    padding: 0.5rem 0.75rem;
     border-bottom: 1px solid var(--border-color);
     display: flex;
     align-items: center;
@@ -98,12 +107,17 @@
 }
 
 .panel-header h3 {
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     font-weight: 600;
     color: var(--text-primary);
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.4rem;
+    margin: 0;
+}
+
+.panel-header h3 i {
+    font-size: 0.75rem;
 }
 
 .panel-collapse-btn {
@@ -123,18 +137,18 @@
 
 /* Buscador de acciones */
 .actions-search {
-    padding: 0.75rem;
+    padding: 0.4rem 0.5rem;
     border-bottom: 1px solid var(--border-color);
 }
 
 .actions-search input {
     width: 100%;
-    padding: 0.5rem 0.75rem;
+    padding: 0.35rem 0.5rem;
     background: var(--bg-primary);
     border: 1px solid var(--border-color);
-    border-radius: 6px;
+    border-radius: 4px;
     color: var(--text-primary);
-    font-size: 0.85rem;
+    font-size: 0.75rem;
 }
 
 .actions-search input:focus {
@@ -146,20 +160,54 @@
 .actions-list {
     flex: 1;
     overflow-y: auto;
+    overflow-x: hidden;
     padding: 0.5rem;
+    padding-bottom: 0.5rem;
+}
+
+/* Botón cargar más acciones */
+.actions-load-more {
+    padding: 0.5rem;
+    border-top: 1px solid var(--border-color);
+    background: var(--dark-bg);
+}
+
+.btn-load-more {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    background: rgba(var(--primary-rgb), 0.1);
+    border: 1px dashed var(--primary-color);
+    border-radius: 6px;
+    color: var(--primary-color);
+    font-size: 0.75rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.2s;
+}
+
+.btn-load-more:hover {
+    background: rgba(var(--primary-rgb), 0.2);
+    border-style: solid;
+}
+
+.btn-load-more i {
+    font-size: 0.85rem;
 }
 
 .action-category {
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.15rem;
 }
 
 .category-header {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 0.75rem;
+    gap: 0.25rem;
+    padding: 0.25rem 0.4rem;
     cursor: pointer;
-    border-radius: 6px;
+    border-radius: 4px;
     transition: all 0.2s;
     user-select: none;
 }
@@ -169,7 +217,7 @@
 }
 
 .category-header i.fa-chevron-right {
-    font-size: 0.7rem;
+    font-size: 0.6rem;
     transition: transform 0.2s;
 }
 
@@ -178,29 +226,30 @@
 }
 
 .category-header .category-icon {
-    width: 20px;
+    width: 16px;
     text-align: center;
+    font-size: 0.75rem;
 }
 
 .category-header .category-name {
     flex: 1;
-    font-size: 0.85rem;
+    font-size: 0.7rem;
     font-weight: 600;
 }
 
 .category-header .category-count {
-    font-size: 0.75rem;
+    font-size: 0.65rem;
     color: var(--text-secondary);
     background: rgba(255, 255, 255, 0.05);
-    padding: 0.15rem 0.5rem;
-    border-radius: 12px;
+    padding: 0.1rem 0.35rem;
+    border-radius: 10px;
 }
 
 /* Items de acciones */
 .category-items {
     display: none;
-    padding-left: 1.5rem;
-    margin-top: 0.25rem;
+    padding-left: 0.75rem;
+    margin-top: 0.1rem;
 }
 
 .action-category.expanded .category-items {
@@ -210,15 +259,21 @@
 .action-item {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 0.75rem;
-    margin-bottom: 0.25rem;
+    gap: 0.25rem;
+    padding: 0.2rem 0.4rem;
+    margin-bottom: 0.1rem;
     background: var(--bg-primary);
     border: 1px solid transparent;
-    border-radius: 6px;
+    border-radius: 4px;
     cursor: grab;
     transition: all 0.2s;
-    font-size: 0.85rem;
+    font-size: 0.7rem;
+}
+
+.action-item i {
+    font-size: 0.7rem;
+    width: 14px;
+    text-align: center;
 }
 
 .action-item:hover {
@@ -243,43 +298,174 @@
     text-align: center;
 }
 
+.action-item.is-container {
+    background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.1), rgba(var(--primary-rgb), 0.05));
+    border: 1px dashed rgba(var(--primary-rgb), 0.3);
+}
+
+.action-item.is-container i {
+    color: var(--warning-color);
+}
+
 /* Panel central - Canvas */
 .studio-center-panel {
+    grid-row: 2;
     background: var(--bg-primary);
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    outline: none;
 }
 
 .canvas-toolbar {
-    padding: 0.75rem 1rem;
+    padding: 0.5rem 0.75rem;
     border-bottom: 1px solid var(--border-color);
     display: flex;
     align-items: center;
     gap: 0.5rem;
     background: var(--card-bg);
+    flex-wrap: wrap;
 }
 
+/* Botones con texto (Nuevo, Guardar, Diagrama) */
 .canvas-toolbar button {
-    padding: 0.4rem 0.75rem;
+    padding: 0.45rem 0.75rem;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.canvas-toolbar button i {
     font-size: 0.85rem;
+}
+
+/* Botones solo icono - cuadrados uniformes */
+.canvas-toolbar button.btn-icon-only {
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    min-width: 34px;
+}
+
+.canvas-toolbar button.btn-icon-only i {
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+/* Botones compactos - solo icono en pantallas pequeñas */
+@media (max-width: 1400px) {
+    .canvas-toolbar button span {
+        display: none;
+    }
+    .canvas-toolbar button {
+        width: 34px;
+        height: 34px;
+        padding: 0;
+        min-width: 34px;
+    }
+    .canvas-toolbar button i {
+        margin: 0;
+    }
+}
+
+.toolbar-divider {
+    width: 1px;
+    height: 24px;
+    background: var(--border-color);
+    margin: 0 0.25rem;
+}
+
+.toolbar-spacer {
+    flex: 1;
+    min-width: 0.5rem;
+}
+
+.toolbar-group {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.btn-execute {
+    background: linear-gradient(135deg, #10b981, #059669) !important;
+    color: white !important;
+    border: none !important;
+}
+
+.btn-execute:hover:not(:disabled) {
+    background: linear-gradient(135deg, #059669, #047857) !important;
+}
+
+.btn-preview {
+    background: rgba(59, 130, 246, 0.15) !important;
+    color: #3b82f6 !important;
+    border: 1px solid rgba(59, 130, 246, 0.3) !important;
+}
+
+.btn-preview:hover:not(:disabled) {
+    background: rgba(59, 130, 246, 0.25) !important;
+}
+
+.btn-ai {
+    background: linear-gradient(135deg, #667eea, #764ba2) !important;
+    color: white !important;
+    border: none !important;
+}
+
+/* Toggle de vista */
+.view-toggle {
+    display: flex;
+    background: var(--bg-primary);
+    border-radius: 6px;
+    padding: 3px;
+    gap: 2px;
+}
+
+.view-toggle-btn {
+    width: 32px;
+    height: 28px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.view-toggle-btn i {
+    font-size: 0.85rem;
+}
+
+.view-toggle-btn:hover {
+    color: var(--text-primary);
+}
+
+.view-toggle-btn.active {
+    background: var(--primary-color);
+    color: white;
 }
 
 .canvas-container {
     flex: 1;
     overflow: auto;
-    padding: 2rem;
+    padding: 1.5rem;
     position: relative;
 }
 
 .workflow-canvas {
     min-height: 100%;
-    background-image:
-        linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-    background-size: 20px 20px;
+    background-color: var(--bg-secondary);
     border-radius: 8px;
-    padding: 2rem;
+    padding: 1.5rem;
     transition: all 0.3s;
 }
 
@@ -312,133 +498,630 @@
 .workflow-canvas-empty small {
     font-size: 0.9rem;
     opacity: 0.7;
+    margin-bottom: 1.5rem;
 }
 
-/* Steps en el canvas */
-.workflow-step {
-    background: var(--card-bg);
-    border: 2px solid var(--border-color);
-    border-radius: 8px;
-    padding: 1rem;
-    margin-bottom: 1rem;
-    cursor: pointer;
-    transition: all 0.2s;
-    position: relative;
+.keyboard-shortcuts {
+    display: flex;
+    gap: 1.5rem;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    opacity: 0.7;
 }
 
-.workflow-step:hover {
-    border-color: var(--primary-color);
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+.keyboard-shortcuts kbd {
+    background: var(--bg-tertiary);
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 0.75rem;
+    margin-right: 0.25rem;
 }
 
-.workflow-step.selected {
-    border-color: var(--primary-color);
-    background: rgba(37, 99, 235, 0.05);
+/* ====================================
+   VISTA DE LISTA (estilo Power Automate)
+   ==================================== */
+
+.workflow-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
 }
 
-.workflow-step-header {
+/* Nodos de inicio y fin */
+.workflow-start-node,
+.workflow-end-node {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    margin-bottom: 0.5rem;
+    padding: 0.75rem 1rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 0.9rem;
 }
 
-.workflow-step-icon {
+.workflow-start-node i {
+    color: #10b981;
+}
+
+.workflow-end-node i {
+    color: var(--text-secondary);
+}
+
+.workflow-list-steps {
+    border-left: 2px solid var(--border-color);
+    margin-left: 1.25rem;
+    padding-left: 0;
+}
+
+/* Items de la lista */
+.workflow-list-item-wrapper {
+    position: relative;
+}
+
+.workflow-list-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1rem;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-left: 3px solid transparent;
+    margin-bottom: -1px;
+    cursor: pointer;
+    transition: all 0.15s;
+    min-height: 44px;
+}
+
+.workflow-list-item:first-child {
+    border-top-left-radius: 0;
+    border-top-right-radius: 6px;
+}
+
+.workflow-list-item:last-child {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 6px;
+}
+
+.workflow-list-item:hover {
+    background: var(--card-bg-hover);
+}
+
+.workflow-list-item.selected {
+    background: rgba(var(--primary-rgb), 0.08);
+    border-left-color: var(--primary-color);
+}
+
+.workflow-list-item.is-container {
+    background: linear-gradient(90deg, rgba(245, 158, 11, 0.08), transparent);
+    border-left-color: #f59e0b;
+}
+
+.workflow-list-item.is-container.selected {
+    background: linear-gradient(90deg, rgba(245, 158, 11, 0.15), rgba(var(--primary-rgb), 0.05));
+}
+
+.workflow-list-item.has-error {
+    border-left-color: #ef4444;
+}
+
+/* Expand button */
+.step-expand-btn {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.15s;
+    flex-shrink: 0;
+}
+
+.step-expand-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+}
+
+.step-indent-line {
+    width: 20px;
+    flex-shrink: 0;
+}
+
+/* Icono del tipo de acción */
+.step-type-icon {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(var(--primary-rgb), 0.1);
+    color: var(--primary-color);
+    border-radius: 6px;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+
+.step-type-icon.container-icon {
+    background: rgba(245, 158, 11, 0.15);
+    color: #f59e0b;
+}
+
+/* Info del paso */
+.step-info {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.step-title {
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.step-param-preview {
+    color: var(--text-secondary);
+    font-weight: 400;
+    margin-left: 0.25rem;
+}
+
+/* Indicadores */
+.step-indicators {
+    display: flex;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+.step-indicator {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 0.7rem;
+}
+
+.step-indicator.configured {
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+}
+
+.step-indicator.error {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+}
+
+/* Menú del paso */
+.step-menu {
+    flex-shrink: 0;
+    opacity: 0;
+    transition: opacity 0.15s;
+}
+
+.workflow-list-item:hover .step-menu {
+    opacity: 1;
+}
+
+.step-menu-btn {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.15s;
+}
+
+.step-menu-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+}
+
+/* Hijos del contenedor */
+.step-children {
+    position: relative;
+}
+
+.step-drop-zone {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    border: 2px dashed var(--border-color);
+    border-radius: 6px;
+    margin: 0.5rem 0;
+    transition: all 0.2s;
+}
+
+.step-drop-zone:hover {
+    border-color: var(--primary-color);
+    background: rgba(var(--primary-rgb), 0.05);
+}
+
+/* ====================================
+   VISTA DE FLUJO (estilo UiPath)
+   ==================================== */
+
+.workflow-flow {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem;
+}
+
+/* Nodos de inicio/fin en vista de flujo */
+.flow-start-node,
+.flow-end-node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.flow-node-circle {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+.flow-node-circle.start {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.flow-node-circle.end {
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    border: 2px solid var(--border-color);
+}
+
+.flow-start-node span,
+.flow-end-node span {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+/* Conectores */
+.flow-connector {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 40px;
+}
+
+.flow-line {
+    width: 2px;
+    flex: 1;
+    background: var(--border-color);
+}
+
+.flow-arrow {
+    color: var(--border-color);
+    font-size: 0.7rem;
+}
+
+/* Punto de inserción */
+.flow-insert-point {
+    display: flex;
+    justify-content: center;
+    padding: 0.5rem 0;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.flow-insert-point:hover,
+.flow-insert-point.initial {
+    opacity: 1;
+}
+
+.flow-insert-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--bg-tertiary);
+    border: 2px dashed var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    font-size: 0.7rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.flow-insert-icon:hover {
+    border-color: var(--primary-color);
+    background: rgba(var(--primary-rgb), 0.1);
+    color: var(--primary-color);
+}
+
+/* Wrapper del paso en flujo */
+.flow-step-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Paso en vista de flujo */
+.flow-step {
+    min-width: 280px;
+    max-width: 400px;
+    background: var(--card-bg);
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.flow-step:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 16px rgba(var(--primary-rgb), 0.2);
+}
+
+.flow-step.selected {
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 20px rgba(var(--primary-rgb), 0.3);
+}
+
+.flow-step.is-container {
+    border-color: #f59e0b;
+}
+
+.flow-step-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    background: var(--bg-tertiary);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.flow-expand-btn {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.15s;
+}
+
+.flow-expand-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.flow-step-icon {
     width: 32px;
     height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--primary-color);
+    background: rgba(var(--primary-rgb), 0.15);
+    color: var(--primary-color);
     border-radius: 6px;
-    color: white;
+    font-size: 1rem;
 }
 
-.workflow-step-info {
+.flow-step.is-container .flow-step-icon {
+    background: rgba(245, 158, 11, 0.15);
+    color: #f59e0b;
+}
+
+.flow-step-label {
     flex: 1;
-}
-
-.workflow-step-name {
     font-weight: 600;
     font-size: 0.95rem;
     color: var(--text-primary);
 }
 
-.workflow-step-type {
-    font-size: 0.75rem;
-    color: var(--text-secondary);
-}
-
-.workflow-step-actions {
+.flow-step-menu {
+    width: 28px;
+    height: 28px;
     display: flex;
-    gap: 0.25rem;
-}
-
-.workflow-step-actions button {
+    align-items: center;
+    justify-content: center;
     background: transparent;
     border: none;
     color: var(--text-secondary);
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
     cursor: pointer;
+    border-radius: 4px;
+    opacity: 0;
+    transition: all 0.15s;
+}
+
+.flow-step:hover .flow-step-menu {
+    opacity: 1;
+}
+
+.flow-step-menu:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Cuerpo del paso contenedor */
+.flow-step-body {
+    padding: 0.75rem;
+    background: var(--card-bg);
+}
+
+.flow-child-step {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    background: var(--bg-primary);
+    border-radius: 6px;
+    margin-bottom: 0.5rem;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.flow-child-step:last-child {
+    margin-bottom: 0;
+}
+
+.flow-child-step:hover {
+    background: var(--bg-tertiary);
+}
+
+.flow-child-step i {
+    color: var(--primary-color);
+    width: 16px;
+    text-align: center;
+}
+
+.flow-drop-zone {
+    padding: 1rem;
+    border: 2px dashed var(--border-color);
+    border-radius: 6px;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
     transition: all 0.2s;
 }
 
-.workflow-step-actions button:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: var(--text-primary);
+.flow-drop-zone:hover {
+    border-color: var(--primary-color);
+    background: rgba(var(--primary-rgb), 0.05);
 }
 
 /* Panel derecho - Propiedades */
 .studio-right-panel {
+    grid-column: -1;
+    grid-row: 2;
     background: var(--card-bg);
     border-left: 1px solid var(--border-color);
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    min-width: 150px;
+    position: relative;
+}
+
+.studio-right-panel .panel-header {
+    padding: 0.35rem 0.5rem;
+}
+
+.studio-right-panel .panel-tabs {
+    gap: 0;
+    display: flex;
+}
+
+.studio-right-panel .panel-tab {
+    padding: 0.25rem 0.4rem;
+    font-size: 0.65rem;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
+    border-radius: 4px;
+}
+
+.studio-right-panel .panel-tab:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-primary);
+}
+
+.studio-right-panel .panel-tab.active {
+    background: var(--primary-color);
+    color: white;
+}
+
+.studio-right-panel .panel-tab i {
+    margin-right: 0.15rem;
+    font-size: 0.6rem;
 }
 
 .properties-content {
     flex: 1;
     overflow-y: auto;
-    padding: 1rem;
+    overflow-x: hidden;
+    padding: 0.3rem;
+}
+
+.properties-content .property-group {
+    margin-bottom: 0.35rem;
+}
+
+.properties-content .property-field {
+    margin-bottom: 0.25rem;
+}
+
+.properties-content .property-field label {
+    font-size: 0.65rem;
+    margin-bottom: 0.1rem;
+}
+
+.properties-content .property-field input,
+.properties-content .property-field select,
+.properties-content .property-field textarea {
+    padding: 0.25rem 0.35rem;
+    font-size: 0.7rem;
 }
 
 .property-group {
-    margin-bottom: 1.5rem;
+    margin-bottom: 0.5rem;
 }
 
 .property-group-title {
-    font-size: 0.75rem;
+    font-size: 0.65rem;
     font-weight: 700;
     text-transform: uppercase;
     color: var(--text-secondary);
-    margin-bottom: 0.75rem;
-    letter-spacing: 0.5px;
+    margin-bottom: 0.3rem;
+    letter-spacing: 0.3px;
 }
 
 .property-field {
-    margin-bottom: 1rem;
+    margin-bottom: 0.35rem;
 }
 
 .property-field label {
     display: block;
-    font-size: 0.85rem;
+    font-size: 0.65rem;
     font-weight: 600;
     color: var(--text-primary);
-    margin-bottom: 0.4rem;
+    margin-bottom: 0.15rem;
 }
 
 .property-field input,
 .property-field select,
 .property-field textarea {
     width: 100%;
-    padding: 0.5rem;
+    padding: 0.3rem 0.4rem;
     background: var(--bg-primary);
     border: 1px solid var(--border-color);
-    border-radius: 6px;
+    border-radius: 4px;
     color: var(--text-primary);
-    font-size: 0.85rem;
+    font-size: 0.75rem;
 }
 
 .property-field input:focus,
@@ -451,6 +1134,7 @@
 /* Footer con info */
 .studio-footer {
     grid-column: 1 / -1;
+    grid-row: 3;
     background: var(--dark-bg);
     border-top: 1px solid var(--border-color);
     padding: 0.5rem 1rem;
@@ -473,19 +1157,122 @@
     gap: 0.5rem;
 }
 
+.clipboard-indicator {
+    background: rgba(var(--primary-rgb), 0.1);
+    padding: 0.25rem 0.75rem;
+    border-radius: 4px;
+    color: var(--primary-color);
+}
+
 /* Collapsed states */
-.studio-left-panel.collapsed .panel-header h3,
-.studio-left-panel.collapsed .actions-search,
-.studio-left-panel.collapsed .actions-list,
 .studio-right-panel.collapsed .panel-header h3,
 .studio-right-panel.collapsed .properties-content {
     display: none;
 }
 
-.studio-left-panel.collapsed,
+.studio-left-panel.collapsed {
+    width: 50px;
+    min-width: 50px;
+}
+
+.studio-left-panel.collapsed .panel-header {
+    justify-content: center;
+    padding: 0.5rem;
+}
+
+.studio-left-panel.collapsed .panel-header h3 {
+    display: flex;
+    justify-content: center;
+}
+
+.studio-left-panel.collapsed .panel-header h3 i {
+    margin: 0;
+}
+
 .studio-right-panel.collapsed {
     width: 50px;
     align-items: center;
+}
+
+/* Panel resizers - barras para redimensionar */
+.panel-resizer {
+    width: 6px;
+    cursor: col-resize;
+    background: transparent;
+    z-index: 100;
+    transition: background 0.2s ease;
+    grid-row: 2;
+    position: relative;
+}
+
+.panel-resizer:hover,
+.panel-resizer:active {
+    background: linear-gradient(90deg, transparent 0%, var(--primary-color) 50%, transparent 100%);
+}
+
+.panel-resizer::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 4px;
+    height: 50px;
+    background: var(--border-color);
+    border-radius: 4px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.panel-resizer:hover::before {
+    opacity: 1;
+    background: var(--primary-color);
+}
+
+.panel-resizer-left {
+    margin-left: -3px;
+    margin-right: -3px;
+}
+
+.panel-resizer-right {
+    margin-left: -3px;
+    margin-right: -3px;
+}
+
+/* Iconos colapsados del panel izquierdo */
+.collapsed-icons {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.5rem 0;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.collapsed-icon-btn {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+}
+
+.collapsed-icon-btn:hover {
+    background: rgba(var(--primary-rgb), 0.15);
+    color: var(--primary-color);
+    transform: scale(1.1);
+}
+
+.collapsed-icon-btn:active {
+    transform: scale(0.95);
 }
 
 /* Scrollbar personalizado */
@@ -526,6 +1313,2251 @@
     }
 }
 
-.workflow-step {
-    animation: slideIn 0.3s ease;
+.workflow-list-item,
+.flow-step {
+    animation: slideIn 0.2s ease;
+}
+
+/* ====================================
+   MENÚ CONTEXTUAL
+   ==================================== */
+
+.context-menu {
+    position: fixed;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    min-width: 180px;
+    padding: 0.5rem 0;
+    z-index: 1000;
+    animation: contextMenuIn 0.15s ease;
+}
+
+@keyframes contextMenuIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.context-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.6rem 1rem;
+    font-size: 0.85rem;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.context-menu-item:hover {
+    background: rgba(var(--primary-rgb), 0.1);
+}
+
+.context-menu-item i {
+    width: 16px;
+    text-align: center;
+    color: var(--text-secondary);
+}
+
+.context-menu-item:hover i {
+    color: var(--primary-color);
+}
+
+.context-menu-item .shortcut {
+    margin-left: auto;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    opacity: 0.7;
+}
+
+.context-menu-divider {
+    height: 1px;
+    background: var(--border-color);
+    margin: 0.5rem 0;
+}
+
+.context-menu-item.danger {
+    color: #ef4444;
+}
+
+.context-menu-item.danger i {
+    color: #ef4444;
+}
+
+.context-menu-item.danger:hover {
+    background: rgba(239, 68, 68, 0.1);
+}
+
+/* ====================================
+   BREAKPOINTS Y DEBUGGER
+   ==================================== */
+
+/* Gutter para breakpoints en lista */
+.breakpoint-gutter {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    cursor: pointer;
+    border-radius: 50%;
+    margin-right: 0.25rem;
+    transition: all 0.15s;
+}
+
+.breakpoint-gutter:hover {
+    background: rgba(239, 68, 68, 0.2);
+}
+
+.breakpoint-gutter i {
+    font-size: 0.6rem;
+    color: transparent;
+    transition: color 0.15s;
+}
+
+.breakpoint-gutter:hover i {
+    color: rgba(239, 68, 68, 0.5);
+}
+
+/* Paso con breakpoint */
+.workflow-list-item.has-breakpoint .breakpoint-gutter i,
+.flow-step.has-breakpoint .breakpoint-gutter i {
+    color: #ef4444;
+}
+
+.workflow-list-item.has-breakpoint {
+    background: rgba(239, 68, 68, 0.05);
+}
+
+.flow-step.has-breakpoint {
+    border-color: #ef4444;
+}
+
+.flow-step.has-breakpoint .flow-step-header {
+    background: rgba(239, 68, 68, 0.1);
+}
+
+/* Paso actual en debug */
+.workflow-list-item.debug-current {
+    background: rgba(245, 158, 11, 0.15) !important;
+    border-left-color: #f59e0b !important;
+    box-shadow: inset 3px 0 0 #f59e0b;
+}
+
+.flow-step.debug-current {
+    border-color: #f59e0b !important;
+    box-shadow: 0 0 20px rgba(245, 158, 11, 0.4);
+}
+
+.flow-step.debug-current .flow-step-header {
+    background: rgba(245, 158, 11, 0.15);
+}
+
+/* Indicador de debug en paso */
+.debug-arrow {
+    color: #f59e0b;
+    font-size: 0.9rem;
+    margin-right: 0.25rem;
+    animation: debugPulse 1s ease-in-out infinite;
+}
+
+@keyframes debugPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* Botones de debug en toolbar */
+.btn-debug {
+    background: rgba(16, 185, 129, 0.15) !important;
+    color: #10b981 !important;
+    border: 1px solid rgba(16, 185, 129, 0.3) !important;
+}
+
+.btn-debug:hover {
+    background: rgba(16, 185, 129, 0.25) !important;
+}
+
+.btn-debug.active {
+    background: #10b981 !important;
+    color: white !important;
+}
+
+.btn-debug.stop {
+    background: rgba(239, 68, 68, 0.15) !important;
+    color: #ef4444 !important;
+    border: 1px solid rgba(239, 68, 68, 0.3) !important;
+}
+
+.btn-debug.stop:hover {
+    background: rgba(239, 68, 68, 0.25) !important;
+}
+
+/* Indicador de debug en footer */
+.debug-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(245, 158, 11, 0.15);
+    color: #f59e0b;
+    padding: 0.25rem 0.75rem;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+.debug-indicator i {
+    animation: debugPulse 1s ease-in-out infinite;
+}
+
+/* ====================================
+   TABS DEL PANEL DERECHO
+   ==================================== */
+
+.panel-tabs {
+    display: flex;
+    background: var(--dark-bg);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.panel-tab {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+}
+
+.panel-tab:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.panel-tab.active {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.panel-tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--primary-color);
+}
+
+.panel-tab i {
+    margin-right: 0.5rem;
+}
+
+/* ====================================
+   TOOLBAR DE DEBUGGER
+   ==================================== */
+
+.debug-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0 0.5rem;
+    margin-left: 0.5rem;
+    border-left: 1px solid var(--border-color);
+}
+
+.debug-btn {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.debug-btn.start {
+    color: #10b981;
+}
+
+.debug-btn.start:hover {
+    background: rgba(16, 185, 129, 0.15);
+}
+
+.debug-btn.step {
+    color: var(--primary-color);
+}
+
+.debug-btn.step:hover {
+    background: rgba(var(--primary-rgb), 0.15);
+}
+
+.debug-btn.stop {
+    color: #ef4444;
+}
+
+.debug-btn.stop:hover {
+    background: rgba(239, 68, 68, 0.15);
+}
+
+.debug-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.debug-btn:disabled:hover {
+    background: transparent;
+}
+
+/* ====================================
+   ESTILOS PARA VISTA SIN SELECCIÓN
+   ==================================== */
+
+.properties-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 2rem;
+    text-align: center;
+    color: var(--text-secondary);
+}
+
+.properties-empty i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.3;
+}
+
+.properties-empty p {
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.properties-empty small {
+    font-size: 0.8rem;
+    opacity: 0.7;
+}
+
+/* ====================================
+   MEJORAS PARA SELECCIÓN MÚLTIPLE
+   ==================================== */
+
+.workflow-list-item.multi-selected {
+    background: rgba(var(--primary-rgb), 0.12);
+    border-left-color: var(--primary-color);
+}
+
+.flow-step.multi-selected {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.3);
+}
+
+/* ====================================
+   DRAG AND DROP MEJORADO
+   ==================================== */
+
+.workflow-list-item.drag-over {
+    border-top: 2px solid var(--primary-color);
+}
+
+.workflow-list-item.drag-over-bottom {
+    border-bottom: 2px solid var(--primary-color);
+}
+
+.flow-step.drag-over {
+    box-shadow: 0 -4px 0 var(--primary-color);
+}
+
+/* Zona de drop global */
+.canvas-drop-indicator {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--primary-color);
+    pointer-events: none;
+    transition: top 0.1s;
+}
+
+/* ====================================
+   ESTADOS DE ERROR Y WARNING
+   ==================================== */
+
+.workflow-list-item.has-warning {
+    border-left-color: #f59e0b;
+}
+
+.workflow-list-item.has-warning .step-type-icon {
+    background: rgba(245, 158, 11, 0.15);
+    color: #f59e0b;
+}
+
+.flow-step.has-warning {
+    border-color: #f59e0b;
+}
+
+.flow-step.has-error {
+    border-color: #ef4444;
+}
+
+.flow-step.has-error .flow-step-icon {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+}
+
+/* ====================================
+   BOTONES DE TOOLBAR ADICIONALES
+   ==================================== */
+
+.btn-migrate {
+    background: linear-gradient(135deg, #10b981, #059669) !important;
+    color: white !important;
+    border: none !important;
+}
+
+.btn-migrate:hover {
+    background: linear-gradient(135deg, #059669, #047857) !important;
+    transform: translateY(-1px);
+}
+
+.btn-ai {
+    background: linear-gradient(135deg, #8b5cf6, #6d28d9) !important;
+    color: white !important;
+    border: none !important;
+}
+
+.btn-ai:hover {
+    background: linear-gradient(135deg, #7c3aed, #5b21b6) !important;
+    transform: translateY(-1px);
+}
+
+.btn-ai:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-code {
+    background: linear-gradient(135deg, #0ea5e9, #0284c7) !important;
+    color: white !important;
+    border: none !important;
+}
+
+.btn-code:hover {
+    background: linear-gradient(135deg, #0284c7, #0369a1) !important;
+    transform: translateY(-1px);
+}
+
+/* ====================================
+   MODAL DE CARGAR CÓDIGO
+   ==================================== */
+
+.empty-code-actions {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-secondary);
+}
+
+.empty-code-actions i {
+    font-size: 4rem;
+    color: var(--border-color);
+    margin-bottom: 1.5rem;
+    display: block;
+}
+
+.empty-code-actions h4 {
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.empty-code-actions p {
+    margin-bottom: 1.5rem;
+}
+
+.empty-code-actions ol {
+    text-align: left;
+    max-width: 400px;
+    margin: 0 auto;
+    padding-left: 1.5rem;
+}
+
+.empty-code-actions ol li {
+    margin-bottom: 0.5rem;
+    color: var(--text-secondary);
+}
+
+.empty-code-actions ol strong {
+    color: var(--primary-color);
+}
+
+.code-actions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.code-actions-list .hint {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.code-actions-list .hint i {
+    color: var(--info-color, #3b82f6);
+}
+
+.code-action-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--bg-tertiary, #334155);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+
+.code-action-item:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.code-action-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.code-action-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.code-action-header i {
+    font-size: 1.25rem;
+}
+
+.code-action-name {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.code-action-lang {
+    padding: 0.15rem 0.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+}
+
+.code-action-preview {
+    background: var(--bg-primary, #0f172a);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 0.75rem;
+    font-family: 'Fira Code', 'Consolas', monospace;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    max-height: 80px;
+    overflow: hidden;
+    white-space: pre-wrap;
+    margin-bottom: 0.5rem;
+}
+
+.code-action-date {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+}
+
+.code-action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.code-action-buttons .btn {
+    white-space: nowrap;
+}
+
+/* ====================================
+   VOICE COMMANDS
+   ==================================== */
+
+.btn-voice {
+    background: linear-gradient(135deg, #10b981, #059669) !important;
+    color: white !important;
+    border: none !important;
+}
+
+.btn-voice:hover {
+    background: linear-gradient(135deg, #059669, #047857) !important;
+    transform: translateY(-1px);
+}
+
+.btn-voice.listening {
+    background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+    animation: voicePulse 1.5s ease-in-out infinite;
+}
+
+.btn-voice.listening i {
+    animation: micBounce 0.5s ease-in-out infinite;
+}
+
+@keyframes voicePulse {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
+    }
+}
+
+@keyframes micBounce {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.2);
+    }
+}
+
+.voice-indicator {
+    position: absolute;
+    top: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+    z-index: 100;
+    animation: slideDown 0.3s ease-out;
+}
+
+.voice-indicator i {
+    animation: micBounce 0.5s ease-in-out infinite;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+/* ====================================
+   MODAL DE MIGRACIÓN
+   ==================================== */
+
+.migrate-options {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.migrate-section h4 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+    font-size: 1rem;
+}
+
+.migrate-section h4 i {
+    color: var(--primary-color);
+}
+
+.migrate-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+
+.migrate-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1.5rem 1rem;
+    background: var(--bg-secondary);
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.migrate-option:hover {
+    border-color: var(--primary-color);
+    background: var(--bg-tertiary);
+    transform: translateY(-2px);
+}
+
+.migrate-option i {
+    font-size: 2rem;
+}
+
+.migrate-option span {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+/* ====================================
+   MODAL DE IA
+   ==================================== */
+
+.ai-generator {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.ai-prompt-input {
+    width: 100%;
+    padding: 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    line-height: 1.5;
+    resize: vertical;
+    transition: border-color 0.2s;
+}
+
+.ai-prompt-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+.ai-prompt-input::placeholder {
+    color: var(--text-secondary);
+}
+
+.ai-templates {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.templates-label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.template-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.template-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.template-chip:hover {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+}
+
+.template-chip i {
+    font-size: 0.8rem;
+}
+
+/* Modal grande */
+.modal-lg {
+    max-width: 700px;
+}
+
+/* ====================================
+   NÚMEROS DE PASO Y DRAG & DROP
+   ==================================== */
+
+/* Número de paso en vista lista */
+.step-number {
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    background: linear-gradient(135deg, var(--primary-color), #8b5cf6);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin-right: 0.5rem;
+    flex-shrink: 0;
+}
+
+/* Handle de arrastre */
+.step-drag-handle {
+    width: 20px;
+    color: var(--text-secondary);
+    cursor: grab;
+    opacity: 0.5;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.step-drag-handle:hover {
+    opacity: 1;
+    color: var(--primary-color);
+}
+
+.workflow-list-item:active .step-drag-handle {
+    cursor: grabbing;
+}
+
+/* Botones de mover */
+.step-move-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-right: 0.5rem;
+    opacity: 0;
+    transition: opacity 0.15s;
+}
+
+.workflow-list-item:hover .step-move-buttons {
+    opacity: 1;
+}
+
+.step-move-btn {
+    width: 18px;
+    height: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-radius: 3px;
+    transition: all 0.15s;
+    padding: 0;
+}
+
+.step-move-btn:hover:not(:disabled) {
+    background: rgba(var(--primary-rgb), 0.2);
+    color: var(--primary-color);
+}
+
+.step-move-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.step-move-btn i {
+    font-size: 0.6rem;
+}
+
+/* Indicador de drop */
+.step-drop-indicator {
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary-color), #8b5cf6);
+    border-radius: 2px;
+    margin: 0 1rem;
+    animation: dropPulse 0.5s ease-in-out infinite;
+}
+
+.step-drop-indicator.before {
+    margin-bottom: 0;
+}
+
+.step-drop-indicator.after {
+    margin-top: 0;
+}
+
+@keyframes dropPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* Estado de arrastre */
+.workflow-list-item.dragging {
+    opacity: 0.5;
+    transform: scale(0.98);
+    background: rgba(var(--primary-rgb), 0.1) !important;
+}
+
+/* Descripción de paso */
+.step-description {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    font-style: italic;
+    margin-left: 0.5rem;
+}
+
+/* ====================================
+   VISTA DE FLUJO MEJORADA
+   ==================================== */
+
+/* Número de paso en flujo */
+.flow-step-number {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    background: linear-gradient(135deg, var(--primary-color), #8b5cf6);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+/* Botones de mover en flujo */
+.flow-step-move-buttons {
+    display: flex;
+    gap: 4px;
+    margin-left: auto;
+    margin-right: 0.5rem;
+    opacity: 0;
+    transition: opacity 0.15s;
+}
+
+.flow-step:hover .flow-step-move-buttons {
+    opacity: 1;
+}
+
+.flow-move-btn {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(var(--primary-rgb), 0.1);
+    border: none;
+    color: var(--primary-color);
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.15s;
+}
+
+.flow-move-btn:hover:not(:disabled) {
+    background: rgba(var(--primary-rgb), 0.2);
+    transform: translateY(-1px);
+}
+
+.flow-move-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.flow-move-btn i {
+    font-size: 0.75rem;
+}
+
+/* Descripción en flujo */
+.flow-step-description {
+    padding: 0.5rem 1rem;
+    background: rgba(var(--primary-rgb), 0.05);
+    border-top: 1px solid var(--border-color);
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.flow-step-description i {
+    color: var(--primary-color);
+}
+
+/* Número de hijo en flujo */
+.flow-child-number {
+    width: 28px;
+    height: 20px;
+    background: rgba(var(--primary-rgb), 0.1);
+    color: var(--primary-color);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+/* ====================================
+   BLOQUES DE ACCIONES
+   ==================================== */
+
+.action-block {
+    background: var(--card-bg);
+    border: 2px solid var(--border-color);
+    border-radius: 10px;
+    margin-bottom: 1rem;
+    overflow: hidden;
+}
+
+.action-block.expanded {
+    border-color: var(--primary-color);
+}
+
+.action-block-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.1), rgba(139, 92, 246, 0.05));
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.action-block-header:hover {
+    background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.15), rgba(139, 92, 246, 0.1));
+}
+
+.action-block-expand {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.action-block.expanded .action-block-expand {
+    transform: rotate(90deg);
+}
+
+.action-block-icon {
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(135deg, var(--primary-color), #8b5cf6);
+    color: white;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+}
+
+.action-block-info {
+    flex: 1;
+}
+
+.action-block-title {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+}
+
+.action-block-description {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-top: 0.25rem;
+}
+
+.action-block-count {
+    background: rgba(var(--primary-rgb), 0.1);
+    color: var(--primary-color);
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.action-block-body {
+    padding: 1rem;
+    background: var(--bg-primary);
+    border-top: 1px solid var(--border-color);
+    display: none;
+}
+
+.action-block.expanded .action-block-body {
+    display: block;
+}
+
+.action-block-empty {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-secondary);
+    border: 2px dashed var(--border-color);
+    border-radius: 8px;
+}
+
+.action-block-empty i {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    opacity: 0.5;
+}
+
+/* =====================================================
+   DICTADO DE VOZ EN MODALES
+   ===================================================== */
+
+/* Textarea con botón de voz */
+.textarea-with-voice {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+}
+
+.textarea-with-voice textarea {
+    flex: 1;
+    padding-right: 50px !important;
+}
+
+.voice-input-btn {
+    position: absolute;
+    right: 8px;
+    top: 8px;
+    width: 36px;
+    height: 36px;
+    border: none;
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+}
+
+.voice-input-btn:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+.voice-input-btn.listening {
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    color: white;
+    animation: voicePulse 1.5s ease-in-out infinite;
+}
+
+@keyframes voicePulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
+    50% { box-shadow: 0 0 0 8px rgba(34, 197, 94, 0); }
+}
+
+/* Banner de dictado activo */
+.dictation-live-banner {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(22, 163, 74, 0.1));
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    border-radius: 10px;
+    margin-bottom: 1rem;
+}
+
+.dictation-live-banner.ai-target {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(139, 92, 246, 0.1));
+    border-color: rgba(99, 102, 241, 0.3);
+}
+
+.dictation-live-icon {
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    animation: voicePulse 1.5s ease-in-out infinite;
+}
+
+.dictation-live-banner.ai-target .dictation-live-icon {
+    background: linear-gradient(135deg, var(--primary-color), #8b5cf6);
+}
+
+.dictation-live-text {
+    flex: 1;
+    min-width: 0;
+}
+
+.dictation-live-label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #22c55e;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.dictation-live-banner.ai-target .dictation-live-label {
+    color: var(--primary-color);
+}
+
+.dictation-live-content {
+    display: block;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dictation-stop-btn {
+    padding: 0.5rem 1rem;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #ef4444;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s;
+}
+
+.dictation-stop-btn:hover {
+    background: #ef4444;
+    color: white;
+}
+
+/* =====================================================
+   IMPORTAR VIDEO PARA ANÁLISIS
+   ===================================================== */
+
+.video-import-section {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.video-import-btn {
+    width: 100%;
+    padding: 1rem;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(99, 102, 241, 0.1));
+    border: 2px dashed rgba(139, 92, 246, 0.3);
+    border-radius: 12px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.video-import-btn:hover {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(99, 102, 241, 0.15));
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.video-import-btn i {
+    font-size: 1.5rem;
+}
+
+.video-import-btn span {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.video-import-btn small {
+    font-size: 0.75rem;
+    opacity: 0.7;
+}
+
+/* Modal de análisis de video */
+.video-analysis-progress {
+    text-align: center;
+    padding: 2rem;
+}
+
+.video-analysis-progress .progress-circle {
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 1.5rem;
+    position: relative;
+}
+
+.video-analysis-progress .progress-value {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.video-analysis-progress h4 {
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+}
+
+.video-analysis-progress p {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.video-analysis-steps {
+    margin-top: 1.5rem;
+    text-align: left;
+}
+
+.analysis-step {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0;
+    color: var(--text-secondary);
+}
+
+.analysis-step.active {
+    color: var(--primary-color);
+}
+
+.analysis-step.completed {
+    color: #22c55e;
+}
+
+.analysis-step i {
+    width: 20px;
+    text-align: center;
+}
+
+.save-location-selector {
+    margin-top: 1.5rem;
+}
+
+.save-location-selector label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.location-input-group {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.location-input-group input {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-primary);
+}
+
+.location-input-group button {
+    padding: 0.75rem 1rem;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.location-input-group button:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+/* ==========================================
+   GENERADOR DE DIAGRAMAS MERMAID
+   ========================================== */
+
+/* Botón de diagrama en toolbar */
+.btn-diagram {
+    background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+    border: none !important;
+    color: white !important;
+    padding: 0.5rem 1rem !important;
+    border-radius: 8px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    font-weight: 600 !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3) !important;
+}
+
+.btn-diagram:hover {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4) !important;
+}
+
+.btn-diagram i {
+    font-size: 1rem;
+}
+
+/* Modal extra grande para diagramas */
+.modal-xl {
+    max-width: 95vw !important;
+    width: 1400px !important;
+}
+
+.modal-xl .modal-content {
+    height: 90vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Contenedor del modal de diagrama */
+.diagram-modal {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+}
+
+.diagram-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(37, 99, 235, 0.05));
+}
+
+.diagram-header h4 {
+    margin: 0 0 1rem 0;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 1.25rem;
+}
+
+.diagram-header h4 i {
+    color: #3b82f6;
+}
+
+/* Selector de tipo de diagrama */
+.diagram-type-selector {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.diagram-type-btn {
+    padding: 0.6rem 1rem;
+    background: var(--bg-secondary);
+    border: 2px solid var(--border-color);
+    border-radius: 10px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.diagram-type-btn:hover {
+    border-color: #3b82f6;
+    color: #3b82f6;
+    background: rgba(59, 130, 246, 0.1);
+}
+
+.diagram-type-btn.active {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    border-color: #3b82f6;
+    color: white;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.diagram-type-btn .emoji {
+    font-size: 1.1rem;
+}
+
+/* Selector de dirección */
+.direction-selector {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.direction-selector label {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.direction-buttons {
+    display: flex;
+    gap: 0.25rem;
+    background: var(--bg-tertiary);
+    padding: 0.25rem;
+    border-radius: 8px;
+}
+
+.direction-btn {
+    padding: 0.4rem 0.75rem;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.direction-btn:hover {
+    color: #3b82f6;
+}
+
+.direction-btn.active {
+    background: #3b82f6;
+    color: white;
+}
+
+/* Controles de diagrama */
+.diagram-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.btn-diagram-generate {
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, #10b981, #059669);
+    border: none;
+    border-radius: 10px;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.btn-diagram-generate:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);
+}
+
+.btn-diagram-generate:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-diagram-generate i.fa-spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Sección de IA para diagramas */
+.ai-diagram-section {
+    width: 100%;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.ai-diagram-section label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.75rem;
+}
+
+.ai-diagram-section label i {
+    color: #8b5cf6;
+}
+
+.ai-prompt-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.ai-prompt-input-wrapper {
+    display: flex;
+    gap: 0.5rem;
+    align-items: flex-start;
+}
+
+.ai-prompt-textarea {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: 10px;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    resize: none;
+    transition: all 0.2s ease;
+    font-family: inherit;
+}
+
+.ai-prompt-textarea:focus {
+    outline: none;
+    border-color: #8b5cf6;
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+}
+
+.ai-prompt-textarea::placeholder {
+    color: var(--text-tertiary);
+}
+
+.btn-voice-diagram {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    padding: 0;
+    border: 2px solid var(--border-color);
+    border-radius: 50%;
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    font-size: 1.1rem;
+}
+
+.btn-voice-diagram:hover {
+    border-color: #ef4444;
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.btn-voice-diagram.dictating {
+    background: #ef4444;
+    border-color: #ef4444;
+    color: white;
+    animation: pulse-voice 1.5s infinite;
+}
+
+@keyframes pulse-voice {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); }
+    50% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+}
+
+.ai-prompt-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-ai-generate {
+    flex: 1;
+    padding: 0.75rem 1.25rem;
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    border: none;
+    border-radius: 10px;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+}
+
+.btn-ai-generate:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(139, 92, 246, 0.4);
+}
+
+.btn-ai-generate:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-clear-prompt {
+    width: 42px;
+    height: 42px;
+    padding: 0;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.btn-clear-prompt:hover:not(:disabled) {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: #ef4444;
+    color: #ef4444;
+}
+
+.btn-clear-prompt:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.ai-hint {
+    font-size: 0.8rem;
+    color: var(--text-tertiary);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.ai-hint i {
+    color: #f59e0b;
+}
+
+/* Fila de botones de diagrama */
+.diagram-buttons-row {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.btn-workflow-generate {
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    border: none;
+    border-radius: 10px;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.btn-workflow-generate:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4);
+}
+
+.btn-workflow-generate:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Ajuste del layout del modal para acomodar controles */
+.diagram-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+}
+
+/* Cuerpo del modal de diagrama */
+.diagram-body {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    padding: 1.5rem;
+    overflow: hidden;
+    min-height: 0;
+}
+
+/* Área de previsualización */
+.diagram-preview-area {
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+}
+
+.diagram-preview-area h5 {
+    padding: 1rem 1.25rem;
+    margin: 0;
+    background: var(--bg-tertiary);
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.diagram-preview-area h5 i {
+    color: #3b82f6;
+}
+
+.diagram-preview-container {
+    flex: 1;
+    padding: 1.5rem;
+    overflow: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #ffffff;
+    min-height: 300px;
+}
+
+/* Tema oscuro para el preview */
+.dark .diagram-preview-container,
+[data-theme="dark"] .diagram-preview-container {
+    background: #1e293b;
+}
+
+.diagram-preview-container svg {
+    max-width: 100%;
+    height: auto;
+}
+
+.diagram-placeholder {
+    text-align: center;
+    color: var(--text-tertiary);
+    padding: 3rem;
+}
+
+.diagram-placeholder i {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.3;
+    color: #3b82f6;
+}
+
+.diagram-placeholder p {
+    font-size: 1rem;
+    margin: 0;
+}
+
+/* Área de código */
+.diagram-code-editor {
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+}
+
+.diagram-code-editor h5 {
+    padding: 1rem 1.25rem;
+    margin: 0;
+    background: var(--bg-tertiary);
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.diagram-code-editor h5 i {
+    color: #f59e0b;
+}
+
+.mermaid-code-input {
+    flex: 1;
+    width: 100%;
+    padding: 1rem;
+    background: #1e1e2e;
+    border: none;
+    color: #a6e3a1;
+    font-family: 'Fira Code', 'Monaco', 'Consolas', monospace;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    resize: none;
+    min-height: 300px;
+}
+
+.mermaid-code-input:focus {
+    outline: none;
+}
+
+.mermaid-code-input::placeholder {
+    color: #6c7086;
+}
+
+/* Botones de acción del código */
+.code-actions {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: var(--bg-tertiary);
+    border-top: 1px solid var(--border-color);
+}
+
+.btn-code-action {
+    padding: 0.5rem 1rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: all 0.2s ease;
+}
+
+.btn-code-action:hover {
+    background: #3b82f6;
+    border-color: #3b82f6;
+    color: white;
+}
+
+.btn-code-action.btn-export {
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    border-color: transparent;
+    color: white;
+}
+
+.btn-code-action.btn-export:hover {
+    background: linear-gradient(135deg, #7c3aed, #6d28d9);
+    transform: translateY(-1px);
+}
+
+.btn-code-action.btn-copy {
+    margin-left: auto;
+}
+
+/* Footer del modal de diagrama */
+.diagram-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    background: var(--bg-primary);
+}
+
+/* Animación de carga para diagrama */
+.diagram-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+    color: var(--text-secondary);
+}
+
+.diagram-loading .spinner {
+    width: 48px;
+    height: 48px;
+    border: 3px solid var(--border-color);
+    border-top-color: #3b82f6;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1rem;
+}
+
+/* Estilos para mermaid renderizado */
+.mermaid {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.mermaid .node rect,
+.mermaid .node circle,
+.mermaid .node ellipse,
+.mermaid .node polygon,
+.mermaid .node path {
+    stroke-width: 2px;
+}
+
+.mermaid .edgePath path {
+    stroke-width: 2px;
+}
+
+/* Responsive para diagramas */
+@media (max-width: 1200px) {
+    .modal-xl {
+        max-width: 98vw !important;
+        width: 98vw !important;
+    }
+
+    .diagram-body {
+        grid-template-columns: 1fr;
+        grid-template-rows: 1fr 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .diagram-type-selector {
+        justify-content: center;
+    }
+
+    .diagram-type-btn {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.8rem;
+    }
+
+    .diagram-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
+
+/* ==========================================
+   MODERN MESSAGEBOX (Windows 11 Style)
+   ========================================== */
+
+.win-messagebox-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.win-messagebox {
+    background: var(--card-bg, #1e293b);
+    border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    min-width: 380px;
+    max-width: 480px;
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 14px;
+    overflow: hidden;
+    animation: slideIn 0.25s ease;
+}
+
+/* Barra de título */
+.win-titlebar {
+    background: transparent;
+    padding: 16px 20px 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.win-titlebar-icon {
+    display: none;
+}
+
+.win-title-text {
+    flex: 1;
+    color: var(--text-primary, #fff);
+    font-weight: 600;
+    font-size: 16px;
+}
+
+.win-titlebar-buttons {
+    display: flex;
+}
+
+.win-btn-close {
+    width: 32px;
+    height: 32px;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    color: var(--text-secondary, #94a3b8);
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+}
+
+.win-btn-close:hover {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+}
+
+/* Contenido */
+.win-content {
+    background: transparent;
+    padding: 0 20px 20px;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+}
+
+.win-icon {
+    flex-shrink: 0;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.win-icon.info { background: rgba(59, 130, 246, 0.15); }
+.win-icon.success { background: rgba(16, 185, 129, 0.15); }
+.win-icon.warning { background: rgba(245, 158, 11, 0.15); }
+.win-icon.error { background: rgba(239, 68, 68, 0.15); }
+.win-icon.question { background: rgba(139, 92, 246, 0.15); }
+
+.win-message-icon {
+    width: 32px;
+    height: 32px;
+}
+
+.win-message {
+    flex: 1;
+    color: var(--text-primary, #fff);
+    padding-top: 4px;
+}
+
+.win-message p {
+    margin: 0 0 16px 0;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-secondary, #94a3b8);
+    word-wrap: break-word;
+}
+
+.win-timer {
+    background: var(--dark-bg, rgba(0, 0, 0, 0.2));
+    border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+    border-radius: 8px;
+    padding: 8px 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.win-timer-label {
+    color: var(--text-secondary, #94a3b8);
+    font-size: 13px;
+}
+
+.win-timer-value {
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+    font-weight: 600;
+    color: var(--primary-color, #3b82f6);
+    font-size: 16px;
+    letter-spacing: 1px;
+}
+
+/* Botones */
+.win-buttons {
+    background: var(--dark-bg, rgba(0, 0, 0, 0.2));
+    padding: 16px 20px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    border-top: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+}
+
+.win-btn {
+    min-width: 100px;
+    height: 38px;
+    padding: 0 20px;
+    background: var(--primary-color, #3b82f6);
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.win-btn:hover {
+    background: var(--primary-hover, #2563eb);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.win-btn:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+.win-btn.secondary {
+    background: transparent;
+    border: 1px solid var(--border-color, rgba(255, 255, 255, 0.2));
+    color: var(--text-primary, #fff);
+}
+
+.win-btn.secondary:hover {
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: none;
 }

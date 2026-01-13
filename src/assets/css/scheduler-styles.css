@@ -1,0 +1,755 @@
+/* ========================================
+   SCHEDULER VIEW - PROGRAMADOR
+   ======================================== */
+
+#scheduler-view .view-header {
+  margin-bottom: 1.5rem;
+}
+
+/* Toolbar */
+.scheduler-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  flex-wrap: wrap;
+}
+
+.scheduler-toolbar .toolbar-stats {
+  margin-left: auto;
+  display: flex;
+  gap: 1.5rem;
+}
+
+.scheduler-toolbar .stat {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.scheduler-toolbar .stat i {
+  color: var(--primary-color);
+}
+
+/* Empty State */
+.schedules-list .empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  border: 2px dashed var(--border-color);
+}
+
+.schedules-list .empty-state i {
+  font-size: 4rem;
+  color: var(--border-color);
+  margin-bottom: 1.5rem;
+}
+
+.schedules-list .empty-state h3 {
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.schedules-list .empty-state p {
+  color: var(--text-muted);
+  margin-bottom: 1.5rem;
+}
+
+/* Schedules Grid */
+.schedules-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 1rem;
+}
+
+/* Schedule Card */
+.schedule-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.2s;
+}
+
+.schedule-card:hover {
+  border-color: var(--primary-color);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.schedule-card.disabled {
+  opacity: 0.6;
+}
+
+.schedule-card.disabled .schedule-header {
+  background: var(--bg-tertiary);
+}
+
+/* Schedule Header */
+.schedule-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
+}
+
+.schedule-status {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  font-size: 1.1rem;
+}
+
+.schedule-status .text-success { color: #22c55e; }
+.schedule-status .text-warning { color: #f59e0b; }
+.schedule-status .text-danger { color: #ef4444; }
+.schedule-status .text-primary { color: white; }
+
+.schedule-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.schedule-info h4 {
+  margin: 0;
+  color: white;
+  font-size: 1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.schedule-info .workflow-name {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+}
+
+.schedule-actions {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.schedule-actions .btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+}
+
+.schedule-actions .btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.schedule-actions .btn.text-danger:hover {
+  background: rgba(239, 68, 68, 0.5);
+}
+
+/* Schedule Trigger */
+.schedule-trigger {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.trigger-type {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-primary);
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.trigger-type i {
+  color: var(--primary-color);
+}
+
+.trigger-details {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.trigger-details span {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.trigger-details i {
+  color: var(--text-muted);
+}
+
+/* Schedule Footer */
+.schedule-footer {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: var(--bg-tertiary);
+}
+
+.schedule-stat {
+  text-align: center;
+}
+
+.schedule-stat .label {
+  display: block;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  margin-bottom: 0.25rem;
+}
+
+.schedule-stat .value {
+  color: var(--text-primary);
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+/* ========================================
+   CREATE SCHEDULE MODAL
+   ======================================== */
+
+.modal-lg {
+  max-width: 700px;
+  max-height: 90vh;
+}
+
+.modal-body {
+  max-height: calc(90vh - 140px);
+  overflow-y: auto;
+  padding: 1.5rem;
+}
+
+/* Trigger Type Selector */
+.trigger-type-selector {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.75rem;
+}
+
+.trigger-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem 0.75rem;
+  background: var(--bg-primary);
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.trigger-option:hover {
+  border-color: var(--primary-color);
+  background: var(--primary-light);
+}
+
+.trigger-option.active {
+  border-color: var(--primary-color);
+  background: var(--primary-color);
+}
+
+.trigger-option.active i,
+.trigger-option.active .trigger-name,
+.trigger-option.active .trigger-desc {
+  color: white;
+}
+
+.trigger-option i {
+  font-size: 1.5rem;
+  color: var(--primary-color);
+  margin-bottom: 0.5rem;
+}
+
+.trigger-option .trigger-name {
+  color: var(--text-primary);
+  font-weight: 500;
+  font-size: 0.85rem;
+  margin-bottom: 0.25rem;
+}
+
+.trigger-option .trigger-desc {
+  color: var(--text-muted);
+  font-size: 0.7rem;
+}
+
+/* Trigger Config Section */
+.trigger-config {
+  margin-top: 1.5rem;
+  padding: 1.25rem;
+  background: var(--bg-tertiary);
+  border-radius: 8px;
+}
+
+.trigger-config h4 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 1rem;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+}
+
+.trigger-config h4 i {
+  color: var(--primary-color);
+}
+
+/* Form Row */
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+}
+
+/* Days Selector */
+.days-selector {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.day-btn {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-primary);
+  border: 2px solid var(--border-color);
+  border-radius: 50%;
+  color: var(--text-secondary);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.day-btn:hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.day-btn.active {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  color: white;
+}
+
+/* Input with Copy */
+.input-with-copy {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.input-with-copy input {
+  flex: 1;
+}
+
+/* Advanced Options */
+.advanced-options {
+  margin-top: 1.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.advanced-options summary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  user-select: none;
+}
+
+.advanced-options summary:hover {
+  color: var(--text-primary);
+}
+
+.advanced-options summary i {
+  color: var(--primary-color);
+}
+
+.advanced-options-content {
+  padding: 1rem;
+}
+
+/* Checkbox Group */
+.checkbox-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  color: var(--text-secondary);
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary-color);
+}
+
+/* ========================================
+   FILTER BAR
+   ======================================== */
+
+.scheduler-filter-bar {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.filter-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.filter-search {
+  position: relative;
+  flex: 1;
+  min-width: 200px;
+  max-width: 300px;
+}
+
+.filter-search i {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+}
+
+.filter-search input {
+  width: 100%;
+  padding: 0.5rem 2rem 0.5rem 2.5rem;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+.filter-search input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+
+.filter-search .clear-search {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.25rem;
+}
+
+.filter-search .clear-search:hover {
+  color: var(--text-primary);
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.filter-group label {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.filter-group select {
+  padding: 0.5rem 0.75rem;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  min-width: 120px;
+  cursor: pointer;
+}
+
+.filter-group select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+
+.view-toggle {
+  display: flex;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.view-toggle .toggle-btn {
+  padding: 0.5rem 0.75rem;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.view-toggle .toggle-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-tertiary);
+}
+
+.view-toggle .toggle-btn.active {
+  color: var(--primary-color);
+  background: var(--primary-light);
+}
+
+/* Quick Actions */
+.quick-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border-color);
+  flex-wrap: wrap;
+}
+
+.quick-actions .btn-outline {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+}
+
+.quick-actions .btn-outline:hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+  background: var(--primary-light);
+}
+
+.quick-actions .btn-ghost {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+}
+
+.quick-actions .btn-ghost:hover {
+  color: var(--text-primary);
+}
+
+/* ========================================
+   SCHEDULES TABLE (List View)
+   ======================================== */
+
+.schedules-table-container {
+  overflow-x: auto;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.schedules-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.schedules-table thead {
+  background: var(--bg-tertiary);
+}
+
+.schedules-table th {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border-color);
+  white-space: nowrap;
+}
+
+.schedules-table td {
+  padding: 0.75rem 1rem;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.schedules-table tbody tr:hover {
+  background: var(--bg-tertiary);
+}
+
+.schedules-table tbody tr.disabled {
+  opacity: 0.6;
+}
+
+.schedules-table .status-cell {
+  text-align: center;
+  width: 50px;
+}
+
+.schedules-table .status-cell .text-success { color: #22c55e; }
+.schedules-table .status-cell .text-warning { color: #f59e0b; }
+.schedules-table .status-cell .text-danger { color: #ef4444; }
+.schedules-table .status-cell .text-primary { color: var(--primary-color); }
+
+.schedules-table .name-cell {
+  font-weight: 500;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.schedules-table .workflow-cell {
+  color: var(--text-secondary);
+}
+
+.schedules-table .workflow-cell i {
+  color: var(--primary-color);
+  margin-right: 0.4rem;
+}
+
+.schedules-table .trigger-cell {
+  color: var(--text-secondary);
+}
+
+.schedules-table .trigger-cell i {
+  color: var(--primary-color);
+  margin-right: 0.4rem;
+}
+
+.schedules-table .time-cell {
+  white-space: nowrap;
+}
+
+.schedules-table .time-cell .frequency-badge {
+  display: inline-block;
+  margin-left: 0.5rem;
+  padding: 0.15rem 0.5rem;
+  background: var(--primary-light);
+  color: var(--primary-color);
+  border-radius: 4px;
+  font-size: 0.75rem;
+}
+
+.schedules-table .date-cell {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.schedules-table .count-cell {
+  text-align: center;
+  font-weight: 500;
+}
+
+.schedules-table .actions-cell {
+  white-space: nowrap;
+}
+
+.schedules-table .actions-cell .btn {
+  margin-right: 0.25rem;
+}
+
+/* Results Count */
+.results-count {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  background: var(--bg-secondary);
+  border-radius: 6px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .schedules-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .trigger-type-selector {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .schedule-footer {
+    grid-template-columns: 1fr;
+  }
+
+  .scheduler-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .scheduler-toolbar .toolbar-stats {
+    margin-left: 0;
+    justify-content: center;
+  }
+
+  .filter-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-search {
+    max-width: none;
+  }
+
+  .filter-group {
+    width: 100%;
+  }
+
+  .filter-group select {
+    flex: 1;
+  }
+
+  .view-toggle {
+    align-self: flex-end;
+  }
+
+  .quick-actions {
+    justify-content: center;
+  }
+
+  .schedules-table {
+    font-size: 0.8rem;
+  }
+
+  .schedules-table th,
+  .schedules-table td {
+    padding: 0.5rem;
+  }
+}

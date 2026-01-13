@@ -242,3 +242,184 @@ img[data-rpa-detected="true"] {
 .action-item:hover .action-tooltip {
     opacity: 1;
 }
+
+/* ========================================
+   RECORDER WINDOW SELECTOR
+   ======================================== */
+
+.recorder-window-selector {
+    background: var(--bg-secondary, #1e293b);
+    border: 1px solid var(--border-color, #475569);
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+}
+
+.window-selector-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.5rem;
+    background: var(--bg-tertiary, #334155);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.window-selector-header h3 {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-primary);
+    font-size: 1rem;
+}
+
+.window-selector-header h3 i {
+    color: var(--primary-color);
+}
+
+.selected-window-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1.5rem;
+    background: rgba(34, 197, 94, 0.1);
+    border-bottom: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.selected-window-badge i {
+    font-size: 1.25rem;
+    color: var(--success-color, #22c55e);
+}
+
+.selected-window-badge .window-name {
+    flex: 1;
+    color: var(--text-primary);
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.selected-window-badge .window-process {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    font-family: 'Fira Code', monospace;
+}
+
+.no-window-selected {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1.5rem;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+.no-window-selected i {
+    color: var(--info-color, #3b82f6);
+}
+
+.window-selector-grid {
+    padding: 0;
+}
+
+.window-selector-toolbar {
+    display: flex;
+    justify-content: flex-end;
+    padding: 0.75rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.windows-list {
+    max-height: 300px;
+    overflow-y: auto;
+    padding: 0.5rem;
+}
+
+.window-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 0.25rem;
+}
+
+.window-item:hover {
+    background: var(--primary-light, rgba(99, 102, 241, 0.1));
+}
+
+.window-item.selected {
+    background: rgba(34, 197, 94, 0.15);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.window-item i:first-child {
+    font-size: 1.25rem;
+    color: var(--primary-color);
+    width: 30px;
+    text-align: center;
+}
+
+.window-item .window-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.window-item .window-title {
+    display: block;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.window-item .window-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 0.25rem;
+}
+
+.window-item .selected-icon {
+    color: var(--success-color, #22c55e);
+}
+
+/* Reutilizar estilos de tipo de ventana del Spy */
+.window-item .window-type {
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.65rem;
+}
+
+.window-item .window-type.type-browser { background: #3b82f620; color: #3b82f6; }
+.window-item .window-type.type-editor { background: #8b5cf620; color: #8b5cf6; }
+.window-item .window-type.type-explorer { background: #f59e0b20; color: #f59e0b; }
+.window-item .window-type.type-terminal { background: #22c55e20; color: #22c55e; }
+.window-item .window-type.type-office { background: #ef444420; color: #ef4444; }
+.window-item .window-type.type-application { background: #64748b20; color: #64748b; }
+
+/* Scrollbar */
+.windows-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.windows-list::-webkit-scrollbar-track {
+    background: var(--bg-primary);
+}
+
+.windows-list::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 3px;
+}
+
+.windows-list::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-color);
+}

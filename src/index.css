@@ -1,5 +1,8 @@
 /* Alqvimia RPA 2.0 - Importación de estilos */
 
+/* Sistema de temas */
+@import './assets/css/themes.css';
+
 /* Estilos base y variables */
 @import './assets/css/styles.css';
 
@@ -15,6 +18,11 @@
 @import './assets/css/omnichannel-styles.css';
 @import './assets/css/video-conference.css';
 @import './assets/css/video-conference-save-config.css';
+@import './assets/css/code-editor.css';
+@import './assets/css/spy-styles.css';
+@import './assets/css/scheduler-styles.css';
+@import './assets/css/recorder-styles.css';
+@import './assets/css/login-styles.css';
 
 /* Reset adicional para React */
 #root {
@@ -1025,4 +1033,241 @@
   .control-panel {
     flex-wrap: wrap;
   }
+}
+
+/* ==========================================
+   LANGUAGE SELECTOR
+   ========================================== */
+.language-selector {
+  position: relative;
+}
+
+.language-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.6rem;
+  background: var(--dark-bg, rgba(255, 255, 255, 0.05));
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.15));
+  border-radius: 16px;
+  color: var(--text-primary, white);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.75rem;
+}
+
+.language-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--primary-color, rgba(255, 255, 255, 0.3));
+}
+
+.language-btn .lang-flag {
+  font-size: 0.95rem;
+}
+
+.language-btn .lang-code {
+  font-weight: 600;
+  font-size: 0.7rem;
+}
+
+.language-btn i {
+  font-size: 0.6rem;
+  opacity: 0.6;
+  transition: transform 0.2s ease;
+}
+
+.language-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 160px;
+  background: var(--card-bg, #1e293b);
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  z-index: 1000;
+  animation: dropdownSlide 0.15s ease;
+}
+
+@keyframes dropdownSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.language-dropdown-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: rgba(0, 0, 0, 0.3);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.language-dropdown-header i {
+  color: var(--primary);
+}
+
+.language-option {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: transparent;
+  border: none;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.language-option:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.language-option.active {
+  background: rgba(var(--primary-rgb), 0.2);
+}
+
+.language-option .lang-flag {
+  font-size: 1.2rem;
+}
+
+.language-option .lang-name {
+  flex: 1;
+  font-size: 0.9rem;
+}
+
+.language-option i.fa-check {
+  color: var(--success);
+  font-size: 0.8rem;
+}
+
+/* ==========================================
+   HELP PANEL - "¿Cómo funciona?"
+   ========================================== */
+.help-panel {
+  background: linear-gradient(145deg, rgba(var(--primary-rgb), 0.1), rgba(var(--primary-rgb), 0.05));
+  border: 1px solid rgba(var(--primary-rgb), 0.2);
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.help-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.help-panel-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--primary);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.help-panel-title i {
+  font-size: 1.1rem;
+}
+
+.help-panel-toggle {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  padding: 0.4rem 0.6rem;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.help-panel-toggle:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.help-panel-content {
+  display: grid;
+  gap: 1rem;
+}
+
+.help-panel-content.collapsed {
+  display: none;
+}
+
+.help-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  transition: transform 0.2s ease;
+}
+
+.help-step:hover {
+  transform: translateX(5px);
+}
+
+.help-step-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  background: var(--primary);
+  border-radius: 50%;
+  color: white;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.help-step-content h4 {
+  color: white;
+  font-size: 0.95rem;
+  margin-bottom: 0.25rem;
+}
+
+.help-step-content p {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.help-tips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.help-tip {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(var(--info-rgb), 0.15);
+  border-radius: 20px;
+  color: var(--info);
+  font-size: 0.8rem;
+}
+
+.help-tip i {
+  font-size: 0.7rem;
 }

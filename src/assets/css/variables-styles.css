@@ -1,10 +1,10 @@
 /* ========================================
-   VARIABLES MANAGER - STYLES
+   VARIABLES MANAGER - STYLES (THEMED)
    ======================================== */
 
 /* Panel de Variables */
 #workflowVariablesPanel {
-    background: rgba(15, 23, 42, 0.4);
+    background: var(--bg-secondary, rgba(15, 23, 42, 0.4));
     border-radius: 8px;
     padding: 0;
 }
@@ -17,15 +17,15 @@
 
 /* Item de Variable */
 .variable-item {
-    background: linear-gradient(135deg, #1e293b, #334155);
-    border: 1px solid #475569;
+    background: var(--bg-tertiary, linear-gradient(135deg, #1e293b, #334155));
+    border: 1px solid var(--border-color, #475569);
     border-radius: 8px;
     padding: 0.75rem;
     transition: all 0.3s;
 }
 
 .variable-item:hover {
-    border-color: #2563eb;
+    border-color: var(--primary-color, #2563eb);
     transform: translateX(2px);
     box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
 }
@@ -54,7 +54,7 @@
     letter-spacing: 0.5px;
 }
 
-/* Modal de Variable */
+/* Modal de Variable - THEMED */
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -71,8 +71,8 @@
 }
 
 .modal-content {
-    background: linear-gradient(135deg, #1e293b, #334155);
-    border: 1px solid #475569;
+    background: var(--bg-secondary, #1e1e1e);
+    border: 1px solid var(--border-color, #3a3a3a);
     border-radius: 12px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
     max-width: 90vw;
@@ -81,31 +81,38 @@
     display: flex;
     flex-direction: column;
     animation: slideUp 0.3s;
+    color: var(--text-primary, white);
 }
 
 .modal-header {
-    background: linear-gradient(135deg, #1e40af, #2563eb);
-    color: white;
-    padding: 1.5rem;
+    background: var(--bg-tertiary, #2c2c2c);
+    color: var(--text-primary, white);
+    padding: 1.25rem 1.5rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid var(--border-color, #3a3a3a);
 }
 
 .modal-header h3 {
     margin: 0;
-    font-size: 1.3rem;
+    font-size: 1.2rem;
     display: flex;
     align-items: center;
     gap: 0.75rem;
+    color: var(--text-primary, white);
 }
 
-.close-modal {
-    background: transparent;
-    border: none;
-    color: white;
-    font-size: 2rem;
+.modal-header h3 i {
+    color: var(--primary-color, #2563eb);
+}
+
+.close-modal,
+.modal-close {
+    background: var(--bg-primary, #1a1a1a);
+    border: 1px solid var(--border-color, #3a3a3a);
+    color: var(--text-secondary, #888);
+    font-size: 1.25rem;
     cursor: pointer;
     padding: 0;
     width: 32px;
@@ -113,38 +120,43 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 4px;
-    transition: all 0.3s;
+    border-radius: 8px;
+    transition: all 0.2s;
 }
 
-.close-modal:hover {
-    background: rgba(255, 255, 255, 0.1);
-    transform: rotate(90deg);
+.close-modal:hover,
+.modal-close:hover {
+    background: var(--danger-color, #ef4444);
+    border-color: var(--danger-color, #ef4444);
+    color: white;
+    transform: none;
 }
 
 .modal-body {
     padding: 1.5rem;
     overflow-y: auto;
     flex: 1;
+    background: var(--bg-secondary, #1e1e1e);
+    color: var(--text-primary, white);
 }
 
 .modal-footer {
     padding: 1rem 1.5rem;
-    border-top: 1px solid #475569;
+    border-top: 1px solid var(--border-color, #3a3a3a);
     display: flex;
     gap: 0.75rem;
     justify-content: flex-end;
-    background: rgba(15, 23, 42, 0.5);
+    background: var(--bg-tertiary, #2c2c2c);
 }
 
-/* Form Groups */
+/* Form Groups - THEMED */
 .form-group {
     margin-bottom: 1.25rem;
 }
 
 .form-group label {
     display: block;
-    color: #cbd5e1;
+    color: var(--text-primary, #e2e8f0);
     font-weight: 500;
     margin-bottom: 0.5rem;
     font-size: 0.95rem;
@@ -152,32 +164,32 @@
 
 .form-group label i {
     margin-right: 0.5rem;
-    color: #2563eb;
+    color: var(--primary-color, #2563eb);
 }
 
 .form-control {
     width: 100%;
     padding: 0.75rem;
-    background: #0f172a;
-    border: 1px solid #475569;
+    background: var(--bg-primary, #0f172a);
+    border: 1px solid var(--border-color, #475569);
     border-radius: 6px;
-    color: #e2e8f0;
+    color: var(--text-primary, #e2e8f0);
     font-size: 0.95rem;
     transition: all 0.3s;
 }
 
 .form-control:focus {
     outline: none;
-    border-color: #2563eb;
+    border-color: var(--primary-color, #2563eb);
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
 .form-control::placeholder {
-    color: #64748b;
+    color: var(--text-muted, #64748b);
 }
 
 .form-control[readonly] {
-    background: #1e293b;
+    background: var(--bg-tertiary, #1e293b);
     cursor: not-allowed;
     opacity: 0.7;
 }
@@ -193,7 +205,7 @@ select.form-control {
 
 /* Required Star */
 .required {
-    color: #ef4444;
+    color: var(--danger-color, #ef4444);
     margin-left: 0.25rem;
 }
 
@@ -218,7 +230,7 @@ select.form-control {
     }
 }
 
-/* Buttons */
+/* Buttons - THEMED */
 .btn {
     padding: 0.6rem 1.2rem;
     border: none;
@@ -238,39 +250,40 @@ select.form-control {
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, #1e40af, #2563eb);
+    background: var(--primary-color, linear-gradient(135deg, #1e40af, #2563eb));
     color: white;
 }
 
 .btn-primary:hover {
-    background: linear-gradient(135deg, #1e3a8a, #1d4ed8);
+    filter: brightness(1.1);
 }
 
 .btn-success {
-    background: linear-gradient(135deg, #15803d, #16a34a);
+    background: var(--success-color, linear-gradient(135deg, #15803d, #16a34a));
     color: white;
 }
 
 .btn-success:hover {
-    background: linear-gradient(135deg, #166534, #15803d);
+    filter: brightness(1.1);
 }
 
 .btn-secondary {
-    background: #475569;
-    color: white;
+    background: var(--bg-tertiary, #475569);
+    color: var(--text-primary, white);
+    border: 1px solid var(--border-color, #475569);
 }
 
 .btn-secondary:hover {
-    background: #334155;
+    background: var(--hover-bg, #334155);
 }
 
 .btn-danger {
-    background: linear-gradient(135deg, #b91c1c, #dc2626);
+    background: var(--danger-color, linear-gradient(135deg, #b91c1c, #dc2626));
     color: white;
 }
 
 .btn-danger:hover {
-    background: linear-gradient(135deg, #991b1b, #b91c1c);
+    filter: brightness(1.1);
 }
 
 .btn-sm {

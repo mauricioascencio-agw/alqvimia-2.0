@@ -8,11 +8,13 @@ export const SocketProvider = ({ children }) => {
   const [isConnected, setIsConnected] = useState(false)
 
   useEffect(() => {
-    const socketInstance = io('http://localhost:3000', {
+    // Usar el proxy de Vite (no especificar URL para usar el mismo origen)
+    const socketInstance = io({
       autoConnect: false,
       reconnection: true,
       reconnectionDelay: 1000,
-      reconnectionAttempts: 5
+      reconnectionAttempts: 5,
+      transports: ['websocket', 'polling']
     })
 
     socketInstance.on('connect', () => {

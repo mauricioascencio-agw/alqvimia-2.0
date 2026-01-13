@@ -1,0 +1,325 @@
+/**
+ * VariableInput - Estilos para el componente de input con variables
+ */
+
+.variable-input-container {
+  position: relative;
+  width: 100%;
+}
+
+.variable-input-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.variable-input {
+  width: 100%;
+  padding: 0.75rem 2.5rem 0.75rem 0.75rem;
+  background: var(--bg-tertiary, #1e293b);
+  border: 1px solid var(--border-color, #334155);
+  border-radius: 6px;
+  color: var(--text-primary, #f8fafc);
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.variable-input:focus {
+  outline: none;
+  border-color: var(--primary-color, #3b82f6);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.variable-input.invalid {
+  border-color: #ef4444;
+}
+
+.variable-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+textarea.variable-input {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* Botón de insertar variable */
+.variable-input-actions {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  display: flex;
+  align-items: flex-start;
+  padding: 0.5rem;
+}
+
+.var-btn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: var(--primary-color, #3b82f6);
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+}
+
+.var-btn:hover {
+  background: var(--primary-hover, #2563eb);
+  transform: scale(1.05);
+}
+
+.var-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Preview de variables detectadas */
+.variable-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.var-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.5rem;
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.var-tag i {
+  font-size: 0.65rem;
+}
+
+/* Selector popup */
+.variable-selector-popup {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 0.5rem;
+  background: var(--bg-secondary, #1e293b);
+  border: 1px solid var(--border-color, #334155);
+  border-radius: 8px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+  z-index: 1000;
+  max-height: 350px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.selector-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--border-color, #334155);
+  background: var(--bg-tertiary, #0f172a);
+}
+
+.selector-header input {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  background: var(--bg-secondary, #1e293b);
+  border: 1px solid var(--border-color, #334155);
+  border-radius: 4px;
+  color: var(--text-primary, #f8fafc);
+  font-size: 0.85rem;
+}
+
+.selector-header input:focus {
+  outline: none;
+  border-color: var(--primary-color, #3b82f6);
+}
+
+.selector-header button {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted, #94a3b8);
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.selector-header button:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+.selector-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.5rem;
+}
+
+.var-group {
+  margin-bottom: 1rem;
+}
+
+.var-group:last-child {
+  margin-bottom: 0;
+}
+
+.group-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted, #94a3b8);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.var-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.var-item:hover {
+  background: var(--primary-color, #3b82f6);
+}
+
+.var-item:hover * {
+  color: white !important;
+}
+
+.var-item i {
+  font-size: 0.85rem;
+  width: 20px;
+  text-align: center;
+}
+
+.var-item .var-name {
+  font-weight: 600;
+  color: var(--text-primary, #f8fafc);
+  flex-shrink: 0;
+}
+
+.var-item .var-type {
+  font-size: 0.75rem;
+  color: var(--text-muted, #64748b);
+  background: rgba(100, 116, 139, 0.2);
+  padding: 0.15rem 0.4rem;
+  border-radius: 3px;
+}
+
+.var-item .var-desc {
+  flex: 1;
+  font-size: 0.8rem;
+  color: var(--text-secondary, #94a3b8);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.var-item .var-value,
+.var-item .var-current {
+  font-size: 0.75rem;
+  color: var(--text-muted, #64748b);
+  font-family: 'Fira Code', 'Consolas', monospace;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.var-item.system {
+  background: rgba(34, 197, 94, 0.05);
+}
+
+.var-item.system:hover {
+  background: #22c55e;
+}
+
+.no-variables {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  color: var(--text-muted, #64748b);
+  text-align: center;
+}
+
+.no-variables i {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  opacity: 0.5;
+}
+
+.selector-footer {
+  padding: 0.5rem 0.75rem;
+  border-top: 1px solid var(--border-color, #334155);
+  background: var(--bg-tertiary, #0f172a);
+}
+
+.selector-footer .hint {
+  font-size: 0.75rem;
+  color: var(--text-muted, #64748b);
+}
+
+.selector-footer kbd {
+  display: inline-block;
+  padding: 0.1rem 0.4rem;
+  background: var(--bg-secondary, #1e293b);
+  border: 1px solid var(--border-color, #334155);
+  border-radius: 3px;
+  font-size: 0.7rem;
+  font-family: inherit;
+}
+
+/* Preview del valor resuelto */
+.variable-resolved-preview {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  border-radius: 4px;
+  font-size: 0.85rem;
+  color: #22c55e;
+  margin-top: 0.5rem;
+}
+
+.variable-resolved-preview i {
+  opacity: 0.7;
+}
+
+/* Highlight de variables en el texto */
+.variable-highlight {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.1rem 0.3rem;
+  background: rgba(59, 130, 246, 0.15);
+  border-radius: 3px;
+  font-weight: 500;
+}
+
+.variable-highlight i {
+  font-size: 0.7rem;
+}

@@ -1,0 +1,1378 @@
+/* ========================================
+   CODE EDITOR - STYLES (VS CODE STYLE)
+   ======================================== */
+
+/* Container Principal */
+.code-editor-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: var(--bg-primary, #0f172a);
+    color: var(--text-primary, #e2e8f0);
+    overflow: hidden;
+}
+
+/* ========================================
+   TOOLBAR
+   ======================================== */
+.editor-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 1rem;
+    background: var(--bg-secondary, #1e293b);
+    border-bottom: 1px solid var(--border-color, #334155);
+    gap: 1rem;
+    flex-shrink: 0;
+}
+
+.toolbar-left,
+.toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.toolbar-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem 0.75rem;
+    background: var(--bg-tertiary, #334155);
+    border: 1px solid var(--border-color, #475569);
+    border-radius: 6px;
+    color: var(--text-primary, #e2e8f0);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.toolbar-btn:hover:not(:disabled) {
+    background: var(--primary-color, #2563eb);
+    border-color: var(--primary-color, #2563eb);
+}
+
+.toolbar-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.toolbar-btn.active {
+    background: var(--primary-color, #2563eb);
+    border-color: var(--primary-color, #2563eb);
+}
+
+.toolbar-btn i {
+    font-size: 0.9rem;
+}
+
+.toolbar-divider {
+    width: 1px;
+    height: 24px;
+    background: var(--border-color, #475569);
+    margin: 0 0.25rem;
+}
+
+.font-size-control {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--bg-tertiary, #334155);
+    border: 1px solid var(--border-color, #475569);
+    border-radius: 6px;
+    padding: 0.25rem;
+}
+
+.font-size-control button {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    color: var(--text-primary, #e2e8f0);
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.font-size-control button:hover {
+    background: var(--primary-color, #2563eb);
+}
+
+.font-size-control span {
+    min-width: 40px;
+    text-align: center;
+    font-size: 0.8rem;
+    color: var(--text-secondary, #94a3b8);
+}
+
+/* ========================================
+   SEARCH BAR
+   ======================================== */
+.search-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 1rem;
+    background: var(--bg-tertiary, #334155);
+    border-bottom: 1px solid var(--border-color, #475569);
+}
+
+.search-bar i {
+    color: var(--text-muted, #64748b);
+}
+
+.search-bar input {
+    flex: 1;
+    background: var(--bg-primary, #0f172a);
+    border: 1px solid var(--border-color, #475569);
+    border-radius: 4px;
+    padding: 0.4rem 0.75rem;
+    color: var(--text-primary, #e2e8f0);
+    font-size: 0.9rem;
+}
+
+.search-bar input:focus {
+    outline: none;
+    border-color: var(--primary-color, #2563eb);
+}
+
+.search-count {
+    color: var(--text-muted, #64748b);
+    font-size: 0.8rem;
+}
+
+.search-bar button {
+    background: none;
+    border: none;
+    color: var(--text-muted, #64748b);
+    cursor: pointer;
+    padding: 0.25rem;
+}
+
+.search-bar button:hover {
+    color: var(--text-primary, #e2e8f0);
+}
+
+/* ========================================
+   MAIN EDITOR AREA
+   ======================================== */
+.editor-main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+/* ========================================
+   FILE EXPLORER
+   ======================================== */
+.file-explorer {
+    width: 220px;
+    background: var(--bg-secondary, #1e293b);
+    border-right: 1px solid var(--border-color, #334155);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+}
+
+.explorer-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted, #64748b);
+    border-bottom: 1px solid var(--border-color, #334155);
+}
+
+.file-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0.5rem 0;
+}
+
+.file-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 1rem;
+    cursor: pointer;
+    transition: background 0.2s;
+    position: relative;
+}
+
+.file-item:hover {
+    background: var(--hover-bg, rgba(37, 99, 235, 0.1));
+}
+
+.file-item.active {
+    background: var(--active-bg, rgba(37, 99, 235, 0.2));
+    border-left: 2px solid var(--primary-color, #2563eb);
+}
+
+.file-item i {
+    font-size: 1rem;
+}
+
+.file-name {
+    flex: 1;
+    font-size: 0.85rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.unsaved-dot {
+    color: var(--warning-color, #f59e0b);
+    font-size: 0.8rem;
+}
+
+.close-file-btn {
+    opacity: 0;
+    background: none;
+    border: none;
+    color: var(--text-muted, #64748b);
+    cursor: pointer;
+    padding: 0.1rem 0.25rem;
+    font-size: 0.7rem;
+}
+
+.file-item:hover .close-file-btn {
+    opacity: 1;
+}
+
+.close-file-btn:hover {
+    color: var(--danger-color, #ef4444);
+}
+
+.add-file-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin: 0.5rem;
+    padding: 0.5rem;
+    background: var(--bg-tertiary, #334155);
+    border: 1px dashed var(--border-color, #475569);
+    border-radius: 6px;
+    color: var(--text-muted, #64748b);
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.add-file-btn:hover {
+    background: var(--primary-color, #2563eb);
+    border-color: var(--primary-color, #2563eb);
+    color: white;
+}
+
+/* ========================================
+   EDITOR PANEL
+   ======================================== */
+.editor-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-width: 0;
+}
+
+/* Tabs */
+.editor-tabs {
+    display: flex;
+    background: var(--bg-secondary, #1e293b);
+    border-bottom: 1px solid var(--border-color, #334155);
+    overflow-x: auto;
+    flex-shrink: 0;
+}
+
+.editor-tabs::-webkit-scrollbar {
+    height: 3px;
+}
+
+.editor-tabs::-webkit-scrollbar-thumb {
+    background: var(--border-color, #475569);
+}
+
+.editor-tab {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1rem;
+    background: var(--bg-tertiary, #334155);
+    border-right: 1px solid var(--border-color, #475569);
+    cursor: pointer;
+    white-space: nowrap;
+    font-size: 0.85rem;
+    transition: background 0.2s;
+    position: relative;
+}
+
+.editor-tab:hover {
+    background: var(--hover-bg, rgba(37, 99, 235, 0.1));
+}
+
+.editor-tab.active {
+    background: var(--bg-primary, #0f172a);
+    border-bottom: 2px solid var(--primary-color, #2563eb);
+}
+
+.editor-tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--bg-primary, #0f172a);
+}
+
+.unsaved-indicator {
+    color: var(--warning-color, #f59e0b);
+    margin-left: 0.25rem;
+}
+
+.tab-close {
+    background: none;
+    border: none;
+    color: var(--text-muted, #64748b);
+    cursor: pointer;
+    padding: 0.1rem;
+    margin-left: 0.25rem;
+    border-radius: 4px;
+    opacity: 0;
+    transition: all 0.2s;
+}
+
+.editor-tab:hover .tab-close {
+    opacity: 1;
+}
+
+.tab-close:hover {
+    background: var(--danger-color, #ef4444);
+    color: white;
+}
+
+/* Code Area */
+.code-area {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+    position: relative;
+    background: var(--bg-primary, #0f172a);
+}
+
+.line-numbers {
+    padding: 1rem 0.5rem;
+    background: var(--bg-secondary, #1e293b);
+    color: var(--text-muted, #64748b);
+    font-family: 'Fira Code', 'Consolas', 'Monaco', monospace;
+    font-size: inherit;
+    line-height: 1.5;
+    text-align: right;
+    user-select: none;
+    border-right: 1px solid var(--border-color, #334155);
+    min-width: 50px;
+    overflow: hidden;
+}
+
+.line-number {
+    padding: 0 0.5rem;
+    font-size: 0.85em;
+}
+
+.code-input {
+    flex: 1;
+    padding: 1rem;
+    background: transparent;
+    color: var(--text-primary, #e2e8f0);
+    border: none;
+    outline: none;
+    font-family: 'Fira Code', 'Consolas', 'Monaco', monospace;
+    line-height: 1.5;
+    resize: none;
+    tab-size: 4;
+    overflow: auto;
+}
+
+.code-input::selection {
+    background: var(--primary-color, #2563eb);
+    color: white;
+}
+
+/* Minimap */
+.editor-minimap {
+    width: 100px;
+    background: var(--bg-secondary, #1e293b);
+    border-left: 1px solid var(--border-color, #334155);
+    overflow: hidden;
+    position: relative;
+}
+
+.minimap-content {
+    padding: 0.5rem;
+    color: var(--text-muted, #64748b);
+    overflow: hidden;
+    opacity: 0.5;
+}
+
+.minimap-line {
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.minimap-viewport {
+    position: absolute;
+    left: 0;
+    right: 0;
+    background: rgba(37, 99, 235, 0.2);
+    border: 1px solid var(--primary-color, #2563eb);
+    pointer-events: none;
+}
+
+/* No File Open */
+.no-file-open {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    color: var(--text-muted, #64748b);
+}
+
+.no-file-open i {
+    font-size: 4rem;
+    opacity: 0.3;
+}
+
+.no-file-open h3 {
+    font-size: 1.25rem;
+    font-weight: 500;
+    color: var(--text-primary, #e2e8f0);
+}
+
+.no-file-open p {
+    font-size: 0.9rem;
+}
+
+/* Status Bar */
+.editor-statusbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.25rem 1rem;
+    background: var(--primary-color, #2563eb);
+    color: white;
+    font-size: 0.75rem;
+    flex-shrink: 0;
+}
+
+.status-left,
+.status-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.status-item {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+/* ========================================
+   AI PANEL - Restructured Layout
+   ======================================== */
+.ai-panel {
+    width: 340px;
+    background: var(--bg-secondary, #1e293b);
+    border-left: 1px solid var(--border-color, #334155);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.ai-panel-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1rem;
+    background: var(--bg-tertiary, #334155);
+    border-bottom: 1px solid var(--border-color, #475569);
+    font-weight: 500;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+}
+
+.ai-panel-header i {
+    color: var(--primary-color, #2563eb);
+}
+
+.ai-panel-header button {
+    margin-left: auto;
+    background: none;
+    border: none;
+    color: var(--text-muted, #64748b);
+    cursor: pointer;
+}
+
+.ai-panel-header button:hover {
+    color: var(--text-primary, #e2e8f0);
+}
+
+/* AI Commands - Compact */
+.ai-commands {
+    padding: 0.75rem;
+    border-bottom: 1px solid var(--border-color, #475569);
+    flex-shrink: 0;
+}
+
+.ai-commands h4 {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted, #64748b);
+    margin-bottom: 0.5rem;
+}
+
+.command-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.4rem;
+}
+
+.ai-command-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.5rem 0.3rem;
+    background: var(--bg-primary, #0f172a);
+    border: 1px solid var(--border-color, #475569);
+    border-radius: 6px;
+    color: var(--text-primary, #e2e8f0);
+    font-size: 0.65rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.ai-command-btn:hover:not(:disabled) {
+    background: var(--primary-color, #2563eb);
+    border-color: var(--primary-color, #2563eb);
+    transform: translateY(-1px);
+}
+
+.ai-command-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.ai-command-btn i {
+    font-size: 0.9rem;
+}
+
+/* AI Response Area - Scrollable middle section */
+.ai-response-area {
+    flex: 1;
+    padding: 0.75rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.ai-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 2rem;
+    color: var(--primary-color, #2563eb);
+    flex: 1;
+}
+
+.ai-empty-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    color: var(--text-muted, #64748b);
+    text-align: center;
+    padding: 2rem;
+}
+
+.ai-empty-state i {
+    font-size: 2.5rem;
+    opacity: 0.3;
+}
+
+.ai-empty-state p {
+    font-size: 0.85rem;
+}
+
+.response-content {
+    background: var(--bg-primary, #0f172a);
+    border: 1px solid var(--border-color, #475569);
+    border-radius: 6px;
+    padding: 0.75rem;
+    flex: 1;
+    overflow-y: auto;
+    margin-bottom: 0.75rem;
+}
+
+.response-content pre {
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-size: 0.8rem;
+    color: var(--text-primary, #e2e8f0);
+    margin: 0;
+}
+
+.response-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+.response-actions .btn {
+    flex: 1;
+    justify-content: center;
+    font-size: 0.75rem;
+    padding: 0.4rem 0.5rem;
+}
+
+/* AI Prompt Bottom - Fixed at bottom */
+.ai-prompt-bottom {
+    padding: 0.75rem;
+    background: var(--bg-tertiary, #334155);
+    border-top: 1px solid var(--border-color, #475569);
+    flex-shrink: 0;
+}
+
+.ai-prompt-bottom .dictation-target-indicator {
+    margin-bottom: 0.5rem;
+    padding: 0.6rem 0.8rem;
+    font-size: 0.8rem;
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    border-radius: 8px;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    animation: dictationPulse 1.5s ease-in-out infinite;
+}
+
+.ai-prompt-bottom .dictation-target-indicator i {
+    animation: micBounce 0.5s ease-in-out infinite;
+}
+
+.ai-prompt-bottom .dictation-target-indicator span {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+@keyframes dictationPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
+    50% { box-shadow: 0 0 0 8px rgba(34, 197, 94, 0); }
+}
+
+.ai-prompt-input-wrapper {
+    display: flex;
+    gap: 0.5rem;
+    align-items: flex-end;
+}
+
+.ai-prompt-textarea {
+    flex: 1;
+    padding: 0.6rem 0.75rem;
+    background: var(--bg-primary, #0f172a);
+    border: 1px solid var(--border-color, #475569);
+    border-radius: 8px;
+    color: var(--text-primary, #e2e8f0);
+    font-size: 0.85rem;
+    resize: none;
+    min-height: 42px;
+    max-height: 120px;
+    overflow-y: auto;
+    line-height: 1.4;
+}
+
+.ai-prompt-textarea:focus {
+    outline: none;
+    border-color: var(--primary-color, #2563eb);
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+}
+
+.ai-prompt-textarea::placeholder {
+    color: var(--text-muted, #64748b);
+}
+
+.ai-send-btn {
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--primary-color, #2563eb);
+    border: none;
+    border-radius: 8px;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.ai-send-btn:hover:not(:disabled) {
+    background: #1d4ed8;
+    transform: scale(1.05);
+}
+
+.ai-send-btn:disabled {
+    background: var(--bg-tertiary, #334155);
+    color: var(--text-muted, #64748b);
+    cursor: not-allowed;
+}
+
+.ai-send-btn i {
+    font-size: 1rem;
+}
+
+.ai-prompt-hint {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 0.5rem;
+    font-size: 0.7rem;
+    color: var(--text-muted, #64748b);
+}
+
+.voice-prompt-btn {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-primary, #0f172a);
+    border: 1px solid var(--border-color, #475569);
+    border-radius: 50%;
+    color: var(--text-muted, #64748b);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.voice-prompt-btn:hover {
+    background: var(--primary-color, #2563eb);
+    border-color: var(--primary-color, #2563eb);
+    color: white;
+}
+
+.voice-prompt-btn.active {
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    border-color: #22c55e;
+    color: white;
+    animation: voicePulse 1.5s ease-in-out infinite;
+}
+
+.voice-prompt-btn.active i {
+    animation: micBounce 0.5s ease-in-out infinite;
+}
+
+/* Legacy ai-custom-prompt styles for modal compatibility */
+.ai-custom-prompt {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color, #475569);
+}
+
+.ai-custom-prompt h4 {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted, #64748b);
+    margin-bottom: 0.75rem;
+}
+
+.ai-custom-prompt textarea {
+    width: 100%;
+    padding: 0.6rem;
+    background: var(--bg-primary, #0f172a);
+    border: 1px solid var(--border-color, #475569);
+    border-radius: 6px;
+    color: var(--text-primary, #e2e8f0);
+    font-size: 0.85rem;
+    resize: vertical;
+    margin-bottom: 0.5rem;
+}
+
+.ai-custom-prompt textarea:focus {
+    outline: none;
+    border-color: var(--primary-color, #2563eb);
+}
+
+.ai-custom-prompt button {
+    width: 100%;
+}
+
+.ai-response {
+    flex: 1;
+    padding: 1rem;
+    overflow-y: auto;
+}
+
+.ai-response h4 {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted, #64748b);
+    margin-bottom: 0.75rem;
+}
+
+/* ========================================
+   CONSOLE
+   ======================================== */
+.editor-console {
+    height: 180px;
+    background: var(--bg-secondary, #1e293b);
+    border-top: 1px solid var(--border-color, #334155);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+}
+
+.console-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 1rem;
+    background: var(--bg-tertiary, #334155);
+    font-size: 0.85rem;
+    border-bottom: 1px solid var(--border-color, #475569);
+}
+
+.console-header span {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.console-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.console-actions button {
+    background: none;
+    border: none;
+    color: var(--text-muted, #64748b);
+    cursor: pointer;
+    padding: 0.25rem;
+}
+
+.console-actions button:hover {
+    color: var(--text-primary, #e2e8f0);
+}
+
+.console-output {
+    flex: 1;
+    padding: 0.5rem 1rem;
+    overflow-y: auto;
+    font-family: 'Fira Code', 'Consolas', monospace;
+    font-size: 0.8rem;
+}
+
+.console-line {
+    display: flex;
+    gap: 0.75rem;
+    padding: 0.2rem 0;
+}
+
+.console-time {
+    color: var(--text-muted, #64748b);
+    flex-shrink: 0;
+}
+
+.console-line.success .console-message {
+    color: var(--success-color, #22c55e);
+}
+
+.console-line.error .console-message {
+    color: var(--danger-color, #ef4444);
+}
+
+.console-line.info .console-message {
+    color: var(--info-color, #3b82f6);
+}
+
+.console-line.output .console-message {
+    color: var(--text-primary, #e2e8f0);
+}
+
+/* ========================================
+   MODALS
+   ======================================== */
+.ai-command-modal .modal-body {
+    max-width: 500px;
+}
+
+.ai-command-modal .hint {
+    color: var(--text-muted, #64748b);
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+.ai-commands-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.ai-command-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.75rem 0.5rem;
+    background: var(--bg-tertiary, #334155);
+    border: 1px solid var(--border-color, #475569);
+    border-radius: 8px;
+    color: var(--text-primary, #e2e8f0);
+    font-size: 0.7rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+}
+
+.ai-command-card:hover {
+    background: var(--primary-color, #2563eb);
+    border-color: var(--primary-color, #2563eb);
+    transform: translateY(-2px);
+}
+
+.ai-command-card i {
+    font-size: 1.25rem;
+}
+
+.custom-prompt-section {
+    margin-top: 1rem;
+}
+
+.custom-prompt-section label {
+    display: block;
+    color: var(--text-muted, #64748b);
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Export Preview */
+.export-preview {
+    background: var(--bg-primary, #0f172a);
+    border: 1px solid var(--border-color, #475569);
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 1rem 0;
+}
+
+.preview-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    background: var(--bg-tertiary, #334155);
+    font-size: 0.85rem;
+    border-bottom: 1px solid var(--border-color, #475569);
+}
+
+.preview-code {
+    padding: 1rem;
+    margin: 0;
+    font-family: 'Fira Code', 'Consolas', monospace;
+    font-size: 0.8rem;
+    max-height: 200px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    color: var(--text-primary, #e2e8f0);
+}
+
+.hint {
+    color: var(--text-muted, #64748b);
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.hint i {
+    color: var(--info-color, #3b82f6);
+}
+
+/* ========================================
+   VOICE COMMANDS & DICTATION
+   ======================================== */
+
+/* Voice Controls Container */
+.voice-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.toolbar-btn.voice-btn {
+    position: relative;
+}
+
+.toolbar-btn.voice-btn.listening {
+    background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+    border-color: #ef4444 !important;
+    animation: voicePulse 1.5s ease-in-out infinite;
+}
+
+.toolbar-btn.voice-btn.listening.dictation {
+    background: linear-gradient(135deg, #22c55e, #16a34a) !important;
+    border-color: #22c55e !important;
+    animation: dictationPulse 1.5s ease-in-out infinite;
+}
+
+.toolbar-btn.voice-btn.listening i {
+    animation: micBounce 0.5s ease-in-out infinite;
+}
+
+/* Voice Mode Indicator */
+.voice-mode-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    background: var(--bg-tertiary, #334155);
+    border: 1px solid var(--border-color, #475569);
+    border-radius: 6px;
+}
+
+.mode-badge {
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+}
+
+.mode-badge.dictation {
+    background: rgba(34, 197, 94, 0.2);
+    color: #22c55e;
+    animation: dictationTextPulse 1s ease-in-out infinite;
+}
+
+.mode-badge.command {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+}
+
+.mode-switch-btn {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    color: var(--text-muted, #64748b);
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.mode-switch-btn:hover {
+    background: var(--primary-color, #2563eb);
+    color: white;
+}
+
+@keyframes voicePulse {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
+    }
+}
+
+@keyframes dictationPulse {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 0 8px rgba(34, 197, 94, 0);
+    }
+}
+
+@keyframes micBounce {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.2);
+    }
+}
+
+@keyframes dictationTextPulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.6;
+    }
+}
+
+/* Voice Status in Status Bar */
+.voice-status {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    max-width: 350px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.voice-status.listening {
+    color: #ef4444 !important;
+    animation: textPulse 1.5s ease-in-out infinite;
+}
+
+.voice-status.listening.dictation {
+    color: #22c55e !important;
+    animation: dictationTextPulse 1s ease-in-out infinite;
+}
+
+.voice-status.listening i {
+    animation: micBounce 0.5s ease-in-out infinite;
+}
+
+/* Dictation Preview */
+.dictation-preview {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.dictation-label {
+    font-weight: 600;
+    color: #22c55e;
+}
+
+/* ========================================
+   DICTATION LIVE BANNER
+   ======================================== */
+
+.dictation-live-banner {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(34, 197, 94, 0.05));
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    border-left: 4px solid #22c55e;
+    border-radius: 0;
+    animation: dictationBannerPulse 2s ease-in-out infinite;
+}
+
+.dictation-live-banner.ai-target {
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.15), rgba(37, 99, 235, 0.05));
+    border: 1px solid rgba(37, 99, 235, 0.3);
+    border-left: 4px solid #2563eb;
+}
+
+.dictation-live-banner.ai-target .dictation-live-icon {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+}
+
+.dictation-live-banner.ai-target .dictation-live-label {
+    color: #2563eb;
+}
+
+.dictation-live-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    color: white;
+    border-radius: 50%;
+    font-size: 1.1rem;
+    animation: micBounce 0.5s ease-in-out infinite;
+    flex-shrink: 0;
+}
+
+.dictation-live-text {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 0;
+}
+
+.dictation-live-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #22c55e;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.dictation-live-content {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: var(--text-primary, #f1f5f9);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    animation: dictationTextPulse 1s ease-in-out infinite;
+}
+
+.dictation-live-hint {
+    font-size: 0.7rem;
+    color: var(--text-muted, #64748b);
+    flex-shrink: 0;
+}
+
+@keyframes dictationBannerPulse {
+    0%, 100% {
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(34, 197, 94, 0.05));
+    }
+    50% {
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.1));
+    }
+}
+
+@keyframes textPulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+/* Voice indicator in console */
+.console-line.voice {
+    background: rgba(239, 68, 68, 0.1);
+    border-left: 3px solid #ef4444;
+}
+
+.console-line.voice .console-message {
+    color: #ef4444;
+}
+
+/* Dictation indicator in console */
+.console-line.dictation {
+    background: rgba(34, 197, 94, 0.1);
+    border-left: 3px solid #22c55e;
+}
+
+.console-line.dictation .console-message {
+    color: #22c55e;
+}
+
+/* Dictation Target Indicator for AI Prompt */
+.dictation-target-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(34, 197, 94, 0.05));
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    border-radius: 6px;
+    margin-top: 0.5rem;
+    color: #22c55e;
+    font-size: 0.85rem;
+    font-weight: 500;
+    animation: dictationBannerPulse 2s ease-in-out infinite;
+}
+
+.dictation-target-indicator i {
+    animation: micBounce 0.5s ease-in-out infinite;
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+@media (max-width: 1200px) {
+    .ai-panel {
+        width: 300px;
+    }
+
+    .ai-commands-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .command-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 992px) {
+    .file-explorer {
+        width: 180px;
+    }
+
+    .ai-panel {
+        position: fixed;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        z-index: 1000;
+        box-shadow: -5px 0 20px rgba(0, 0, 0, 0.3);
+        width: 320px;
+    }
+
+    .ai-prompt-bottom {
+        padding: 0.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .toolbar-btn span {
+        display: none;
+    }
+
+    .file-explorer {
+        position: fixed;
+        left: -100%;
+        top: 0;
+        bottom: 0;
+        z-index: 1000;
+        transition: left 0.3s;
+    }
+
+    .file-explorer.open {
+        left: 0;
+    }
+
+    .ai-commands-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .command-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .line-numbers {
+        display: none;
+    }
+
+    .ai-panel {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .ai-prompt-textarea {
+        font-size: 16px; /* Prevent zoom on iOS */
+    }
+}
