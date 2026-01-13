@@ -54,6 +54,9 @@ export class ActionExecutor {
     const actionType = action.type || action.action
     const params = action.properties || action.params || {}
 
+    console.log(`[ActionExecutor] Acción: ${actionType}`)
+    console.log(`[ActionExecutor] Params recibidos:`, JSON.stringify(params, null, 2))
+
     this.log('info', `Ejecutando: ${action.label || actionType}`)
 
     try {
@@ -260,13 +263,54 @@ export class ActionExecutor {
     await page.waitForSelector(selector, { state: 'visible', timeout: 10000 })
 
     // Limpiar campo si se especifica
-    if (params.clearFirst !== false) {
+    const shouldClear = params.clearBefore !== false && params.clearFirst !== false
+    if (shouldClear) {
       await page.fill(selector, '')
     }
 
-    await page.type(selector, text, {
-      delay: params.typeDelay || 50
-    })
+    // Método de entrada
+    const inputMethod = params.inputMethod || 'type'
+    const delay = params.delay || params.typeDelay || 50
+
+    if (inputMethod === 'fill') {
+      // Rellenar instantáneamente
+      await page.fill(selector, text)
+    } else if (inputMethod === 'paste') {
+      // Pegar desde portapapeles (simular)
+      await page.fill(selector, text)
+    } else {
+      // Teclear letra por letra
+      await page.type(selector, text, { delay })
+    }
+
+    // Presionar tecla al terminar si se especifica
+    const keyToPress = params.pressKeyAfter || (params.pressEnter ? 'Enter' : 'none')
+
+    if (keyToPress && keyToPress !== 'none') {
+      this.log('info', `Presionando tecla: ${keyToPress}`)
+
+      // Manejar combinaciones de teclas (Ctrl+A, Shift+Tab, etc.)
+      if (keyToPress.includes('+')) {
+        const parts = keyToPress.split('+')
+        const modifiers = parts.slice(0, -1)
+        const key = parts[parts.length - 1]
+
+        // Presionar modificadores
+        for (const mod of modifiers) {
+          await page.keyboard.down(mod)
+        }
+
+        // Presionar tecla principal
+        await page.keyboard.press(key)
+
+        // Soltar modificadores
+        for (const mod of modifiers.reverse()) {
+          await page.keyboard.up(mod)
+        }
+      } else {
+        await page.keyboard.press(keyToPress)
+      }
+    }
 
     return { typed: text.substring(0, 50) + (text.length > 50 ? '...' : '') }
   }
@@ -698,19 +742,27 @@ export class ActionExecutor {
   // CLEANUP
   // ==========================================
 
-  async cleanup() {
-    this.log('info', 'Limpiando recursos...')
+  async cleanup(options = {}) {
+    const { closeBrowsers = false, reason = 'workflow_completed' } = options
 
-    // Cerrar navegadores
-    for (const [id, browser] of engineState.browsers) {
-      try {
-        await browser.close()
-      } catch (e) {
-        console.error(`Error cerrando navegador ${id}:`, e)
+    this.log('info', `Limpiando recursos... (razón: ${reason}, cerrar navegadores: ${closeBrowsers})`)
+
+    // Solo cerrar navegadores si se solicita explícitamente (error, stop, etc.)
+    // Por defecto, mantener el navegador abierto para que el usuario vea el resultado
+    if (closeBrowsers) {
+      for (const [id, browser] of engineState.browsers) {
+        try {
+          await browser.close()
+          this.log('info', `Navegador ${id} cerrado`)
+        } catch (e) {
+          console.error(`Error cerrando navegador ${id}:`, e)
+        }
       }
+      engineState.browsers.clear()
+      engineState.pages.clear()
+    } else {
+      this.log('info', '📌 Navegador mantenido abierto - el usuario puede interactuar con él')
     }
-    engineState.browsers.clear()
-    engineState.pages.clear()
   }
 }
 

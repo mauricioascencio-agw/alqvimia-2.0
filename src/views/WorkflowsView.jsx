@@ -6,6 +6,7 @@ import { useSocket } from '../context/SocketContext'
 import { resolveVariables } from '../components/workflow/VariableInput'
 import { systemService } from '../services/api'
 import { importers, exporters } from '../utils/workflowMigration'
+import { getActionProperties } from '../utils/actionProperties'
 
 // Categorías expandidas con más acciones
 const WORKFLOW_CATEGORIES = [
@@ -1280,7 +1281,7 @@ function WorkflowsView() {
   })
   const [rightPanelWidth, setRightPanelWidth] = useState(() => {
     const saved = localStorage.getItem('alqvimia-right-panel-width')
-    return saved ? parseInt(saved) : 220
+    return saved ? parseInt(saved) : 340
   })
   const [isResizingLeft, setIsResizingLeft] = useState(false)
   const [isResizingRight, setIsResizingRight] = useState(false)
@@ -1301,6 +1302,8 @@ function WorkflowsView() {
   const [showExecutionBar, setShowExecutionBar] = useState(false)
   const [showPreviewModal, setShowPreviewModal] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [showValidationModal, setShowValidationModal] = useState(false)
+  const [validationErrors, setValidationErrors] = useState([])
 
   // Estados para comandos de voz
   const [isListening, setIsListening] = useState(false)
@@ -1331,11 +1334,21 @@ function WorkflowsView() {
 
   // Conectar Socket.IO automáticamente para ejecución real
   useEffect(() => {
+    console.log('[WorkflowsView] Socket status:', { socket: !!socket, isConnected, socketId: socket?.id })
     if (socket && !isConnected) {
       console.log('[WorkflowsView] Conectando Socket.IO para ejecución real...')
       connect()
     }
   }, [socket, isConnected, connect])
+
+  // Log de cambios en conexión
+  useEffect(() => {
+    if (isConnected) {
+      console.log('%c[WorkflowsView] ✅ Socket CONECTADO - Ejecución real habilitada', 'color: #22c55e; font-weight: bold')
+    } else {
+      console.log('%c[WorkflowsView] ⚠️ Socket DESCONECTADO - Usando ejecución local', 'color: #f59e0b; font-weight: bold')
+    }
+  }, [isConnected])
 
   // Manejar resize de paneles
   useEffect(() => {
@@ -1346,7 +1359,7 @@ function WorkflowsView() {
         localStorage.setItem('alqvimia-left-panel-width', newWidth.toString())
       }
       if (isResizingRight) {
-        const newWidth = Math.max(150, Math.min(450, window.innerWidth - e.clientX))
+        const newWidth = Math.max(280, Math.min(550, window.innerWidth - e.clientX))
         setRightPanelWidth(newWidth)
         localStorage.setItem('alqvimia-right-panel-width', newWidth.toString())
       }
@@ -1928,9 +1941,110 @@ function WorkflowsView() {
     setShowPreviewModal(true)
   }
 
+  // Validar propiedades de los pasos antes de ejecutar
+  const validateWorkflowSteps = () => {
+    const errors = []
+
+    workflowSteps.forEach((step, index) => {
+      const actionConfig = getActionProperties(step.action)
+      if (!actionConfig || !actionConfig.fields) return
+
+      const stepErrors = []
+
+      actionConfig.fields.forEach(field => {
+        if (field.required) {
+          const value = step.params?.[field.key]
+          const isEmpty = value === undefined || value === null || value === ''
+
+          if (isEmpty) {
+            stepErrors.push({
+              field: field.key,
+              label: field.label,
+              message: `El campo "${field.label}" es requerido`
+            })
+          } else if (field.type === 'url' && value) {
+            // Validar formato de URL
+            try {
+              new URL(value)
+            } catch {
+              stepErrors.push({
+                field: field.key,
+                label: field.label,
+                message: `"${value}" no es una URL válida. Debe incluir http:// o https://`
+              })
+            }
+          } else if (field.type === 'email' && value) {
+            // Validar formato de email
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+            if (!emailRegex.test(value)) {
+              stepErrors.push({
+                field: field.key,
+                label: field.label,
+                message: `"${value}" no es un email válido`
+              })
+            }
+          } else if (field.type === 'number' && value !== undefined) {
+            const numValue = Number(value)
+            if (isNaN(numValue)) {
+              stepErrors.push({
+                field: field.key,
+                label: field.label,
+                message: `"${value}" debe ser un número`
+              })
+            } else if (field.min !== undefined && numValue < field.min) {
+              stepErrors.push({
+                field: field.key,
+                label: field.label,
+                message: `El valor mínimo es ${field.min}`
+              })
+            } else if (field.max !== undefined && numValue > field.max) {
+              stepErrors.push({
+                field: field.key,
+                label: field.label,
+                message: `El valor máximo es ${field.max}`
+              })
+            }
+          }
+        }
+      })
+
+      if (stepErrors.length > 0) {
+        errors.push({
+          stepIndex: index,
+          stepNumber: index + 1,
+          stepLabel: step.label || step.action,
+          stepIcon: step.icon || 'fa-cog',
+          action: step.action,
+          errors: stepErrors
+        })
+      }
+    })
+
+    return errors
+  }
+
+  // Ir al paso con error y seleccionarlo
+  const goToErrorStep = (stepIndex) => {
+    const step = workflowSteps[stepIndex]
+    if (step) {
+      setSelectedStep(step)
+      setRightPanelTab('properties')
+      setRightPanelCollapsed(false)
+      setShowValidationModal(false)
+    }
+  }
+
   // Ejecutar workflow con barra de progreso
   const executeWorkflow = async () => {
     if (workflowSteps.length === 0) return
+
+    // Validar propiedades antes de ejecutar
+    const errors = validateWorkflowSteps()
+    if (errors.length > 0) {
+      setValidationErrors(errors)
+      setShowValidationModal(true)
+      return
+    }
 
     // Cerrar modal de preview si está abierto
     setShowPreviewModal(false)
@@ -1955,11 +2069,20 @@ function WorkflowsView() {
     // ========================================================
     // EJECUCIÓN VIA SOCKET (Backend con Playwright)
     // ========================================================
+    console.log('%c[Workflow] ==================== INICIO EJECUCIÓN ====================', 'color: #a855f7; font-weight: bold; font-size: 14px')
+    console.log('[Workflow] Estado Socket:', {
+      socketExists: !!socket,
+      isConnected,
+      socketConnected: socket?.connected,
+      socketId: socket?.id
+    })
+
     if (socket && isConnected) {
-      console.log('[Workflow] Ejecutando via Socket.IO (backend con Playwright)')
+      console.log('%c[Workflow] 🚀 Ejecutando via Socket.IO (backend con Playwright)', 'color: #22c55e; font-weight: bold')
 
       // Conectar si no está conectado
       if (!socket.connected) {
+        console.log('[Workflow] Socket no conectado, reconectando...')
         connect()
         await new Promise(resolve => setTimeout(resolve, 500))
       }
@@ -1983,12 +2106,17 @@ function WorkflowsView() {
         }
       }
 
-      console.log('[Workflow] Enviando workflow al backend:', workflowData)
+      console.log('%c[Workflow] 📤 Enviando workflow al backend:', 'color: #3b82f6; font-weight: bold')
+      console.log('[Workflow] Workflow:', JSON.stringify(workflowData, null, 2))
 
       // Crear promesa para esperar resultado
       const executionPromise = new Promise((resolve, reject) => {
+        const handleStarted = (data) => {
+          console.log('%c[Workflow] 🎬 Ejecución INICIADA en backend:', 'color: #22c55e; font-weight: bold', data)
+        }
+
         const handleStep = (data) => {
-          console.log('[Workflow] Paso:', data)
+          console.log('%c[Workflow] 📍 Paso ejecutándose:', 'color: #8b5cf6', data)
           setExecutionCurrentStep({ label: data.action?.label || `Paso ${data.step}`, action: data.action?.type })
           setExecutionProgress(Math.round((data.step / data.totalSteps) * 100))
         }
@@ -1996,9 +2124,9 @@ function WorkflowsView() {
         const handleLog = (data) => {
           const { log } = data
           if (log.type === 'success') {
-            console.log(`%c[Workflow] ✅ ${log.message}`, 'color: #34d399')
+            console.log(`%c[Workflow] ✅ ${log.message}`, 'color: #34d399; font-weight: bold')
           } else if (log.type === 'error') {
-            console.error(`%c[Workflow] ❌ ${log.message}`, 'color: #f87171')
+            console.error(`%c[Workflow] ❌ ${log.message}`, 'color: #f87171; font-weight: bold')
           } else if (log.type === 'warning') {
             console.warn(`%c[Workflow] ⚠️ ${log.message}`, 'color: #fbbf24')
           } else {
@@ -2007,18 +2135,19 @@ function WorkflowsView() {
         }
 
         const handleCompleted = (data) => {
-          console.log('[Workflow] Ejecución completada:', data)
+          console.log('%c[Workflow] 🏁 Ejecución COMPLETADA:', 'color: #22c55e; font-weight: bold; font-size: 14px', data)
           cleanup()
           resolve(data)
         }
 
         const handleError = (data) => {
-          console.error('[Workflow] Error de ejecución:', data)
+          console.error('%c[Workflow] 💥 ERROR de ejecución:', 'color: #ef4444; font-weight: bold; font-size: 14px', data)
           cleanup()
           reject(new Error(data.message || 'Error desconocido'))
         }
 
         const cleanup = () => {
+          socket.off('executor:started', handleStarted)
           socket.off('executor:step', handleStep)
           socket.off('executor:log', handleLog)
           socket.off('executor:completed', handleCompleted)
@@ -2026,6 +2155,8 @@ function WorkflowsView() {
         }
 
         // Registrar listeners
+        console.log('[Workflow] Registrando listeners de eventos...')
+        socket.on('executor:started', handleStarted)
         socket.on('executor:step', handleStep)
         socket.on('executor:log', handleLog)
         socket.on('executor:completed', handleCompleted)
@@ -2033,13 +2164,16 @@ function WorkflowsView() {
 
         // Timeout de 5 minutos
         setTimeout(() => {
+          console.error('[Workflow] ⏰ TIMEOUT - La ejecución tardó más de 5 minutos')
           cleanup()
           reject(new Error('Timeout: La ejecución tardó demasiado'))
         }, 300000)
       })
 
       // Enviar comando de ejecución
+      console.log('[Workflow] Emitiendo evento executor:run...')
       socket.emit('executor:run', workflowData)
+      console.log('[Workflow] Evento emitido, esperando respuesta del backend...')
 
       try {
         const result = await executionPromise
@@ -2060,13 +2194,17 @@ function WorkflowsView() {
     // ========================================================
     // EJECUCIÓN LOCAL (Fallback sin Socket)
     // ========================================================
-    console.log('[Workflow] Ejecutando localmente (sin backend)')
+    console.log('%c[Workflow] ⚠️ Ejecutando LOCALMENTE (sin backend)', 'color: #f59e0b; font-weight: bold; font-size: 14px')
+    console.log('[Workflow] Razón: Socket no disponible o no conectado')
+    console.log('[Workflow] NOTA: Acciones de navegador (browser_open, navigate, etc.) solo se simularán')
+    console.log('[Workflow] Para ejecución real, asegúrate de que el servidor esté corriendo: cd server && npm start')
 
     // Esperar 1 segundo antes de iniciar la ejecución
     await new Promise(resolve => setTimeout(resolve, 1000))
 
     // Ejecutar el workflow paso a paso
     for (let i = 0; i < workflowSteps.length; i++) {
+      console.log(`%c[Workflow] 📍 Paso ${i + 1}/${workflowSteps.length}: ${workflowSteps[i].label}`, 'color: #8b5cf6')
       setExecutionCurrentStep(workflowSteps[i])
       setExecutionProgress(Math.round(((i + 1) / workflowSteps.length) * 100))
 
@@ -2080,9 +2218,10 @@ function WorkflowsView() {
     setIsExecuting(false)
     setExecutionCurrentStep(null)
     setTimeout(() => setShowExecutionBar(false), 2000)
+    console.log('%c[Workflow] ==================== FIN EJECUCIÓN ====================', 'color: #a855f7; font-weight: bold; font-size: 14px')
 
     // Mostrar mensaje de completado
-    showWindowsMessageBox('Workflow Completado', `El workflow "${workflowName}" se ha ejecutado correctamente.`, 'success')
+    showWindowsMessageBox('Workflow Completado', `El workflow "${workflowName}" se ha ejecutado correctamente.\n\n⚠️ Nota: Ejecutado en modo local (simulación)`, 'success')
   }
 
   // Resolver todas las variables en los parámetros de un paso
@@ -4749,8 +4888,8 @@ function WorkflowsView() {
         id="workflowStudio"
         style={{
           gridTemplateColumns: leftPanelCollapsed
-            ? `50px 1fr ${rightPanelCollapsed ? '50px' : `6px ${rightPanelWidth}px`}`
-            : `${leftPanelWidth}px 6px 1fr ${rightPanelCollapsed ? '50px' : `6px ${rightPanelWidth}px`}`
+            ? `50px 0 1fr ${rightPanelCollapsed ? '0 50px' : `6px ${rightPanelWidth}px`}`
+            : `${leftPanelWidth}px 6px 1fr ${rightPanelCollapsed ? '0 50px' : `6px ${rightPanelWidth}px`}`
         }}
       >
         <div className="studio-header">
@@ -6398,6 +6537,139 @@ function WorkflowsView() {
               <div className="win-buttons">
                 <button className="win-btn" onClick={closeMessageBox}>
                   Aceptar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal de Validación de Errores */}
+        {showValidationModal && (
+          <div className="modal-overlay" onClick={() => setShowValidationModal(false)}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '550px' }}>
+              <div className="modal-header" style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}>
+                <h3 style={{ color: 'white' }}><i className="fas fa-exclamation-triangle"></i> Errores de Validación</h3>
+                <button className="modal-close" onClick={() => setShowValidationModal(false)}>
+                  <i className="fas fa-times"></i>
+                </button>
+              </div>
+              <div className="modal-body" style={{ padding: '1.5rem' }}>
+                <p style={{ marginBottom: '1rem', color: 'var(--text-secondary)' }}>
+                  Se encontraron los siguientes errores que deben corregirse antes de ejecutar el workflow:
+                </p>
+                <div className="validation-errors-list" style={{ maxHeight: '350px', overflowY: 'auto' }}>
+                  {validationErrors.map((stepError, index) => (
+                    <div
+                      key={index}
+                      className="validation-error-item"
+                      onClick={() => goToErrorStep(stepError.stepIndex)}
+                      style={{
+                        padding: '1rem',
+                        marginBottom: '0.75rem',
+                        background: 'rgba(239, 68, 68, 0.08)',
+                        border: '1px solid rgba(239, 68, 68, 0.25)',
+                        borderRadius: '10px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'rgba(239, 68, 68, 0.15)'
+                        e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.4)'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'rgba(239, 68, 68, 0.08)'
+                        e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.25)'
+                      }}
+                    >
+                      {/* Header del paso */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                        <div style={{
+                          width: '32px',
+                          height: '32px',
+                          borderRadius: '8px',
+                          background: 'linear-gradient(135deg, #ef4444, #dc2626)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: 'white',
+                          fontSize: '0.8rem',
+                          fontWeight: 'bold'
+                        }}>
+                          {stepError.stepNumber}
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontWeight: '600', color: 'var(--text-primary)', fontSize: '0.95rem' }}>
+                            {stepError.stepLabel}
+                          </div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                            Acción: {stepError.action}
+                          </div>
+                        </div>
+                        <i className="fas fa-chevron-right" style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}></i>
+                      </div>
+
+                      {/* Lista de errores del paso */}
+                      <div style={{
+                        background: 'rgba(0, 0, 0, 0.15)',
+                        borderRadius: '6px',
+                        padding: '0.75rem',
+                        marginLeft: '0.5rem'
+                      }}>
+                        {stepError.errors.map((err, errIndex) => (
+                          <div
+                            key={errIndex}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'flex-start',
+                              gap: '0.5rem',
+                              marginBottom: errIndex < stepError.errors.length - 1 ? '0.5rem' : 0
+                            }}
+                          >
+                            <i className="fas fa-times-circle" style={{
+                              color: '#ef4444',
+                              marginTop: '0.15rem',
+                              fontSize: '0.8rem'
+                            }}></i>
+                            <div>
+                              <span style={{
+                                color: '#ef4444',
+                                fontWeight: '500',
+                                fontSize: '0.85rem'
+                              }}>
+                                {err.label}:
+                              </span>
+                              <span style={{
+                                color: 'var(--text-primary)',
+                                marginLeft: '0.35rem',
+                                fontSize: '0.85rem'
+                              }}>
+                                {err.message}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="modal-footer" style={{ padding: '1rem 1.5rem', borderTop: '1px solid var(--border-color)' }}>
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => setShowValidationModal(false)}
+                >
+                  Cerrar
+                </button>
+                <button
+                  className="btn btn-primary"
+                  onClick={() => {
+                    if (validationErrors.length > 0) {
+                      goToErrorStep(validationErrors[0].stepIndex)
+                      setShowValidationModal(false)
+                    }
+                  }}
+                >
+                  <i className="fas fa-arrow-right"></i> Ir al primer error
                 </button>
               </div>
             </div>

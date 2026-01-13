@@ -9,16 +9,29 @@ export function registerExecutorHandlers(io, socket, serverState) {
 
   // Ejecutar workflow
   socket.on('executor:run', async (data) => {
+    console.log('\n========================================')
+    console.log('[Executor] 📥 Recibido evento executor:run')
+    console.log('[Executor] Data recibida:', JSON.stringify(data, null, 2))
+    console.log('========================================\n')
+
     const workflowId = data?.workflowId
     const workflow = serverState.activeWorkflows.get(workflowId) || data?.workflow
 
+    console.log('[Executor] workflowId:', workflowId)
+    console.log('[Executor] workflow existe:', !!workflow)
+
     if (!workflow) {
+      console.error('[Executor] ❌ ERROR: Workflow no encontrado')
+      console.error('[Executor] serverState.activeWorkflows tiene:', [...serverState.activeWorkflows.keys()])
       socket.emit('executor:error', { message: 'Workflow no encontrado' })
       return
     }
 
     const executionId = `exec_${Date.now()}`
     const actions = workflow.actions || workflow.steps || workflow.pasos || []
+
+    console.log('[Executor] Acciones encontradas:', actions.length)
+    console.log('[Executor] Acciones:', actions.map(a => a.type || a.action || 'unknown'))
 
     const execution = {
       id: executionId,
@@ -51,7 +64,7 @@ export function registerExecutorHandlers(io, socket, serverState) {
       totalSteps: execution.totalSteps
     })
 
-    console.log(`[Executor] Iniciando: ${execution.workflowName} (${actions.length} pasos)`)
+    console.log(`\n[Executor] 🚀 Iniciando: ${execution.workflowName} (${actions.length} pasos)`)
 
     try {
       // Ejecutar acciones
@@ -68,7 +81,7 @@ export function registerExecutorHandlers(io, socket, serverState) {
         // Verificar si fue detenido
         if (execution.status === 'stopped') {
           socket.emit('executor:stopped', { executionId, step: i + 1 })
-          await executor.cleanup()
+          await executor.cleanup({ closeBrowsers: true, reason: 'stopped' })
           return
         }
 
@@ -157,8 +170,8 @@ export function registerExecutorHandlers(io, socket, serverState) {
       console.error(`[Executor] Error en ${execution.workflowName}: ${error.message}`)
 
     } finally {
-      // Limpiar recursos
-      await executor.cleanup()
+      // Limpiar recursos (pero NO cerrar navegadores - el usuario puede querer interactuar)
+      await executor.cleanup({ closeBrowsers: false, reason: 'workflow_completed' })
       executors.delete(executionId)
     }
   })
@@ -206,7 +219,8 @@ export function registerExecutorHandlers(io, socket, serverState) {
       console.log(`[Executor] Detenido: ${execution.workflowName}`)
 
       if (executor) {
-        await executor.cleanup()
+        // Cuando el usuario detiene, cerrar navegadores
+        await executor.cleanup({ closeBrowsers: true, reason: 'user_stopped' })
       }
     }
   })

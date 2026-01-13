@@ -3,6 +3,29 @@
 
 import { generateActionProperties } from '../config/aiTemplates'
 
+// Campo reutilizable para presionar tecla después de escribir texto
+const PRESS_KEY_AFTER_FIELD = {
+  key: 'pressKeyAfter',
+  label: 'Presionar tecla al terminar',
+  type: 'select',
+  default: 'none',
+  options: [
+    { value: 'none', label: 'Ninguna' },
+    { value: 'Enter', label: 'Enter (enviar formulario)' },
+    { value: 'Tab', label: 'Tab (siguiente campo)' },
+    { value: 'Escape', label: 'Escape (cerrar/cancelar)' },
+    { value: 'Control+a', label: 'Ctrl+A (seleccionar todo)' },
+    { value: 'Control+c', label: 'Ctrl+C (copiar)' },
+    { value: 'Control+v', label: 'Ctrl+V (pegar)' },
+    { value: 'Control+s', label: 'Ctrl+S (guardar)' },
+    { value: 'Control+Enter', label: 'Ctrl+Enter (enviar)' },
+    { value: 'Shift+Tab', label: 'Shift+Tab (campo anterior)' },
+    { value: 'ArrowDown', label: 'Flecha Abajo' },
+    { value: 'ArrowUp', label: 'Flecha Arriba' },
+    { value: 'Space', label: 'Espacio' }
+  ]
+}
+
 // Propiedades base de todas las acciones
 const BASE_ACTION_PROPERTIES = {
   // ==========================================
@@ -237,7 +260,7 @@ const BASE_ACTION_PROPERTIES = {
       {
         key: 'clearBefore',
         label: 'Limpiar campo antes',
-        type: 'toggle',
+        type: 'checkbox',
         default: true
       },
       {
@@ -251,12 +274,7 @@ const BASE_ACTION_PROPERTIES = {
         unit: 'ms',
         condition: { field: 'inputMethod', value: 'type' }
       },
-      {
-        key: 'pressEnter',
-        label: 'Presionar Enter al final',
-        type: 'toggle',
-        default: false
-      }
+      PRESS_KEY_AFTER_FIELD
     ]
   },
 
@@ -4320,7 +4338,8 @@ const BASE_ACTION_PROPERTIES = {
         default: 50,
         min: 0,
         max: 500
-      }
+      },
+      PRESS_KEY_AFTER_FIELD
     ]
   },
 
