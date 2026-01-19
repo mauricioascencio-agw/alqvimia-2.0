@@ -146,9 +146,9 @@ export function parseJavaScript(content) {
 }
 
 /**
- * Parsea un archivo Automation Anywhere
+ * Parsea un archivo RPA Platform
  */
-export function parseAutomationAnywhere(content) {
+export function parseRPAPlatform(content) {
   const steps = []
 
   try {
@@ -167,7 +167,7 @@ export function parseAutomationAnywhere(content) {
       }
     }
   } catch (error) {
-    console.error('Error parsing Automation Anywhere:', error)
+    console.error('Error parsing RPA Platform:', error)
   }
 
   return steps
@@ -677,7 +677,7 @@ function convertToPseudocode(step, stepNum) {
 export const importers = {
   'uipath': parseUiPathXaml,
   'power-automate': parsePowerAutomate,
-  'automation-anywhere': parseAutomationAnywhere,
+  'rpa-platform': parseRPAPlatform,
   'blue-prism': parseBluePrism,
   'python': parsePythonScript,
   'javascript': parseJavaScript,

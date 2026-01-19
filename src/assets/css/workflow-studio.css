@@ -7,8 +7,8 @@
     display: grid;
     grid-template-columns: auto 6px 1fr 6px auto;
     grid-template-rows: auto 1fr auto;
-    height: calc(100vh - 140px);
-    max-height: calc(100vh - 140px);
+    height: 100%;
+    max-height: 100%;
     gap: 0;
     background: var(--bg-primary);
     overflow: hidden;
@@ -94,6 +94,7 @@
     overflow: hidden;
     min-height: 0;
     height: 100%;
+    max-height: 100%;
     position: relative;
     width: 200px;
     min-width: 150px;
@@ -166,6 +167,27 @@
     overflow-x: hidden;
     padding: 0.5rem;
     padding-bottom: 0.5rem;
+    min-height: 0;
+    max-height: 100%;
+}
+
+/* Scrollbar personalizado para el panel de acciones */
+.actions-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.actions-list::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+}
+
+.actions-list::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 4px;
+}
+
+.actions-list::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-hover);
 }
 
 /* Botón cargar más acciones */
@@ -320,28 +342,37 @@
     overflow: hidden;
     outline: none;
     min-width: 0;
+    min-height: 0;
+    height: 100%;
+    max-height: 100%;
 }
 
 .canvas-toolbar {
-    padding: 0.5rem 0.75rem;
+    padding: 0.4rem 0.6rem;
     border-bottom: 1px solid var(--border-color);
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.4rem;
     background: var(--card-bg);
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    overflow-y: hidden;
+    overflow-x: auto;
+    flex-shrink: 0;
+    min-height: 42px;
+    max-height: 42px;
 }
 
 /* Botones con texto (Nuevo, Guardar, Diagrama) */
 .canvas-toolbar button {
-    padding: 0.45rem 0.75rem;
-    font-size: 0.8rem;
+    padding: 0.35rem 0.6rem;
+    font-size: 0.75rem;
     white-space: nowrap;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.4rem;
-    border-radius: 6px;
+    gap: 0.3rem;
+    border-radius: 4px;
+    flex-shrink: 0;
     transition: all 0.2s ease;
 }
 
@@ -351,15 +382,16 @@
 
 /* Botones solo icono - cuadrados uniformes */
 .canvas-toolbar button.btn-icon-only {
-    width: 34px;
-    height: 34px;
+    width: 30px;
+    height: 30px;
     padding: 0;
-    min-width: 34px;
+    min-width: 30px;
+    flex-shrink: 0;
 }
 
 .canvas-toolbar button.btn-icon-only i {
     margin: 0;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
 }
 
 /* Botones compactos - solo icono en pantallas pequeñas */
@@ -380,20 +412,22 @@
 
 .toolbar-divider {
     width: 1px;
-    height: 24px;
+    height: 20px;
     background: var(--border-color);
-    margin: 0 0.25rem;
+    margin: 0 0.15rem;
+    flex-shrink: 0;
 }
 
 .toolbar-spacer {
     flex: 1;
-    min-width: 0.5rem;
+    min-width: 0.25rem;
 }
 
 .toolbar-group {
     display: flex;
     align-items: center;
-    gap: 0.35rem;
+    gap: 0.25rem;
+    flex-shrink: 0;
 }
 
 .btn-execute {
@@ -426,19 +460,21 @@
 .view-toggle {
     display: flex;
     background: var(--bg-primary);
-    border-radius: 6px;
-    padding: 3px;
+    border-radius: 4px;
+    padding: 2px;
     gap: 2px;
+    flex-shrink: 0;
 }
 
 .view-toggle-btn {
-    width: 32px;
-    height: 28px;
+    width: 28px;
+    height: 26px;
     padding: 0;
     background: transparent;
     border: none;
     color: var(--text-secondary);
     cursor: pointer;
+    flex-shrink: 0;
     border-radius: 4px;
     transition: all 0.2s;
     display: flex;
@@ -462,15 +498,15 @@
 .canvas-container {
     flex: 1;
     overflow: auto;
-    padding: 1.5rem;
+    padding: 0;
     position: relative;
 }
 
 .workflow-canvas {
     min-height: 100%;
     background-color: var(--bg-secondary);
-    border-radius: 8px;
-    padding: 1.5rem;
+    border-radius: 0;
+    padding: 1rem;
     transition: all 0.3s;
 }
 
@@ -1023,6 +1059,9 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    min-height: 0;
+    height: 100%;
+    max-height: 100%;
     min-width: 280px;
     max-width: 550px;
     width: 340px;
@@ -1166,18 +1205,9 @@
     border-color: var(--primary-color);
 }
 
-/* Footer con info */
+/* Footer con info - OCULTO */
 .studio-footer {
-    grid-column: 1 / -1;
-    grid-row: 3;
-    background: var(--dark-bg);
-    border-top: 1px solid var(--border-color);
-    padding: 0.5rem 1rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    font-size: 0.75rem;
-    color: var(--text-secondary);
+    display: none !important;
 }
 
 .studio-footer-left,
@@ -1271,6 +1301,38 @@
 
 .panel-resizer-right {
     grid-column: 4;
+}
+
+/* Toolbar resizer - barra horizontal para redimensionar altura del toolbar */
+.toolbar-resizer {
+    height: 6px;
+    cursor: row-resize;
+    background: var(--border-color);
+    z-index: 100;
+    transition: background 0.15s ease;
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.toolbar-resizer:hover,
+.toolbar-resizer:active {
+    background: var(--primary-color);
+}
+
+.toolbar-resizer-line {
+    width: 40px;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 3px;
+    transition: all 0.15s ease;
+}
+
+.toolbar-resizer:hover .toolbar-resizer-line {
+    background: rgba(255, 255, 255, 0.5);
+    width: 60px;
 }
 
 /* Iconos colapsados del panel izquierdo */
@@ -1794,6 +1856,18 @@
 .btn-code:hover {
     background: linear-gradient(135deg, #0284c7, #0369a1) !important;
     transform: translateY(-1px);
+}
+
+.btn-rfq {
+    background: linear-gradient(135deg, #dc2626, #b91c1c) !important;
+    color: white !important;
+    border: none !important;
+}
+
+.btn-rfq:hover {
+    background: linear-gradient(135deg, #b91c1c, #991b1b) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
 }
 
 /* ====================================
@@ -3882,7 +3956,7 @@
 /* Móviles pequeños (< 576px) */
 @media (max-width: 576px) {
     .workflow-studio {
-        height: calc(100vh - 100px);
+        height: 100%;
     }
 
     .studio-header {
@@ -3930,5 +4004,107 @@
 
     .modal-body {
         padding: 0.75rem;
+    }
+}
+
+/* ========================================
+   WORKFLOW STATUS BAR
+   ======================================== */
+
+.workflow-status-bar {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0.75rem;
+    background: var(--card-bg);
+    border-top: 1px solid var(--border-color);
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    flex-shrink: 0;
+    position: relative;
+    overflow-y: auto;
+}
+
+/* Resize handle para status bar */
+.statusbar-resizer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 6px;
+    cursor: row-resize;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    transition: background 0.2s;
+    padding: 1px 0;
+}
+
+.statusbar-resizer:hover {
+    background: rgba(var(--primary-rgb), 0.1);
+}
+
+.statusbar-resizer-line {
+    width: 40px;
+    height: 2px;
+    background: var(--border-color);
+    border-radius: 2px;
+    transition: all 0.2s;
+}
+
+.statusbar-resizer:hover .statusbar-resizer-line {
+    background: var(--primary-color);
+    width: 60px;
+    height: 3px;
+}
+
+.status-left,
+.status-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.status-item {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    white-space: nowrap;
+}
+
+.status-item i {
+    font-size: 0.7rem;
+    color: var(--primary-color);
+}
+
+.status-item span {
+    font-size: 0.75rem;
+}
+
+/* Responsive status bar */
+@media (max-width: 768px) {
+    .workflow-status-bar {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.7rem;
+    }
+
+    .status-left,
+    .status-right {
+        gap: 0.5rem;
+    }
+
+    .status-item span {
+        font-size: 0.7rem;
+    }
+
+    /* Ocultar algunos items en móvil */
+    .status-right .status-item:nth-child(1),
+    .status-right .status-item:nth-child(2) {
+        display: none;
     }
 }

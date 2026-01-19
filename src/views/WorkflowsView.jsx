@@ -1285,6 +1285,18 @@ function WorkflowsView() {
   })
   const [isResizingLeft, setIsResizingLeft] = useState(false)
   const [isResizingRight, setIsResizingRight] = useState(false)
+  const [isResizingToolbar, setIsResizingToolbar] = useState(false)
+  const [toolbarHeight, setToolbarHeight] = useState(() => {
+    const saved = localStorage.getItem('alqvimia-toolbar-height')
+    return saved ? parseInt(saved) : 50
+  })
+  const [toolbarResizeStart, setToolbarResizeStart] = useState({ y: 0, height: 0 })
+  const [statusBarHeight, setStatusBarHeight] = useState(() => {
+    const saved = localStorage.getItem('alqvimia-statusbar-height')
+    return saved ? parseInt(saved) : 32
+  })
+  const [isResizingStatusBar, setIsResizingStatusBar] = useState(false)
+  const [statusBarResizeStart, setStatusBarResizeStart] = useState({ y: 0, height: 0 })
   const [clipboard, setClipboard] = useState(null)
   const [viewMode, setViewMode] = useState('list')
   const [contextMenu, setContextMenu] = useState(null)
@@ -1363,11 +1375,26 @@ function WorkflowsView() {
         setRightPanelWidth(newWidth)
         localStorage.setItem('alqvimia-right-panel-width', newWidth.toString())
       }
+      if (isResizingToolbar) {
+        const delta = e.clientY - toolbarResizeStart.y
+        const newHeight = Math.max(40, Math.min(200, toolbarResizeStart.height + delta))
+        console.log('Resizing toolbar - delta:', delta, 'newHeight:', newHeight, 'startHeight:', toolbarResizeStart.height)
+        setToolbarHeight(newHeight)
+        localStorage.setItem('alqvimia-toolbar-height', newHeight.toString())
+      }
+      if (isResizingStatusBar) {
+        const delta = statusBarResizeStart.y - e.clientY // Invertido porque arrastramos hacia arriba
+        const newHeight = Math.max(32, Math.min(400, statusBarResizeStart.height + delta))
+        setStatusBarHeight(newHeight)
+        localStorage.setItem('alqvimia-statusbar-height', newHeight.toString())
+      }
     }
 
     const handleMouseUp = () => {
       setIsResizingLeft(false)
       setIsResizingRight(false)
+      setIsResizingToolbar(false)
+      setIsResizingStatusBar(false)
       document.body.style.cursor = ''
       document.body.style.userSelect = ''
     }
@@ -1379,11 +1406,18 @@ function WorkflowsView() {
       document.addEventListener('mouseup', handleMouseUp)
     }
 
+    if (isResizingToolbar || isResizingStatusBar) {
+      document.body.style.cursor = 'row-resize'
+      document.body.style.userSelect = 'none'
+      document.addEventListener('mousemove', handleMouseMove)
+      document.addEventListener('mouseup', handleMouseUp)
+    }
+
     return () => {
       document.removeEventListener('mousemove', handleMouseMove)
       document.removeEventListener('mouseup', handleMouseUp)
     }
-  }, [isResizingLeft, isResizingRight])
+  }, [isResizingLeft, isResizingRight, isResizingToolbar, isResizingStatusBar, statusBarResizeStart])
 
   // Cargar componentes personalizados desde localStorage
   useEffect(() => {
@@ -2950,6 +2984,90 @@ function WorkflowsView() {
     URL.revokeObjectURL(url)
   }
 
+  // Función para procesar RFQ desde PDF/Word/MD
+  const processRFQDocument = async (file) => {
+    if (!file) return
+
+    setIsProcessingRFQ(true)
+    setRfqProcessingProgress(0)
+    setRfqContent('')
+
+    try {
+      // Validar tipo de archivo
+      const allowedTypes = [
+        'application/pdf',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/msword',
+        'text/markdown',
+        'text/plain'
+      ]
+
+      if (!allowedTypes.includes(file.type) && !file.name.match(/\.(pdf|docx|doc|md|txt)$/i)) {
+        alert('Tipo de archivo no soportado. Por favor selecciona un archivo PDF, Word (.docx/.doc) o Markdown (.md)')
+        setIsProcessingRFQ(false)
+        return
+      }
+
+      setRfqProcessingProgress(20)
+
+      // Crear FormData para enviar el archivo al backend
+      const formData = new FormData()
+      formData.append('document', file)
+
+      setRfqProcessingProgress(40)
+
+      // Enviar al backend para procesamiento
+      const response = await fetch('/api/workflows/parse-rfq', {
+        method: 'POST',
+        body: formData
+      })
+
+      if (!response.ok) {
+        throw new Error('Error al procesar el documento')
+      }
+
+      setRfqProcessingProgress(70)
+
+      const result = await response.json()
+
+      if (result.success) {
+        setRfqContent(result.extractedText || '')
+        setRfqProcessingProgress(90)
+
+        // Generar workflow desde el contenido extraído
+        if (result.generatedSteps && result.generatedSteps.length > 0) {
+          setWorkflowName(result.workflowName || file.name.replace(/\.(pdf|docx|doc|md|txt)$/i, ''))
+          setWorkflowSteps(result.generatedSteps)
+          if (result.variables) {
+            setVariables(result.variables)
+          }
+          setRfqProcessingProgress(100)
+          alert(`Workflow generado exitosamente con ${result.generatedSteps.length} pasos!`)
+          setShowRFQModal(false)
+        } else {
+          setRfqProcessingProgress(100)
+          alert('Documento procesado. Revisa el contenido extraído para generar el workflow.')
+        }
+      } else {
+        throw new Error(result.message || 'Error al procesar el documento')
+      }
+    } catch (error) {
+      console.error('Error procesando RFQ:', error)
+      alert(`Error al procesar el documento: ${error.message}`)
+    } finally {
+      setIsProcessingRFQ(false)
+      setRfqProcessingProgress(0)
+    }
+  }
+
+  const handleRFQFileSelect = (e) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setRfqFile(file)
+      processRFQDocument(file)
+    }
+  }
+
   const [showMigrateModal, setShowMigrateModal] = useState(false)
   const [migrateMode, setMigrateMode] = useState(null) // 'import' | 'export'
   const [migrateFormat, setMigrateFormat] = useState(null)
@@ -3113,6 +3231,14 @@ function WorkflowsView() {
   })
   const [newFolderName, setNewFolderName] = useState('')
   const [showNewFolderInput, setShowNewFolderInput] = useState(false)
+
+  // Estados para RFQ (Request for Quotation) - Generación desde documentos
+  const [showRFQModal, setShowRFQModal] = useState(false)
+  const [rfqFile, setRfqFile] = useState(null)
+  const [rfqContent, setRfqContent] = useState('')
+  const [isProcessingRFQ, setIsProcessingRFQ] = useState(false)
+  const [rfqProcessingProgress, setRfqProcessingProgress] = useState(0)
+  const rfqFileInputRef = useRef(null)
 
   // Cargar acciones exportadas desde el editor de código
   useEffect(() => {
@@ -4994,6 +5120,9 @@ function WorkflowsView() {
               <button className="btn btn-sm btn-secondary btn-icon-only" onClick={importWorkflow} title={t('wf_import')}><i className="fas fa-file-import"></i></button>
               <button className="btn btn-sm btn-secondary btn-icon-only" onClick={exportWorkflow} title={t('wf_export')}><i className="fas fa-file-export"></i></button>
               <button className="btn btn-sm btn-migrate btn-icon-only" onClick={() => setShowMigrateModal(true)} title={t('wf_migrate')}><i className="fas fa-exchange-alt"></i></button>
+              <button className="btn btn-sm btn-rfq btn-icon-only" onClick={() => setShowRFQModal(true)} title="Generar desde RFQ/Documento">
+                <i className="fas fa-file-pdf"></i>
+              </button>
             </div>
             <div className="toolbar-divider"></div>
             <div className="toolbar-group">
@@ -5108,20 +5237,6 @@ function WorkflowsView() {
           </div>
         </div>
 
-        <div className="studio-footer">
-          <div className="studio-footer-left">
-            <div className="studio-footer-item"><i className="fas fa-layer-group"></i><span>{countSteps(workflowSteps)} {t('wf_steps')}</span></div>
-            <div className="studio-footer-item"><i className="fas fa-cube"></i><span>{variables.length} {t('wf_variables').toLowerCase()}</span></div>
-            <div className="studio-footer-item"><i className="fas fa-circle" style={{ color: breakpoints.size > 0 ? '#ef4444' : 'var(--text-secondary)' }}></i><span>{breakpoints.size} {t('wf_breakpoints')}</span></div>
-            {clipboard && <div className="studio-footer-item clipboard-indicator"><i className="fas fa-clipboard"></i><span>{t('wf_clipboard')}: {clipboard.label}</span></div>}
-            {isDebugging && <div className="studio-footer-item debug-indicator"><i className="fas fa-bug"></i><span>{t('wf_debugging')}</span></div>}
-          </div>
-          <div className="studio-footer-right">
-            <div className="studio-footer-item"><i className="fas fa-circle" style={{ color: '#10b981' }}></i><span>{t('connected')}</span></div>
-            <div className="studio-footer-item"><span>Alqvimia Studio v2.0</span></div>
-          </div>
-        </div>
-
         {contextMenu && (
           <div className="context-menu" style={{ top: contextMenu.y, left: contextMenu.x }} onClick={(e) => e.stopPropagation()}>
             <div className="context-menu-item" onClick={() => { setRightPanelTab('properties'); setRightPanelCollapsed(false); setContextMenu(null) }}><i className="fas fa-edit"></i> {t('btn_edit')} {t('wf_properties')}</div>
@@ -5161,7 +5276,7 @@ function WorkflowsView() {
                   type="file"
                   ref={migrateFileInputRef}
                   style={{ display: 'none' }}
-                  accept={migrateFormat === 'uipath' ? '.xaml,.xml' : migrateFormat === 'power-automate' || migrateFormat === 'automation-anywhere' ? '.json' : '.py,.js,.txt'}
+                  accept={migrateFormat === 'uipath' ? '.xaml,.xml' : migrateFormat === 'power-automate' || migrateFormat === 'rpa-platform' ? '.json' : '.py,.js,.txt'}
                   onChange={(e) => {
                     const file = e.target.files[0]
                     if (file) {
@@ -5188,8 +5303,8 @@ function WorkflowsView() {
                         <button className="migrate-option" onClick={() => { setMigrateMode('import'); setMigrateFormat('power-automate'); setMigrateStep(2); }}>
                           <i className="fas fa-cogs" style={{color: '#0078d4'}}></i><span>Power Automate</span>
                         </button>
-                        <button className="migrate-option" onClick={() => { setMigrateMode('import'); setMigrateFormat('automation-anywhere'); setMigrateStep(2); }}>
-                          <i className="fas fa-bolt" style={{color: '#00a1e0'}}></i><span>Automation Anywhere</span>
+                        <button className="migrate-option" onClick={() => { setMigrateMode('import'); setMigrateFormat('rpa-platform'); setMigrateStep(2); }}>
+                          <i className="fas fa-bolt" style={{color: '#00a1e0'}}></i><span>RPA Platform</span>
                         </button>
                         <button className="migrate-option" onClick={() => { setMigrateMode('import'); setMigrateFormat('blue-prism'); setMigrateStep(2); }}>
                           <i className="fas fa-cube" style={{color: '#1976d2'}}></i><span>Blue Prism</span>
@@ -5708,6 +5823,141 @@ function WorkflowsView() {
                   </button>
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* Modal de RFQ - Generar desde Documentos */}
+        {showRFQModal && (
+          <div className="modal-overlay" onClick={() => setShowRFQModal(false)}>
+            <div className="modal-content modal-lg" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <h3>
+                  <i className="fas fa-file-pdf"></i> Generar Workflow desde RFQ/Documento
+                </h3>
+                <button className="modal-close" onClick={() => setShowRFQModal(false)}>
+                  <i className="fas fa-times"></i>
+                </button>
+              </div>
+              <div className="modal-body">
+                <input
+                  type="file"
+                  ref={rfqFileInputRef}
+                  style={{ display: 'none' }}
+                  accept=".pdf,.docx,.doc,.md,.txt"
+                  onChange={handleRFQFileSelect}
+                />
+
+                {!isProcessingRFQ && !rfqContent && (
+                  <div style={{ textAlign: 'center', padding: '2rem' }}>
+                    <div style={{ fontSize: '4rem', marginBottom: '1rem', color: 'var(--primary-color)' }}>
+                      <i className="fas fa-cloud-upload-alt"></i>
+                    </div>
+                    <h4 style={{ marginBottom: '1rem' }}>Selecciona un documento RFQ</h4>
+                    <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
+                      Soporta archivos PDF, Word (.docx/.doc) y Markdown (.md)
+                    </p>
+                    <button
+                      className="btn btn-primary btn-lg"
+                      onClick={() => rfqFileInputRef.current?.click()}
+                    >
+                      <i className="fas fa-folder-open"></i> Seleccionar Archivo
+                    </button>
+                    <div style={{ marginTop: '2rem', textAlign: 'left', maxWidth: '600px', margin: '2rem auto 0' }}>
+                      <h5 style={{ marginBottom: '0.5rem' }}>
+                        <i className="fas fa-info-circle"></i> ¿Cómo funciona?
+                      </h5>
+                      <ul style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: '1.6' }}>
+                        <li>Sube un documento que contenga los requisitos del proceso (RFQ)</li>
+                        <li>El sistema extraerá automáticamente el texto del documento</li>
+                        <li>Utilizará IA para analizar y generar los pasos del workflow</li>
+                        <li>Identificará variables, condiciones y acciones necesarias</li>
+                        <li>Generará un workflow completo listo para ejecutar</li>
+                      </ul>
+                    </div>
+                  </div>
+                )}
+
+                {isProcessingRFQ && (
+                  <div style={{ textAlign: 'center', padding: '2rem' }}>
+                    <div style={{ fontSize: '3rem', marginBottom: '1rem', color: 'var(--primary-color)' }}>
+                      <i className="fas fa-spinner fa-spin"></i>
+                    </div>
+                    <h4>Procesando documento...</h4>
+                    <div style={{ marginTop: '1.5rem' }}>
+                      <div style={{
+                        background: 'var(--dark-bg)',
+                        borderRadius: '10px',
+                        height: '20px',
+                        overflow: 'hidden',
+                        position: 'relative'
+                      }}>
+                        <div style={{
+                          background: 'linear-gradient(90deg, var(--primary-color), var(--accent-color))',
+                          height: '100%',
+                          width: `${rfqProcessingProgress}%`,
+                          transition: 'width 0.3s ease',
+                          borderRadius: '10px'
+                        }}></div>
+                      </div>
+                      <p style={{ marginTop: '0.5rem', color: 'var(--text-secondary)' }}>
+                        {rfqProcessingProgress}% completado
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {rfqContent && !isProcessingRFQ && (
+                  <div>
+                    <div style={{ marginBottom: '1rem' }}>
+                      <h4>
+                        <i className="fas fa-check-circle" style={{ color: 'var(--success-color)' }}></i>
+                        Documento procesado exitosamente
+                      </h4>
+                      <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+                        Se ha extraído el siguiente contenido del documento:
+                      </p>
+                    </div>
+                    <div style={{
+                      background: 'var(--dark-bg)',
+                      padding: '1rem',
+                      borderRadius: '8px',
+                      maxHeight: '400px',
+                      overflowY: 'auto',
+                      border: '1px solid var(--border-color)'
+                    }}>
+                      <pre style={{
+                        margin: 0,
+                        whiteSpace: 'pre-wrap',
+                        fontSize: '0.85rem',
+                        color: 'var(--text-secondary)'
+                      }}>
+                        {rfqContent}
+                      </pre>
+                    </div>
+                    <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
+                      <button
+                        className="btn btn-secondary"
+                        onClick={() => {
+                          setRfqContent('')
+                          setRfqFile(null)
+                        }}
+                      >
+                        <i className="fas fa-redo"></i> Procesar Otro Documento
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className="modal-footer">
+                <button className="btn btn-secondary" onClick={() => {
+                  setShowRFQModal(false)
+                  setRfqContent('')
+                  setRfqFile(null)
+                }}>
+                  Cerrar
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -6675,6 +6925,57 @@ function WorkflowsView() {
             </div>
           </div>
         )}
+
+        {/* Status Bar */}
+        <div className="workflow-status-bar" style={{ height: `${statusBarHeight}px`, minHeight: `${statusBarHeight}px`, maxHeight: `${statusBarHeight}px` }}>
+          {/* Resize Handle */}
+          <div
+            className="statusbar-resizer"
+            onMouseDown={(e) => {
+              e.preventDefault()
+              setIsResizingStatusBar(true)
+              setStatusBarResizeStart({ y: e.clientY, height: statusBarHeight })
+            }}
+          >
+            <div className="statusbar-resizer-line"></div>
+          </div>
+          <div className="status-left">
+            <div className="status-item">
+              <i className="fas fa-list"></i>
+              <span>{workflowSteps.length} {workflowSteps.length === 1 ? 'paso' : 'pasos'}</span>
+            </div>
+            <div className="status-item">
+              <i className="fas fa-cube"></i>
+              <span>{variables.length} {variables.length === 1 ? 'variable' : 'variables'}</span>
+            </div>
+            {breakpoints.size > 0 && (
+              <div className="status-item">
+                <i className="fas fa-circle" style={{color: '#ef4444'}}></i>
+                <span>{breakpoints.size} {breakpoints.size === 1 ? 'breakpoint' : 'breakpoints'}</span>
+              </div>
+            )}
+            {selectedStep && (
+              <div className="status-item">
+                <i className="fas fa-mouse-pointer"></i>
+                <span>Seleccionado: {selectedStep.label || selectedStep.action}</span>
+              </div>
+            )}
+          </div>
+          <div className="status-right">
+            <div className="status-item">
+              <i className="fas fa-save"></i>
+              <span>Guardado automático</span>
+            </div>
+            <div className="status-item">
+              <i className="fas fa-mouse"></i>
+              <span>{viewMode === 'visual' ? 'Visual' : viewMode === 'list' ? 'Lista' : 'Código'}</span>
+            </div>
+            <div className="status-item">
+              <i className="fas fa-code"></i>
+              <span>Alqvimia v2.0</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   )

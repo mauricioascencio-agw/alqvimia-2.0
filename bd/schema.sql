@@ -429,7 +429,7 @@ CREATE TABLE IF NOT EXISTS configuraciones_ocr (
     api_key_encrypted TEXT,
     endpoint VARCHAR(255),
     region VARCHAR(50),
-    idiomas_preferidos JSON DEFAULT '["es", "en"]',
+    idiomas_preferidos JSON,
     configuracion_adicional JSON,
     activo BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

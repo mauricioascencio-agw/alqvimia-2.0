@@ -566,7 +566,7 @@ function MCPView() {
     { id: 55, name: 'Power Automate', type: 'automation', icon: 'fa-microsoft', brand: true, status: 'connected', color: '#0066FF', description: 'Automatización Microsoft' },
     { id: 56, name: 'n8n', type: 'automation', icon: 'fa-sitemap', status: 'disconnected', color: '#EA4B71', description: 'Workflow open source' },
     { id: 57, name: 'UiPath', type: 'automation', icon: 'fa-robot', status: 'connected', color: '#FA4616', description: 'RPA empresarial' },
-    { id: 58, name: 'Automation Anywhere', type: 'automation', icon: 'fa-robot', status: 'disconnected', color: '#FF6900', description: 'RPA cognitiva' },
+    { id: 58, name: 'Generic RPA', type: 'automation', icon: 'fa-robot', status: 'disconnected', color: '#FF6900', description: 'Plataforma RPA' },
 
     // Monitoreo
     { id: 59, name: 'Prometheus', type: 'monitoring', icon: 'fa-fire', status: 'connected', color: '#E6522C', description: 'Monitoreo de métricas' },
