@@ -484,10 +484,12 @@ input:checked + .connection-slider:before {
     position: relative;
 }
 
-/* Eliminar padding para workflows view */
+/* Eliminar padding para workflows view - ocupa todo el espacio */
 #workflows-view {
     margin: -2rem;
     height: calc(100% + 4rem);
+    max-height: calc(100% + 4rem);
+    overflow: hidden;
 }
 
 .view {

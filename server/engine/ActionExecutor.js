@@ -161,23 +161,60 @@ export class ActionExecutor {
   // ==========================================
 
   /**
-   * Abrir navegador
+   * Abrir navegador con configuración stealth para evitar detección de bots
    */
   async openBrowser(params) {
     const browserType = params.browser || 'chrome'
     const headless = params.headless || false
     const maximized = params.maximized !== false
 
-    this.log('info', `Abriendo navegador: ${browserType}`)
+    this.log('info', `Abriendo navegador: ${browserType} (modo stealth)`)
 
     let browser
+
+    // Argumentos stealth para evitar detección de automatización
+    const stealthArgs = [
+      '--disable-blink-features=AutomationControlled',
+      '--disable-infobars',
+      '--disable-dev-shm-usage',
+      '--disable-browser-side-navigation',
+      '--disable-gpu',
+      '--no-first-run',
+      '--no-default-browser-check',
+      '--disable-popup-blocking',
+      '--disable-extensions',
+      '--disable-component-extensions-with-background-pages',
+      '--disable-default-apps',
+      '--disable-features=TranslateUI',
+      '--disable-hang-monitor',
+      '--disable-ipc-flooding-protection',
+      '--disable-renderer-backgrounding',
+      '--disable-backgrounding-occluded-windows',
+      '--disable-background-timer-throttling',
+      '--disable-sync',
+      '--metrics-recording-only',
+      '--mute-audio',
+      '--no-sandbox',
+      '--password-store=basic',
+      '--use-mock-keychain',
+      '--force-color-profile=srgb',
+      ...(maximized ? ['--start-maximized'] : [])
+    ]
+
     const launchOptions = {
       headless,
-      args: maximized ? ['--start-maximized'] : []
+      args: stealthArgs
     }
 
     if (browserType === 'firefox') {
-      browser = await firefox.launch(launchOptions)
+      browser = await firefox.launch({
+        headless,
+        args: maximized ? [] : [],
+        firefoxUserPrefs: {
+          'dom.webdriver.enabled': false,
+          'useAutomationExtension': false
+        }
+      })
     } else {
       // Chrome/Edge usan chromium
       browser = await chromium.launch({
@@ -186,14 +223,63 @@ export class ActionExecutor {
       })
     }
 
+    // Crear contexto con configuración más humana
     const context = await browser.newContext({
-      viewport: maximized ? null : { width: params.width || 1920, height: params.height || 1080 }
+      viewport: maximized ? null : { width: params.width || 1920, height: params.height || 1080 },
+      userAgent: params.userAgent || 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      locale: params.locale || 'es-MX',
+      timezoneId: params.timezone || 'America/Mexico_City',
+      geolocation: params.geolocation || { latitude: 19.4326, longitude: -99.1332 },
+      permissions: ['geolocation'],
+      colorScheme: 'light',
+      deviceScaleFactor: 1,
+      hasTouch: false,
+      isMobile: false,
+      javaScriptEnabled: true,
+      ignoreHTTPSErrors: true
     })
+
     const page = await context.newPage()
+
+    // Inyectar scripts para ocultar detección de webdriver
+    await page.addInitScript(() => {
+      // Ocultar webdriver
+      Object.defineProperty(navigator, 'webdriver', {
+        get: () => undefined,
+      })
+
+      // Ocultar plugins vacíos
+      Object.defineProperty(navigator, 'plugins', {
+        get: () => [1, 2, 3, 4, 5],
+      })
+
+      // Ocultar languages
+      Object.defineProperty(navigator, 'languages', {
+        get: () => ['es-MX', 'es', 'en-US', 'en'],
+      })
+
+      // Chrome específico
+      window.chrome = {
+        runtime: {},
+        loadTimes: function() {},
+        csi: function() {},
+        app: {}
+      }
+
+      // Permisos
+      const originalQuery = window.navigator.permissions.query
+      window.navigator.permissions.query = (parameters) => (
+        parameters.name === 'notifications' ?
+          Promise.resolve({ state: Notification.permission }) :
+          originalQuery(parameters)
+      )
+    })
 
     // Guardar referencia
     engineState.browsers.set(this.sessionId, browser)
     engineState.pages.set(this.sessionId, page)
+
+    this.log('info', 'Navegador iniciado con configuración anti-detección')
 
     return { browserId: this.sessionId }
   }

@@ -2,13 +2,14 @@
  * Workflow Studio - Diseño inspirado en UiPath y Power Automate
  */
 
-/* Layout principal de 3 paneles */
+/* Layout principal de 2 filas - SIN barra de estado inferior */
 .workflow-studio {
     display: grid;
     grid-template-columns: auto 6px 1fr 6px auto;
-    grid-template-rows: auto 1fr auto;
+    grid-template-rows: auto 1fr;
     height: 100%;
     max-height: 100%;
+    min-height: 0;
     gap: 0;
     background: var(--bg-primary);
     overflow: hidden;
@@ -83,7 +84,7 @@
     background: rgba(255, 255, 255, 0.1);
 }
 
-/* Panel izquierdo - Acciones */
+/* Panel izquierdo - Acciones - OCUPA TODO EL ESPACIO VERTICAL */
 .studio-left-panel {
     grid-column: 1;
     grid-row: 2;
@@ -94,7 +95,6 @@
     overflow: hidden;
     min-height: 0;
     height: 100%;
-    max-height: 100%;
     position: relative;
     width: 200px;
     min-width: 150px;
@@ -332,7 +332,7 @@
     color: var(--warning-color);
 }
 
-/* Panel central - Canvas */
+/* Panel central - Canvas - DEBE ocupar todo el espacio vertical */
 .studio-center-panel {
     grid-column: 3;
     grid-row: 2;
@@ -345,6 +345,7 @@
     min-height: 0;
     height: 100%;
     max-height: 100%;
+    flex: 1;
 }
 
 .canvas-toolbar {
@@ -500,14 +501,23 @@
     overflow: auto;
     padding: 0;
     position: relative;
+    background: var(--bg-primary);
+    min-height: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
 }
 
 .workflow-canvas {
-    min-height: 100%;
-    background-color: var(--bg-secondary);
+    flex: 1;
+    min-height: 0;
+    height: 100%;
+    background-color: var(--bg-primary);
     border-radius: 0;
     padding: 1rem;
-    transition: all 0.3s;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
 }
 
 .workflow-canvas.drag-over {
@@ -520,8 +530,8 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 100%;
-    min-height: 400px;
+    flex: 1;
+    min-height: 0;
     color: var(--text-secondary);
 }
 
@@ -567,6 +577,8 @@
     display: flex;
     flex-direction: column;
     gap: 0;
+    flex: 1;
+    min-height: 0;
 }
 
 /* Nodos de inicio y fin */
@@ -801,6 +813,8 @@
     flex-direction: column;
     align-items: center;
     padding: 2rem;
+    flex: 1;
+    min-height: 0;
 }
 
 /* Nodos de inicio/fin en vista de flujo */
@@ -1050,7 +1064,7 @@
     background: rgba(var(--primary-rgb), 0.05);
 }
 
-/* Panel derecho - Propiedades */
+/* Panel derecho - Propiedades - OCUPA TODO EL ESPACIO VERTICAL */
 .studio-right-panel {
     grid-column: 5;
     grid-row: 2;
@@ -1061,7 +1075,6 @@
     overflow: hidden;
     min-height: 0;
     height: 100%;
-    max-height: 100%;
     min-width: 280px;
     max-width: 550px;
     width: 340px;
@@ -3876,7 +3889,7 @@
 @media (max-width: 768px) {
     .workflow-studio {
         grid-template-columns: 1fr;
-        grid-template-rows: auto auto 1fr auto;
+        grid-template-rows: auto 1fr;
     }
 
     /* Ocultar paneles laterales en móvil */
@@ -3912,7 +3925,7 @@
 
     .canvas-area {
         grid-column: 1;
-        grid-row: 3;
+        grid-row: 2;
     }
 
     .studio-header {
@@ -3920,9 +3933,12 @@
         padding: 0.25rem 0.5rem;
     }
 
-    .canvas-toolbar {
+    .studio-center-panel {
         grid-column: 1;
         grid-row: 2;
+    }
+
+    .canvas-toolbar {
         overflow-x: auto;
         flex-wrap: nowrap;
         justify-content: flex-start;
@@ -3934,9 +3950,10 @@
         height: 4px;
     }
 
-    .studio-footer {
-        grid-column: 1;
-        grid-row: 4;
+    /* Status bar eliminada */
+    .studio-footer,
+    .workflow-status-bar {
+        display: none !important;
     }
 
     .workflow-name-input {
@@ -3979,9 +3996,9 @@
         font-size: 0.7rem;
     }
 
-    .studio-footer {
-        padding: 0.2rem 0.35rem;
-        font-size: 0.6rem;
+    .studio-footer,
+    .workflow-status-bar {
+        display: none !important;
     }
 
     .step-item {
@@ -4011,55 +4028,43 @@
    WORKFLOW STATUS BAR
    ======================================== */
 
+/* Status bar ELIMINADA - información movida al panel izquierdo */
 .workflow-status-bar {
-    grid-column: 1 / -1;
-    grid-row: 3;
+    display: none !important;
+}
+
+/* Quick stats en el panel izquierdo */
+.workflow-quick-stats {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.4rem 0.5rem;
+    background: var(--dark-bg);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.workflow-quick-stats .stat-badge {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    padding: 0.5rem 0.75rem;
-    background: var(--card-bg);
-    border-top: 1px solid var(--border-color);
-    font-size: 0.75rem;
+    gap: 0.3rem;
+    padding: 0.2rem 0.5rem;
+    background: rgba(var(--primary-rgb), 0.15);
+    border-radius: 4px;
+    font-size: 0.7rem;
     color: var(--text-secondary);
-    flex-shrink: 0;
-    position: relative;
-    overflow-y: auto;
 }
 
-/* Resize handle para status bar */
+.workflow-quick-stats .stat-badge i {
+    font-size: 0.6rem;
+    color: var(--primary-color);
+}
+
+/* Resize handle para status bar - DESHABILITADO para altura fija */
 .statusbar-resizer {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 6px;
-    cursor: row-resize;
-    z-index: 10;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: transparent;
-    transition: background 0.2s;
-    padding: 1px 0;
-}
-
-.statusbar-resizer:hover {
-    background: rgba(var(--primary-rgb), 0.1);
+    display: none;
 }
 
 .statusbar-resizer-line {
-    width: 40px;
-    height: 2px;
-    background: var(--border-color);
-    border-radius: 2px;
-    transition: all 0.2s;
-}
-
-.statusbar-resizer:hover .statusbar-resizer-line {
-    background: var(--primary-color);
-    width: 60px;
-    height: 3px;
+    display: none;
 }
 
 .status-left,
@@ -4086,25 +4091,18 @@
     font-size: 0.75rem;
 }
 
-/* Responsive status bar */
+/* Responsive - sin status bar */
 @media (max-width: 768px) {
-    .workflow-status-bar {
-        padding: 0.25rem 0.5rem;
-        font-size: 0.7rem;
+    .workflow-studio {
+        grid-template-rows: auto 1fr;
     }
 
-    .status-left,
-    .status-right {
-        gap: 0.5rem;
+    .workflow-quick-stats {
+        padding: 0.3rem 0.4rem;
     }
 
-    .status-item span {
-        font-size: 0.7rem;
-    }
-
-    /* Ocultar algunos items en móvil */
-    .status-right .status-item:nth-child(1),
-    .status-right .status-item:nth-child(2) {
-        display: none;
+    .workflow-quick-stats .stat-badge {
+        font-size: 0.65rem;
+        padding: 0.15rem 0.4rem;
     }
 }

@@ -5053,6 +5053,11 @@ function WorkflowsView() {
               <div className="actions-search">
                 <input type="text" placeholder={t('wf_search_actions')} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
               </div>
+              {/* Info de workflow - movido aquí desde status bar */}
+              <div className="workflow-quick-stats">
+                <span className="stat-badge"><i className="fas fa-list"></i> {workflowSteps.length} pasos</span>
+                <span className="stat-badge"><i className="fas fa-cube"></i> {variables.length} vars</span>
+              </div>
               <div className="actions-list">
                 {filteredCategories.map(category => (
                   <div key={category.id} className={`action-category ${expandedCategories[category.id] ? 'expanded' : ''} ${category.id === 'custom-components' ? 'custom-category' : ''}`}>
@@ -6926,56 +6931,6 @@ function WorkflowsView() {
           </div>
         )}
 
-        {/* Status Bar */}
-        <div className="workflow-status-bar" style={{ height: `${statusBarHeight}px`, minHeight: `${statusBarHeight}px`, maxHeight: `${statusBarHeight}px` }}>
-          {/* Resize Handle */}
-          <div
-            className="statusbar-resizer"
-            onMouseDown={(e) => {
-              e.preventDefault()
-              setIsResizingStatusBar(true)
-              setStatusBarResizeStart({ y: e.clientY, height: statusBarHeight })
-            }}
-          >
-            <div className="statusbar-resizer-line"></div>
-          </div>
-          <div className="status-left">
-            <div className="status-item">
-              <i className="fas fa-list"></i>
-              <span>{workflowSteps.length} {workflowSteps.length === 1 ? 'paso' : 'pasos'}</span>
-            </div>
-            <div className="status-item">
-              <i className="fas fa-cube"></i>
-              <span>{variables.length} {variables.length === 1 ? 'variable' : 'variables'}</span>
-            </div>
-            {breakpoints.size > 0 && (
-              <div className="status-item">
-                <i className="fas fa-circle" style={{color: '#ef4444'}}></i>
-                <span>{breakpoints.size} {breakpoints.size === 1 ? 'breakpoint' : 'breakpoints'}</span>
-              </div>
-            )}
-            {selectedStep && (
-              <div className="status-item">
-                <i className="fas fa-mouse-pointer"></i>
-                <span>Seleccionado: {selectedStep.label || selectedStep.action}</span>
-              </div>
-            )}
-          </div>
-          <div className="status-right">
-            <div className="status-item">
-              <i className="fas fa-save"></i>
-              <span>Guardado automático</span>
-            </div>
-            <div className="status-item">
-              <i className="fas fa-mouse"></i>
-              <span>{viewMode === 'visual' ? 'Visual' : viewMode === 'list' ? 'Lista' : 'Código'}</span>
-            </div>
-            <div className="status-item">
-              <i className="fas fa-code"></i>
-              <span>Alqvimia v2.0</span>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   )
