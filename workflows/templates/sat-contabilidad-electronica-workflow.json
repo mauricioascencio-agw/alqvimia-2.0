@@ -1,0 +1,202 @@
+{
+  "id": "wf_sat_contabilidad_electronica",
+  "nombre": "Gestor de Contabilidad Electronica",
+  "descripcion": "Workflow para generar y validar balanzas de comprobacion para envio al SAT",
+  "categoria": "fiscal-sat",
+  "version": "1.0.0",
+  "estado": "activo",
+  "trigger": {
+    "type": "schedule",
+    "config": {
+      "frequency": "monthly",
+      "dayOfMonth": 1,
+      "runAt": "08:00"
+    }
+  },
+  "variables": {
+    "rfc": "${CONFIG.rfc}",
+    "sistema_contable_url": "${CONFIG.sistema_contable_url}",
+    "sat_portal_url": "https://portalsat.plataforma.sat.gob.mx/",
+    "whatsapp_number": "${CONFIG.whatsapp_number}",
+    "email": "${CONFIG.email}",
+    "output_path": "${CONFIG.output_path}"
+  },
+  "pasos": [
+    {
+      "id": "step_1",
+      "type": "script",
+      "label": "Calcular periodo a reportar",
+      "properties": {
+        "code": "const hoy = new Date(); let mesReporte = hoy.getMonth() - 2; let anioReporte = hoy.getFullYear(); if (mesReporte < 0) { mesReporte += 12; anioReporte -= 1; } context.periodo = { mes: mesReporte + 1, anio: anioReporte, nombreMes: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'][mesReporte], fechaLimite: new Date(hoy.getFullYear(), hoy.getMonth(), 3) };",
+        "saveAs": "periodo"
+      }
+    },
+    {
+      "id": "step_2",
+      "type": "http_get",
+      "label": "Obtener catalogo de cuentas",
+      "properties": {
+        "url": "${sistema_contable_url}/api/catalogo-cuentas",
+        "headers": {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer ${CONFIG.contable_token}"
+        },
+        "saveAs": "catalogo_cuentas"
+      }
+    },
+    {
+      "id": "step_3",
+      "type": "http_get",
+      "label": "Obtener balanza del periodo",
+      "properties": {
+        "url": "${sistema_contable_url}/api/balanza",
+        "headers": {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer ${CONFIG.contable_token}"
+        },
+        "queryParams": {
+          "mes": "${periodo.mes}",
+          "anio": "${periodo.anio}"
+        },
+        "saveAs": "balanza_periodo"
+      }
+    },
+    {
+      "id": "step_4",
+      "type": "script",
+      "label": "Validar estructura de balanza",
+      "properties": {
+        "code": "const balanza = context.balanza_periodo; const catalogo = context.catalogo_cuentas; const errores = []; const cuentasValidas = []; balanza.forEach((cuenta, idx) => { const erroresCuenta = []; const cuentaCatalogo = catalogo.find(c => c.codigo === cuenta.numero_cuenta); if (!cuentaCatalogo) erroresCuenta.push({campo: 'CUENTA', mensaje: `Cuenta ${cuenta.numero_cuenta} no existe en catalogo SAT`}); if (!cuenta.numero_cuenta || !/^[0-9]{3,}$/.test(cuenta.numero_cuenta)) erroresCuenta.push({campo: 'NUMERO_CUENTA', mensaje: 'Numero de cuenta invalido'}); if (cuenta.saldo_inicial === undefined || isNaN(parseFloat(cuenta.saldo_inicial))) erroresCuenta.push({campo: 'SALDO_INICIAL', mensaje: 'Saldo inicial debe ser numerico'}); if (cuenta.debe === undefined || isNaN(parseFloat(cuenta.debe))) erroresCuenta.push({campo: 'DEBE', mensaje: 'Movimientos debe deben ser numericos'}); if (cuenta.haber === undefined || isNaN(parseFloat(cuenta.haber))) erroresCuenta.push({campo: 'HABER', mensaje: 'Movimientos haber deben ser numericos'}); if (cuenta.saldo_final === undefined || isNaN(parseFloat(cuenta.saldo_final))) erroresCuenta.push({campo: 'SALDO_FINAL', mensaje: 'Saldo final debe ser numerico'}); const calculado = parseFloat(cuenta.saldo_inicial) + parseFloat(cuenta.debe) - parseFloat(cuenta.haber); if (Math.abs(calculado - parseFloat(cuenta.saldo_final)) > 0.01) erroresCuenta.push({campo: 'CUADRE', mensaje: 'Saldo final no cuadra con movimientos'}); if (erroresCuenta.length > 0) { errores.push({ linea: idx + 1, cuenta: cuenta.numero_cuenta, errores: erroresCuenta }); } else { cuentasValidas.push(cuenta); } }); context.validacion_balanza = { total_cuentas: balanza.length, cuentas_validas: cuentasValidas.length, cuentas_con_error: errores.length, errores: errores, cuentas_validadas: cuentasValidas };",
+        "saveAs": "validacion_balanza"
+      }
+    },
+    {
+      "id": "step_5",
+      "type": "if_condition",
+      "label": "Verificar errores de validacion",
+      "properties": {
+        "condition": "${validacion_balanza.cuentas_con_error} > 0",
+        "trueSteps": ["step_6", "step_7"],
+        "falseSteps": ["step_8"]
+      }
+    },
+    {
+      "id": "step_6",
+      "type": "http_post",
+      "label": "Notificar errores de validacion",
+      "properties": {
+        "url": "http://localhost:4301/send/template",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "to": "${whatsapp_number}",
+          "templateName": "balanza_validation_errors",
+          "components": [
+            {
+              "type": "body",
+              "parameters": [
+                { "type": "text", "text": "${validacion_balanza.cuentas_con_error}" },
+                { "type": "text", "text": "${periodo.nombreMes} ${periodo.anio}" }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "step_7",
+      "type": "http_post",
+      "label": "Registrar errores en sistema",
+      "properties": {
+        "url": "http://localhost:4000/api/contabilidad/validation-errors",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "rfc": "${rfc}",
+          "periodo": "${periodo.mes}/${periodo.anio}",
+          "errores": "${validacion_balanza.errores}",
+          "timestamp": "${new Date().toISOString()}"
+        }
+      }
+    },
+    {
+      "id": "step_8",
+      "type": "script",
+      "label": "Generar XML de balanza SAT",
+      "properties": {
+        "code": "const cuentas = context.validacion_balanza.cuentas_validadas; const periodo = context.periodo; const rfc = context.rfc; let xml = '<?xml version=\"1.0\" encoding=\"UTF-8\"?>\\n'; xml += '<BCE:Balanza xmlns:BCE=\"http://www.sat.gob.mx/esquemas/ContabilidadE/1_3/BalanzaComprobacion\" '; xml += 'xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" '; xml += `Version=\"1.3\" RFC=\"${rfc}\" Mes=\"${String(periodo.mes).padStart(2, '0')}\" Anio=\"${periodo.anio}\" TipoEnvio=\"N\">\\n`; cuentas.forEach(cuenta => { xml += `  <BCE:Ctas NumCta=\"${cuenta.numero_cuenta}\" SaldoIni=\"${parseFloat(cuenta.saldo_inicial).toFixed(2)}\" Debe=\"${parseFloat(cuenta.debe).toFixed(2)}\" Haber=\"${parseFloat(cuenta.haber).toFixed(2)}\" SaldoFin=\"${parseFloat(cuenta.saldo_final).toFixed(2)}\"/>\\n`; }); xml += '</BCE:Balanza>'; context.archivo_xml = { nombre: `${rfc}${periodo.anio}${String(periodo.mes).padStart(2, '0')}BN.xml`, contenido: xml, cuentas: cuentas.length };",
+        "saveAs": "archivo_xml"
+      }
+    },
+    {
+      "id": "step_9",
+      "type": "write_file",
+      "label": "Guardar archivo XML",
+      "properties": {
+        "path": "${output_path}/${archivo_xml.nombre}",
+        "content": "${archivo_xml.contenido}",
+        "encoding": "utf-8"
+      }
+    },
+    {
+      "id": "step_10",
+      "type": "http_post",
+      "label": "Notificar archivo listo para envio",
+      "properties": {
+        "url": "http://localhost:4301/send/template",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "to": "${whatsapp_number}",
+          "templateName": "balanza_ready",
+          "components": [
+            {
+              "type": "body",
+              "parameters": [
+                { "type": "text", "text": "${periodo.nombreMes} ${periodo.anio}" },
+                { "type": "text", "text": "${archivo_xml.cuentas}" },
+                { "type": "text", "text": "${archivo_xml.nombre}" }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "step_11",
+      "type": "log_info",
+      "label": "Registrar proceso completado",
+      "properties": {
+        "message": "Generacion de balanza completada",
+        "data": {
+          "rfc": "${rfc}",
+          "periodo": "${periodo.mes}/${periodo.anio}",
+          "cuentas_procesadas": "${validacion_balanza.total_cuentas}",
+          "cuentas_validas": "${validacion_balanza.cuentas_validas}",
+          "archivo_generado": "${archivo_xml.nombre}",
+          "timestamp": "${new Date().toISOString()}"
+        }
+      }
+    }
+  ],
+  "configuracion": {
+    "continueOnError": false,
+    "maxRetries": 2,
+    "retryDelaySeconds": 60,
+    "timeout": 300000,
+    "notifications": {
+      "onSuccess": true,
+      "onError": true,
+      "channels": ["email", "whatsapp"]
+    }
+  },
+  "metadata": {
+    "author": "Alqvimia RPA",
+    "createdAt": "2025-01-13",
+    "lastModified": "2025-01-13",
+    "tags": ["sat", "fiscal", "contabilidad", "balanza", "xml"]
+  }
+}

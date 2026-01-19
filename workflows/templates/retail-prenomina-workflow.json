@@ -1,0 +1,189 @@
+{
+  "id": "wf_retail_prenomina",
+  "nombre": "Validacion de Prenomina Automatica",
+  "descripcion": "Workflow para validar prenomina contra sistema de asistencias y reglas de contrato",
+  "categoria": "retail",
+  "version": "1.0.0",
+  "estado": "activo",
+  "trigger": {
+    "type": "schedule",
+    "config": {
+      "frequency": "biweekly",
+      "dayOfMonth": [1, 16],
+      "runAt": "06:00"
+    }
+  },
+  "variables": {
+    "sistema_asistencia_url": "${CONFIG.sistema_asistencia_url}",
+    "sistema_nomina_url": "${CONFIG.sistema_nomina_url}",
+    "tolerancia_minutos": 10,
+    "email_rh": "${CONFIG.email_rh}"
+  },
+  "pasos": [
+    {
+      "id": "step_1",
+      "type": "script",
+      "label": "Calcular periodo de nomina",
+      "properties": {
+        "code": "const hoy = new Date(); const dia = hoy.getDate(); let inicio, fin; if (dia <= 15) { inicio = new Date(hoy.getFullYear(), hoy.getMonth(), 1); fin = new Date(hoy.getFullYear(), hoy.getMonth(), 15); } else { inicio = new Date(hoy.getFullYear(), hoy.getMonth(), 16); fin = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0); } context.periodo = { inicio: inicio.toISOString().split('T')[0], fin: fin.toISOString().split('T')[0], quincena: dia <= 15 ? 1 : 2, mes: hoy.getMonth() + 1, anio: hoy.getFullYear() };",
+        "saveAs": "periodo"
+      }
+    },
+    {
+      "id": "step_2",
+      "type": "http_get",
+      "label": "Obtener registros de asistencia",
+      "properties": {
+        "url": "${sistema_asistencia_url}/api/attendance",
+        "headers": {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer ${CONFIG.asistencia_token}"
+        },
+        "queryParams": {
+          "from": "${periodo.inicio}",
+          "to": "${periodo.fin}"
+        },
+        "saveAs": "asistencias"
+      }
+    },
+    {
+      "id": "step_3",
+      "type": "http_get",
+      "label": "Obtener prenomina del periodo",
+      "properties": {
+        "url": "${sistema_nomina_url}/api/prenomina",
+        "headers": {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer ${CONFIG.nomina_token}"
+        },
+        "queryParams": {
+          "periodo": "${periodo.quincena}",
+          "mes": "${periodo.mes}",
+          "anio": "${periodo.anio}"
+        },
+        "saveAs": "prenomina"
+      }
+    },
+    {
+      "id": "step_4",
+      "type": "http_get",
+      "label": "Obtener reglas de contrato por empleado",
+      "properties": {
+        "url": "${sistema_nomina_url}/api/employees/contracts",
+        "headers": {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer ${CONFIG.nomina_token}"
+        },
+        "saveAs": "contratos"
+      }
+    },
+    {
+      "id": "step_5",
+      "type": "script",
+      "label": "Validar prenomina contra asistencias",
+      "properties": {
+        "code": "const asistencias = context.asistencias; const prenomina = context.prenomina; const contratos = context.contratos; const tolerancia = context.tolerancia_minutos; const discrepancias = []; const validaciones = []; prenomina.forEach(empleado => { const asistenciaEmpleado = asistencias.filter(a => a.empleado_id === empleado.empleado_id); const contrato = contratos.find(c => c.empleado_id === empleado.empleado_id); const discrepanciasEmpleado = []; const diasTrabajados = new Set(asistenciaEmpleado.map(a => a.fecha)).size; if (diasTrabajados !== empleado.dias_trabajados) { discrepanciasEmpleado.push({ tipo: 'DIAS_TRABAJADOS', esperado: diasTrabajados, prenomina: empleado.dias_trabajados, diferencia: empleado.dias_trabajados - diasTrabajados }); } const horasTotales = asistenciaEmpleado.reduce((sum, a) => sum + (a.horas_trabajadas || 0), 0); if (Math.abs(horasTotales - empleado.horas_normales) > 1) { discrepanciasEmpleado.push({ tipo: 'HORAS_NORMALES', esperado: horasTotales, prenomina: empleado.horas_normales, diferencia: empleado.horas_normales - horasTotales }); } const retardos = asistenciaEmpleado.filter(a => a.minutos_retardo > tolerancia).length; if (retardos !== (empleado.retardos || 0)) { discrepanciasEmpleado.push({ tipo: 'RETARDOS', esperado: retardos, prenomina: empleado.retardos || 0 }); } if (contrato) { if (empleado.salario_diario !== contrato.salario_diario) { discrepanciasEmpleado.push({ tipo: 'SALARIO_DIARIO', esperado: contrato.salario_diario, prenomina: empleado.salario_diario }); } } if (discrepanciasEmpleado.length > 0) { discrepancias.push({ empleado_id: empleado.empleado_id, nombre: empleado.nombre, discrepancias: discrepanciasEmpleado }); } else { validaciones.push({ empleado_id: empleado.empleado_id, nombre: empleado.nombre, status: 'OK' }); } }); context.resultado_validacion = { total_empleados: prenomina.length, empleados_ok: validaciones.length, empleados_con_discrepancias: discrepancias.length, discrepancias: discrepancias, validaciones: validaciones };",
+        "saveAs": "resultado_validacion"
+      }
+    },
+    {
+      "id": "step_6",
+      "type": "if_condition",
+      "label": "Verificar si hay discrepancias",
+      "properties": {
+        "condition": "${resultado_validacion.empleados_con_discrepancias} > 0",
+        "trueSteps": ["step_7", "step_8"],
+        "falseSteps": ["step_9"]
+      }
+    },
+    {
+      "id": "step_7",
+      "type": "http_post",
+      "label": "Enviar reporte de discrepancias por email",
+      "properties": {
+        "url": "http://localhost:4000/api/email/send",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "to": "${email_rh}",
+          "subject": "Alerta: Discrepancias en Prenomina Q${periodo.quincena} ${periodo.mes}/${periodo.anio}",
+          "template": "prenomina_discrepancias",
+          "data": {
+            "periodo": "${periodo}",
+            "total_empleados": "${resultado_validacion.total_empleados}",
+            "empleados_con_discrepancias": "${resultado_validacion.empleados_con_discrepancias}",
+            "discrepancias": "${resultado_validacion.discrepancias}"
+          }
+        }
+      }
+    },
+    {
+      "id": "step_8",
+      "type": "http_post",
+      "label": "Registrar discrepancias en sistema",
+      "properties": {
+        "url": "http://localhost:4000/api/prenomina/discrepancias",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "periodo": "${periodo}",
+          "discrepancias": "${resultado_validacion.discrepancias}",
+          "timestamp": "${new Date().toISOString()}"
+        }
+      }
+    },
+    {
+      "id": "step_9",
+      "type": "http_post",
+      "label": "Marcar prenomina como validada",
+      "properties": {
+        "url": "${sistema_nomina_url}/api/prenomina/validate",
+        "headers": {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer ${CONFIG.nomina_token}"
+        },
+        "body": {
+          "periodo": "${periodo.quincena}",
+          "mes": "${periodo.mes}",
+          "anio": "${periodo.anio}",
+          "status": "${resultado_validacion.empleados_con_discrepancias > 0 ? 'con_observaciones' : 'validada'}",
+          "validado_por": "Alqvimia RPA"
+        }
+      }
+    },
+    {
+      "id": "step_10",
+      "type": "log_info",
+      "label": "Registrar validacion completada",
+      "properties": {
+        "message": "Validacion de prenomina completada",
+        "data": {
+          "periodo": "${periodo}",
+          "empleados_validados": "${resultado_validacion.total_empleados}",
+          "empleados_ok": "${resultado_validacion.empleados_ok}",
+          "con_discrepancias": "${resultado_validacion.empleados_con_discrepancias}",
+          "timestamp": "${new Date().toISOString()}"
+        }
+      }
+    }
+  ],
+  "configuracion": {
+    "continueOnError": false,
+    "maxRetries": 2,
+    "retryDelaySeconds": 60,
+    "timeout": 300000,
+    "notifications": {
+      "onSuccess": true,
+      "onError": true,
+      "channels": ["email"]
+    }
+  },
+  "metadata": {
+    "author": "Alqvimia RPA",
+    "createdAt": "2025-01-13",
+    "lastModified": "2025-01-13",
+    "tags": ["retail", "rh", "nomina", "asistencias", "validacion"]
+  }
+}

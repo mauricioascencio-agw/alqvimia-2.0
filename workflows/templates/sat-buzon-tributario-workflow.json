@@ -1,0 +1,201 @@
+{
+  "id": "wf_sat_buzon_tributario",
+  "nombre": "Monitoreo de Buzón Tributario SAT",
+  "descripcion": "Workflow para monitorear el buzón tributario del SAT y enviar alertas automáticas",
+  "categoria": "fiscal-sat",
+  "version": "1.0.0",
+  "estado": "activo",
+  "trigger": {
+    "type": "schedule",
+    "config": {
+      "frequency": "hourly",
+      "runAt": "00:00"
+    }
+  },
+  "variables": {
+    "sat_portal_url": "https://portalsat.plataforma.sat.gob.mx/",
+    "rfc": "${CONFIG.rfc}",
+    "whatsapp_number": "${CONFIG.whatsapp_number}",
+    "email": "${CONFIG.email}",
+    "urgency_threshold": 3
+  },
+  "pasos": [
+    {
+      "id": "step_1",
+      "type": "open_browser",
+      "label": "Abrir navegador para portal SAT",
+      "properties": {
+        "browser": "chromium",
+        "headless": true,
+        "timeout": 30000
+      }
+    },
+    {
+      "id": "step_2",
+      "type": "navigate",
+      "label": "Navegar al portal del SAT",
+      "properties": {
+        "url": "${sat_portal_url}",
+        "waitUntil": "networkidle"
+      }
+    },
+    {
+      "id": "step_3",
+      "type": "wait_element",
+      "label": "Esperar formulario de login",
+      "properties": {
+        "selector": "#rfc",
+        "timeout": 10000
+      }
+    },
+    {
+      "id": "step_4",
+      "type": "type",
+      "label": "Ingresar RFC",
+      "properties": {
+        "selector": "#rfc",
+        "value": "${rfc}",
+        "delay": 50
+      }
+    },
+    {
+      "id": "step_5",
+      "type": "click",
+      "label": "Seleccionar autenticación con e.firma",
+      "properties": {
+        "selector": "#btn-efirma"
+      }
+    },
+    {
+      "id": "step_6",
+      "type": "wait",
+      "label": "Esperar autenticación manual",
+      "properties": {
+        "seconds": 60,
+        "message": "Esperando autenticación con e.firma..."
+      }
+    },
+    {
+      "id": "step_7",
+      "type": "navigate",
+      "label": "Ir a Buzón Tributario",
+      "properties": {
+        "url": "${sat_portal_url}buzon-tributario",
+        "waitUntil": "networkidle"
+      }
+    },
+    {
+      "id": "step_8",
+      "type": "extract",
+      "label": "Extraer notificaciones pendientes",
+      "properties": {
+        "selector": ".notification-list .notification-item",
+        "multiple": true,
+        "extractData": {
+          "id": "@data-id",
+          "type": ".notification-type",
+          "subject": ".notification-subject",
+          "date": ".notification-date",
+          "status": ".notification-status"
+        },
+        "saveAs": "notifications"
+      }
+    },
+    {
+      "id": "step_9",
+      "type": "if_condition",
+      "label": "Verificar si hay notificaciones nuevas",
+      "properties": {
+        "condition": "${notifications.length} > 0",
+        "trueSteps": ["step_10", "step_11", "step_12"],
+        "falseSteps": ["step_13"]
+      }
+    },
+    {
+      "id": "step_10",
+      "type": "set_variable",
+      "label": "Procesar notificaciones",
+      "properties": {
+        "name": "processed_notifications",
+        "value": {
+          "expression": "notifications.map(n => ({ ...n, urgency: classifyUrgency(n.type), received_at: new Date().toISOString() }))"
+        }
+      }
+    },
+    {
+      "id": "step_11",
+      "type": "http_post",
+      "label": "Enviar alerta por WhatsApp",
+      "properties": {
+        "url": "http://localhost:4301/send/template",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "to": "${whatsapp_number}",
+          "templateName": "sat_notification_alert",
+          "components": [
+            {
+              "type": "body",
+              "parameters": [
+                { "type": "text", "text": "${processed_notifications.length}" },
+                { "type": "text", "text": "${processed_notifications[0].subject}" }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "step_12",
+      "type": "http_post",
+      "label": "Registrar en base de datos",
+      "properties": {
+        "url": "http://localhost:4000/api/notifications/bulk",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "notifications": "${processed_notifications}",
+          "source": "buzon_tributario",
+          "timestamp": "${new Date().toISOString()}"
+        }
+      }
+    },
+    {
+      "id": "step_13",
+      "type": "log_info",
+      "label": "Registrar verificación sin novedades",
+      "properties": {
+        "message": "Verificación de buzón completada. Sin notificaciones nuevas.",
+        "data": {
+          "timestamp": "${new Date().toISOString()}",
+          "rfc": "${rfc}"
+        }
+      }
+    },
+    {
+      "id": "step_14",
+      "type": "close_browser",
+      "label": "Cerrar navegador",
+      "properties": {}
+    }
+  ],
+  "configuracion": {
+    "continueOnError": false,
+    "maxRetries": 3,
+    "retryDelaySeconds": 60,
+    "timeout": 300000,
+    "notifications": {
+      "onSuccess": true,
+      "onError": true,
+      "channels": ["email", "webhook"]
+    }
+  },
+  "metadata": {
+    "author": "Alqvimia RPA",
+    "createdAt": "2025-01-13",
+    "lastModified": "2025-01-13",
+    "tags": ["sat", "fiscal", "buzon", "notificaciones"]
+  }
+}

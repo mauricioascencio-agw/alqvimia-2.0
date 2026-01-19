@@ -1,0 +1,241 @@
+{
+  "id": "wf_retail_atencion_clientes",
+  "nombre": "Procesamiento de Mensajes de Atención a Clientes",
+  "descripcion": "Workflow para procesar mensajes entrantes y generar respuestas automáticas",
+  "categoria": "retail",
+  "version": "1.0.0",
+  "estado": "activo",
+  "trigger": {
+    "type": "webhook",
+    "config": {
+      "endpoint": "/api/webhooks/customer-message",
+      "method": "POST"
+    }
+  },
+  "variables": {
+    "message": "${TRIGGER.body.message}",
+    "from": "${TRIGGER.body.from}",
+    "channel": "${TRIGGER.body.channel}",
+    "session_id": "${TRIGGER.body.session_id}",
+    "knowledge_base_url": "http://localhost:4360",
+    "whatsapp_agent_url": "http://localhost:4301",
+    "escalation_threshold": 0.3
+  },
+  "pasos": [
+    {
+      "id": "step_1",
+      "type": "log_info",
+      "label": "Registrar mensaje entrante",
+      "properties": {
+        "message": "Mensaje recibido de ${from} via ${channel}",
+        "data": {
+          "from": "${from}",
+          "channel": "${channel}",
+          "message": "${message}",
+          "timestamp": "${new Date().toISOString()}"
+        }
+      }
+    },
+    {
+      "id": "step_2",
+      "type": "http_post",
+      "label": "Detectar intención del mensaje",
+      "properties": {
+        "url": "${knowledge_base_url}/api/intent/detect",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "message": "${message}",
+          "session_id": "${session_id}"
+        },
+        "saveAs": "intent_result"
+      }
+    },
+    {
+      "id": "step_3",
+      "type": "if_condition",
+      "label": "Verificar si se detectó intención con alta confianza",
+      "properties": {
+        "condition": "${intent_result.confidence} >= ${escalation_threshold}",
+        "trueSteps": ["step_4"],
+        "falseSteps": ["step_7"]
+      }
+    },
+    {
+      "id": "step_4",
+      "type": "http_post",
+      "label": "Buscar respuesta en base de conocimiento",
+      "properties": {
+        "url": "${knowledge_base_url}/api/knowledge/search",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "intent": "${intent_result.intent}",
+          "message": "${message}",
+          "context": "${session_id}"
+        },
+        "saveAs": "knowledge_result"
+      }
+    },
+    {
+      "id": "step_5",
+      "type": "set_variable",
+      "label": "Preparar respuesta",
+      "properties": {
+        "name": "bot_response",
+        "value": "${knowledge_result.answer || 'Lo siento, no encontré información sobre eso. ¿Puedo ayudarte con algo más?'}"
+      }
+    },
+    {
+      "id": "step_6",
+      "type": "if_condition",
+      "label": "Verificar canal de respuesta",
+      "properties": {
+        "condition": "${channel} === 'whatsapp'",
+        "trueSteps": ["step_send_whatsapp"],
+        "falseSteps": ["step_send_web"]
+      }
+    },
+    {
+      "id": "step_send_whatsapp",
+      "type": "http_post",
+      "label": "Enviar respuesta por WhatsApp",
+      "properties": {
+        "url": "${whatsapp_agent_url}/send",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "to": "${from}",
+          "text": "${bot_response}"
+        },
+        "saveAs": "send_result"
+      }
+    },
+    {
+      "id": "step_send_web",
+      "type": "http_post",
+      "label": "Enviar respuesta por WebSocket",
+      "properties": {
+        "url": "http://localhost:4000/api/chat/send",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "session_id": "${session_id}",
+          "message": "${bot_response}",
+          "type": "bot"
+        },
+        "saveAs": "send_result"
+      }
+    },
+    {
+      "id": "step_7",
+      "type": "log_info",
+      "label": "Registrar caso de baja confianza",
+      "properties": {
+        "message": "Mensaje con baja confianza - considerando escalado",
+        "data": {
+          "confidence": "${intent_result.confidence}",
+          "message": "${message}"
+        }
+      }
+    },
+    {
+      "id": "step_8",
+      "type": "http_post",
+      "label": "Verificar si requiere escalado a humano",
+      "properties": {
+        "url": "${knowledge_base_url}/api/escalation/check",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "session_id": "${session_id}",
+          "message": "${message}",
+          "intent": "${intent_result.intent}",
+          "confidence": "${intent_result.confidence}"
+        },
+        "saveAs": "escalation_check"
+      }
+    },
+    {
+      "id": "step_9",
+      "type": "if_condition",
+      "label": "Verificar si hay que escalar",
+      "properties": {
+        "condition": "${escalation_check.shouldEscalate}",
+        "trueSteps": ["step_escalate"],
+        "falseSteps": ["step_default_response"]
+      }
+    },
+    {
+      "id": "step_escalate",
+      "type": "http_post",
+      "label": "Escalar a agente humano",
+      "properties": {
+        "url": "${knowledge_base_url}/api/escalation/create",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "session_id": "${session_id}",
+          "from": "${from}",
+          "channel": "${channel}",
+          "reason": "${escalation_check.reason}",
+          "conversation_history": "${escalation_check.history}"
+        },
+        "saveAs": "escalation_result"
+      }
+    },
+    {
+      "id": "step_default_response",
+      "type": "set_variable",
+      "label": "Generar respuesta por defecto",
+      "properties": {
+        "name": "bot_response",
+        "value": "Disculpa, no entendí tu pregunta. ¿Podrías reformularla? También puedes seleccionar una opción:\n1. Horarios\n2. Estado de pedido\n3. Devoluciones\n4. Hablar con un asesor"
+      }
+    },
+    {
+      "id": "step_10",
+      "type": "http_post",
+      "label": "Registrar interacción",
+      "properties": {
+        "url": "http://localhost:4000/api/interactions/log",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "session_id": "${session_id}",
+          "from": "${from}",
+          "channel": "${channel}",
+          "user_message": "${message}",
+          "bot_response": "${bot_response}",
+          "intent": "${intent_result.intent}",
+          "confidence": "${intent_result.confidence}",
+          "escalated": "${escalation_check?.shouldEscalate || false}",
+          "timestamp": "${new Date().toISOString()}"
+        }
+      }
+    }
+  ],
+  "configuracion": {
+    "continueOnError": true,
+    "maxRetries": 2,
+    "retryDelaySeconds": 5,
+    "timeout": 30000,
+    "notifications": {
+      "onError": true,
+      "channels": ["webhook"]
+    }
+  },
+  "metadata": {
+    "author": "Alqvimia RPA",
+    "createdAt": "2025-01-13",
+    "lastModified": "2025-01-13",
+    "tags": ["retail", "atencion", "clientes", "chatbot", "whatsapp"]
+  }
+}

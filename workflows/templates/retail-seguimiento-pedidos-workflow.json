@@ -1,0 +1,148 @@
+{
+  "id": "wf_retail_seguimiento_pedidos",
+  "nombre": "Seguimiento Automatico de Pedidos",
+  "descripcion": "Workflow para monitorear estados de pedidos y notificar cambios automaticamente",
+  "categoria": "retail",
+  "version": "1.0.0",
+  "estado": "activo",
+  "trigger": {
+    "type": "schedule",
+    "config": {
+      "frequency": "every",
+      "interval": 15,
+      "unit": "minutes"
+    }
+  },
+  "variables": {
+    "oms_api_url": "${CONFIG.oms_api_url}",
+    "whatsapp_enabled": "${CONFIG.whatsapp_enabled}",
+    "email_enabled": "${CONFIG.email_enabled}"
+  },
+  "pasos": [
+    {
+      "id": "step_1",
+      "type": "http_get",
+      "label": "Obtener pedidos con cambios de estado",
+      "properties": {
+        "url": "${oms_api_url}/api/orders/status-changes",
+        "headers": {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer ${CONFIG.oms_token}"
+        },
+        "queryParams": {
+          "since": "${new Date(Date.now() - 15*60*1000).toISOString()}"
+        },
+        "saveAs": "pedidos_actualizados"
+      }
+    },
+    {
+      "id": "step_2",
+      "type": "if_condition",
+      "label": "Verificar si hay pedidos actualizados",
+      "properties": {
+        "condition": "${pedidos_actualizados.length} > 0",
+        "trueSteps": ["step_3"],
+        "falseSteps": ["step_7"]
+      }
+    },
+    {
+      "id": "step_3",
+      "type": "for_each",
+      "label": "Procesar cada pedido actualizado",
+      "properties": {
+        "collection": "${pedidos_actualizados}",
+        "itemVariable": "pedido",
+        "steps": ["step_4", "step_5", "step_6"]
+      }
+    },
+    {
+      "id": "step_4",
+      "type": "script",
+      "label": "Determinar mensaje segun estado",
+      "properties": {
+        "code": "const pedido = context.pedido; const mensajes = { 'confirmado': `Tu pedido #${pedido.numero} ha sido confirmado. Te notificaremos cuando sea enviado.`, 'en_preparacion': `Tu pedido #${pedido.numero} esta siendo preparado. Pronto estara listo para envio.`, 'enviado': `Tu pedido #${pedido.numero} ha sido enviado. Numero de guia: ${pedido.tracking || 'Pendiente'}`, 'en_transito': `Tu pedido #${pedido.numero} esta en camino. Rastrea en: ${pedido.tracking_url || ''}`, 'en_reparto': `Tu pedido #${pedido.numero} esta en reparto y llegara hoy.`, 'entregado': `Tu pedido #${pedido.numero} ha sido entregado. Gracias por tu compra!`, 'cancelado': `Tu pedido #${pedido.numero} ha sido cancelado. Contactanos si tienes dudas.` }; context.notificacion = { pedido_id: pedido.id, numero: pedido.numero, cliente: pedido.cliente, telefono: pedido.cliente_telefono, email: pedido.cliente_email, estado: pedido.estado, mensaje: mensajes[pedido.estado] || `Tu pedido #${pedido.numero} tiene una actualizacion.`, template: `order_status_${pedido.estado}` };",
+        "saveAs": "notificacion"
+      }
+    },
+    {
+      "id": "step_5",
+      "type": "if_condition",
+      "label": "Enviar WhatsApp si esta habilitado",
+      "properties": {
+        "condition": "${whatsapp_enabled} === true && ${notificacion.telefono}",
+        "trueSteps": ["step_5a"],
+        "falseSteps": []
+      }
+    },
+    {
+      "id": "step_5a",
+      "type": "http_post",
+      "label": "Enviar notificacion WhatsApp",
+      "properties": {
+        "url": "http://localhost:4301/send/template",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "to": "${notificacion.telefono}",
+          "templateName": "${notificacion.template}",
+          "components": [
+            {
+              "type": "body",
+              "parameters": [
+                { "type": "text", "text": "${notificacion.numero}" },
+                { "type": "text", "text": "${notificacion.cliente}" }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "step_6",
+      "type": "http_post",
+      "label": "Registrar notificacion enviada",
+      "properties": {
+        "url": "http://localhost:4000/api/notifications/order-status",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "pedido_id": "${notificacion.pedido_id}",
+          "estado": "${notificacion.estado}",
+          "canales_notificados": ["whatsapp"],
+          "timestamp": "${new Date().toISOString()}"
+        }
+      }
+    },
+    {
+      "id": "step_7",
+      "type": "log_info",
+      "label": "Registrar ejecucion",
+      "properties": {
+        "message": "Monitoreo de pedidos completado",
+        "data": {
+          "pedidos_actualizados": "${pedidos_actualizados.length}",
+          "timestamp": "${new Date().toISOString()}"
+        }
+      }
+    }
+  ],
+  "configuracion": {
+    "continueOnError": true,
+    "maxRetries": 2,
+    "retryDelaySeconds": 30,
+    "timeout": 120000,
+    "notifications": {
+      "onSuccess": false,
+      "onError": true,
+      "channels": ["email"]
+    }
+  },
+  "metadata": {
+    "author": "Alqvimia RPA",
+    "createdAt": "2025-01-13",
+    "lastModified": "2025-01-13",
+    "tags": ["retail", "pedidos", "tracking", "notificaciones"]
+  }
+}

@@ -30,6 +30,8 @@ const translations = {
     nav_scheduler: 'Programador',
     nav_onboarding: 'Asistente',
     nav_admin: 'Administración',
+    nav_agent_catalog: 'Catálogo de Agentes',
+    nav_workflow_templates: 'Plantillas de Workflows',
 
     // Scheduler
     scheduler_subtitle: 'Programa ejecuciones automaticas de tus workflows',
@@ -553,6 +555,8 @@ const translations = {
     nav_scheduler: 'Scheduler',
     nav_onboarding: 'Wizard',
     nav_admin: 'Admin',
+    nav_agent_catalog: 'Agent Catalog',
+    nav_workflow_templates: 'Workflow Templates',
 
     // Scheduler
     scheduler_subtitle: 'Schedule automatic workflow executions',
@@ -1074,6 +1078,10 @@ const translations = {
     nav_videoconference: 'Videoconferência',
     nav_settings: 'Configurações',
     nav_scheduler: 'Agendador',
+    nav_onboarding: 'Assistente',
+    nav_admin: 'Administração',
+    nav_agent_catalog: 'Catálogo de Agentes',
+    nav_workflow_templates: 'Modelos de Workflows',
 
     // Scheduler
     scheduler_subtitle: 'Agende execuções automáticas de seus workflows',

@@ -22,6 +22,8 @@ import SettingsView from './views/SettingsView'
 import AgentMarketplaceView from './views/AgentMarketplaceView'
 import OnboardingWizard from './views/OnboardingWizard'
 import AdminDashboard from './views/AdminDashboard'
+import AgentCatalogView from './views/AgentCatalogView'
+import WorkflowTemplatesView from './views/WorkflowTemplatesView'
 
 function App() {
   const [currentView, setCurrentView] = useState('spy')
@@ -138,10 +140,12 @@ function App() {
     { id: 'spy', icon: 'fa-search', labelKey: 'nav_spy' },
     { id: 'recorder', icon: 'fa-video', labelKey: 'nav_recorder' },
     { id: 'workflows', icon: 'fa-project-diagram', labelKey: 'nav_workflows' },
+    { id: 'workflow-templates', icon: 'fa-file-code', labelKey: 'nav_workflow_templates' },
     { id: 'executor', icon: 'fa-play-circle', labelKey: 'nav_executor' },
     { id: 'scheduler', icon: 'fa-calendar-alt', labelKey: 'nav_scheduler' },
     { id: 'code-editor', icon: 'fa-code', labelKey: 'nav_code_editor' },
     { id: 'agents', icon: 'fa-robot', labelKey: 'nav_agents' },
+    { id: 'agent-catalog', icon: 'fa-layer-group', labelKey: 'nav_agent_catalog' },
     { id: 'mcp', icon: 'fa-plug', labelKey: 'nav_mcp' },
     { id: 'marketplace', icon: 'fa-store', labelKey: 'nav_marketplace' },
     { id: 'onboarding', icon: 'fa-magic', labelKey: 'nav_onboarding' },
@@ -158,10 +162,12 @@ function App() {
       case 'spy': return <SpyView />
       case 'recorder': return <RecorderView />
       case 'workflows': return <WorkflowsView />
+      case 'workflow-templates': return <WorkflowTemplatesView />
       case 'executor': return <ExecutorView />
       case 'scheduler': return <SchedulerView />
       case 'code-editor': return <CodeEditorView />
       case 'agents': return <AgentsView />
+      case 'agent-catalog': return <AgentCatalogView />
       case 'mcp': return <MCPView />
       case 'marketplace': return <AgentMarketplaceView />
       case 'onboarding': return <OnboardingWizard />

@@ -28,7 +28,8 @@
       "Bash(git push:*)",
       "Bash(npx esbuild:*)",
       "Bash(npx eslint:*)",
-      "Bash(node --check:*)"
+      "Bash(node --check:*)",
+      "Bash(grep:*)"
     ]
   }
 }

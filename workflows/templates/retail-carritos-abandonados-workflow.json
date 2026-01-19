@@ -1,0 +1,171 @@
+{
+  "id": "wf_retail_carritos_abandonados",
+  "nombre": "Recuperacion de Carritos Abandonados",
+  "descripcion": "Workflow para detectar y recuperar carritos abandonados con mensajes personalizados",
+  "categoria": "retail",
+  "version": "1.0.0",
+  "estado": "activo",
+  "trigger": {
+    "type": "schedule",
+    "config": {
+      "frequency": "hourly",
+      "runAt": "00:30"
+    }
+  },
+  "variables": {
+    "ecommerce_api_url": "${CONFIG.ecommerce_api_url}",
+    "tiempo_abandono_minutos": 60,
+    "max_recordatorios": 3,
+    "descuento_recuperacion": 10
+  },
+  "pasos": [
+    {
+      "id": "step_1",
+      "type": "http_get",
+      "label": "Obtener carritos abandonados",
+      "properties": {
+        "url": "${ecommerce_api_url}/api/carts/abandoned",
+        "headers": {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer ${CONFIG.ecommerce_token}"
+        },
+        "queryParams": {
+          "abandonedSince": "${tiempo_abandono_minutos}",
+          "hasEmail": true
+        },
+        "saveAs": "carritos_abandonados"
+      }
+    },
+    {
+      "id": "step_2",
+      "type": "http_get",
+      "label": "Obtener historial de recordatorios",
+      "properties": {
+        "url": "http://localhost:4000/api/cart-reminders/history",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "saveAs": "historial_recordatorios"
+      }
+    },
+    {
+      "id": "step_3",
+      "type": "script",
+      "label": "Filtrar carritos elegibles",
+      "properties": {
+        "code": "const carritos = context.carritos_abandonados; const historial = context.historial_recordatorios; const maxRecordatorios = context.max_recordatorios; const elegibles = carritos.filter(carrito => { const recordatoriosEnviados = historial.filter(r => r.carrito_id === carrito.id).length; return recordatoriosEnviados < maxRecordatorios; }).map(carrito => { const recordatoriosEnviados = historial.filter(r => r.carrito_id === carrito.id).length; return { ...carrito, recordatorio_numero: recordatoriosEnviados + 1, valor_total: carrito.items.reduce((sum, item) => sum + (item.precio * item.cantidad), 0), producto_principal: carrito.items[0]?.nombre || 'tus productos' }; }); context.carritos_elegibles = elegibles;",
+        "saveAs": "carritos_elegibles"
+      }
+    },
+    {
+      "id": "step_4",
+      "type": "if_condition",
+      "label": "Verificar carritos elegibles",
+      "properties": {
+        "condition": "${carritos_elegibles.length} > 0",
+        "trueSteps": ["step_5"],
+        "falseSteps": ["step_9"]
+      }
+    },
+    {
+      "id": "step_5",
+      "type": "for_each",
+      "label": "Procesar cada carrito",
+      "properties": {
+        "collection": "${carritos_elegibles}",
+        "itemVariable": "carrito",
+        "steps": ["step_6", "step_7", "step_8"]
+      }
+    },
+    {
+      "id": "step_6",
+      "type": "script",
+      "label": "Generar mensaje personalizado",
+      "properties": {
+        "code": "const carrito = context.carrito; const descuento = context.descuento_recuperacion; const mensajes = { 1: { asunto: `Olvidaste algo en tu carrito`, mensaje: `Hola ${carrito.cliente_nombre}, notamos que dejaste ${carrito.producto_principal} en tu carrito. Completa tu compra antes de que se agote.`, incluir_descuento: false }, 2: { asunto: `Tus productos te estan esperando`, mensaje: `Hola ${carrito.cliente_nombre}, ${carrito.producto_principal} sigue en tu carrito. Usa el codigo VUELVE${descuento} para obtener ${descuento}% de descuento.`, incluir_descuento: true, codigo_descuento: `VUELVE${descuento}` }, 3: { asunto: `Ultima oportunidad - ${descuento}% de descuento`, mensaje: `Hola ${carrito.cliente_nombre}, es tu ultima oportunidad de obtener ${carrito.producto_principal} con ${descuento}% de descuento. Codigo: ULTIMO${descuento}`, incluir_descuento: true, codigo_descuento: `ULTIMO${descuento}` } }; const config = mensajes[carrito.recordatorio_numero] || mensajes[1]; context.mensaje_carrito = { carrito_id: carrito.id, cliente_email: carrito.cliente_email, cliente_telefono: carrito.cliente_telefono, cliente_nombre: carrito.cliente_nombre, asunto: config.asunto, mensaje: config.mensaje, incluir_descuento: config.incluir_descuento, codigo_descuento: config.codigo_descuento, valor_carrito: carrito.valor_total, recordatorio_numero: carrito.recordatorio_numero, url_carrito: `${context.ecommerce_api_url}/cart/recover/${carrito.recovery_token}` };",
+        "saveAs": "mensaje_carrito"
+      }
+    },
+    {
+      "id": "step_7",
+      "type": "http_post",
+      "label": "Enviar WhatsApp de recuperacion",
+      "properties": {
+        "url": "http://localhost:4301/send/template",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "to": "${mensaje_carrito.cliente_telefono}",
+          "templateName": "cart_recovery_${mensaje_carrito.recordatorio_numero}",
+          "components": [
+            {
+              "type": "body",
+              "parameters": [
+                { "type": "text", "text": "${mensaje_carrito.cliente_nombre}" },
+                { "type": "text", "text": "${mensaje_carrito.codigo_descuento || ''}" }
+              ]
+            },
+            {
+              "type": "button",
+              "sub_type": "url",
+              "index": 0,
+              "parameters": [
+                { "type": "text", "text": "${mensaje_carrito.url_carrito}" }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "step_8",
+      "type": "http_post",
+      "label": "Registrar recordatorio enviado",
+      "properties": {
+        "url": "http://localhost:4000/api/cart-reminders",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "carrito_id": "${mensaje_carrito.carrito_id}",
+          "cliente_email": "${mensaje_carrito.cliente_email}",
+          "recordatorio_numero": "${mensaje_carrito.recordatorio_numero}",
+          "valor_carrito": "${mensaje_carrito.valor_carrito}",
+          "descuento_ofrecido": "${mensaje_carrito.codigo_descuento}",
+          "timestamp": "${new Date().toISOString()}"
+        }
+      }
+    },
+    {
+      "id": "step_9",
+      "type": "log_info",
+      "label": "Registrar ejecucion",
+      "properties": {
+        "message": "Proceso de carritos abandonados completado",
+        "data": {
+          "carritos_detectados": "${carritos_abandonados.length}",
+          "carritos_procesados": "${carritos_elegibles.length}",
+          "timestamp": "${new Date().toISOString()}"
+        }
+      }
+    }
+  ],
+  "configuracion": {
+    "continueOnError": true,
+    "maxRetries": 2,
+    "retryDelaySeconds": 30,
+    "timeout": 180000,
+    "notifications": {
+      "onSuccess": false,
+      "onError": true,
+      "channels": ["email"]
+    }
+  },
+  "metadata": {
+    "author": "Alqvimia RPA",
+    "createdAt": "2025-01-13",
+    "lastModified": "2025-01-13",
+    "tags": ["retail", "ecommerce", "carritos", "recuperacion", "marketing"]
+  }
+}

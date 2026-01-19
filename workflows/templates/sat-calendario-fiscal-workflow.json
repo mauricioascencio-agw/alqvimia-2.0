@@ -1,0 +1,148 @@
+{
+  "id": "wf_sat_calendario_fiscal",
+  "nombre": "Calendario Fiscal Inteligente",
+  "descripcion": "Workflow para generar recordatorios personalizados de obligaciones fiscales por regimen",
+  "categoria": "fiscal-sat",
+  "version": "1.0.0",
+  "estado": "activo",
+  "trigger": {
+    "type": "schedule",
+    "config": {
+      "frequency": "daily",
+      "runAt": "07:00"
+    }
+  },
+  "variables": {
+    "rfc": "${CONFIG.rfc}",
+    "regimen_fiscal": "${CONFIG.regimen_fiscal}",
+    "whatsapp_number": "${CONFIG.whatsapp_number}",
+    "email": "${CONFIG.email}",
+    "dias_anticipacion": 3
+  },
+  "pasos": [
+    {
+      "id": "step_1",
+      "type": "script",
+      "label": "Calcular obligaciones del mes actual",
+      "properties": {
+        "code": "const hoy = new Date(); const mes = hoy.getMonth(); const anio = hoy.getFullYear(); const regimen = context.regimen_fiscal; const obligaciones = []; const ultimoDiaMes = new Date(anio, mes + 1, 0).getDate(); if (['601', '603', '612', '620', '621', '622', '623', '624', '625', '626'].includes(regimen)) { obligaciones.push({ tipo: 'ISR_PROVISIONAL', nombre: 'Declaracion Provisional ISR', fechaLimite: new Date(anio, mes, 17), descripcion: 'Pago provisional de ISR del mes anterior' }); obligaciones.push({ tipo: 'IVA_MENSUAL', nombre: 'Declaracion Mensual IVA', fechaLimite: new Date(anio, mes, 17), descripcion: 'Declaracion y pago de IVA del mes anterior' }); } if (['601', '603'].includes(regimen)) { if (mes === 1 || mes === 4 || mes === 7 || mes === 10) { obligaciones.push({ tipo: 'CONTABILIDAD_ELECTRONICA', nombre: 'Envio Contabilidad Electronica', fechaLimite: new Date(anio, mes, 3), descripcion: 'Envio de balanza de comprobacion del periodo anterior' }); } obligaciones.push({ tipo: 'DIOT', nombre: 'DIOT Mensual', fechaLimite: new Date(anio, mes, ultimoDiaMes), descripcion: 'Declaracion Informativa de Operaciones con Terceros' }); } context.obligaciones_mes = obligaciones.map(o => ({ ...o, diasRestantes: Math.ceil((o.fechaLimite - hoy) / (1000 * 60 * 60 * 24)), urgente: Math.ceil((o.fechaLimite - hoy) / (1000 * 60 * 60 * 24)) <= context.dias_anticipacion }));",
+        "saveAs": "obligaciones_mes"
+      }
+    },
+    {
+      "id": "step_2",
+      "type": "set_variable",
+      "label": "Filtrar obligaciones urgentes",
+      "properties": {
+        "name": "obligaciones_urgentes",
+        "value": {
+          "expression": "obligaciones_mes.filter(o => o.urgente && o.diasRestantes >= 0)"
+        }
+      }
+    },
+    {
+      "id": "step_3",
+      "type": "if_condition",
+      "label": "Verificar obligaciones urgentes",
+      "properties": {
+        "condition": "${obligaciones_urgentes.length} > 0",
+        "trueSteps": ["step_4", "step_5", "step_6"],
+        "falseSteps": ["step_7"]
+      }
+    },
+    {
+      "id": "step_4",
+      "type": "http_post",
+      "label": "Enviar alerta WhatsApp",
+      "properties": {
+        "url": "http://localhost:4301/send/template",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "to": "${whatsapp_number}",
+          "templateName": "fiscal_calendar_reminder",
+          "components": [
+            {
+              "type": "body",
+              "parameters": [
+                { "type": "text", "text": "${obligaciones_urgentes.length}" },
+                { "type": "text", "text": "${obligaciones_urgentes[0].nombre}" },
+                { "type": "text", "text": "${obligaciones_urgentes[0].diasRestantes}" }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "step_5",
+      "type": "http_post",
+      "label": "Enviar recordatorio por email",
+      "properties": {
+        "url": "http://localhost:4000/api/email/send",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "to": "${email}",
+          "subject": "Recordatorio: Obligaciones fiscales proximas a vencer",
+          "template": "fiscal_reminder",
+          "data": {
+            "rfc": "${rfc}",
+            "obligaciones": "${obligaciones_urgentes}"
+          }
+        }
+      }
+    },
+    {
+      "id": "step_6",
+      "type": "http_post",
+      "label": "Registrar recordatorios enviados",
+      "properties": {
+        "url": "http://localhost:4000/api/fiscal/reminders",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "rfc": "${rfc}",
+          "obligaciones": "${obligaciones_urgentes}",
+          "canales": ["whatsapp", "email"],
+          "timestamp": "${new Date().toISOString()}"
+        }
+      }
+    },
+    {
+      "id": "step_7",
+      "type": "log_info",
+      "label": "Registrar verificacion diaria",
+      "properties": {
+        "message": "Verificacion de calendario fiscal completada",
+        "data": {
+          "rfc": "${rfc}",
+          "regimen": "${regimen_fiscal}",
+          "obligaciones_mes": "${obligaciones_mes.length}",
+          "obligaciones_urgentes": "${obligaciones_urgentes.length}",
+          "timestamp": "${new Date().toISOString()}"
+        }
+      }
+    }
+  ],
+  "configuracion": {
+    "continueOnError": true,
+    "maxRetries": 2,
+    "retryDelaySeconds": 30,
+    "timeout": 60000,
+    "notifications": {
+      "onSuccess": false,
+      "onError": true,
+      "channels": ["email"]
+    }
+  },
+  "metadata": {
+    "author": "Alqvimia RPA",
+    "createdAt": "2025-01-13",
+    "lastModified": "2025-01-13",
+    "tags": ["sat", "fiscal", "calendario", "recordatorios", "obligaciones"]
+  }
+}

@@ -23,6 +23,8 @@
 @import './assets/css/scheduler-styles.css';
 @import './assets/css/recorder-styles.css';
 @import './assets/css/login-styles.css';
+@import './assets/css/agent-catalog.css';
+@import './assets/css/workflow-templates.css';
 
 /* Reset adicional para React */
 #root {

@@ -1,0 +1,191 @@
+{
+  "id": "wf_sat_diot",
+  "nombre": "Administrador DIOT",
+  "descripcion": "Workflow para validar y preparar la Declaracion Informativa de Operaciones con Terceros",
+  "categoria": "fiscal-sat",
+  "version": "1.0.0",
+  "estado": "activo",
+  "trigger": {
+    "type": "schedule",
+    "config": {
+      "frequency": "monthly",
+      "dayOfMonth": 20,
+      "runAt": "09:00"
+    }
+  },
+  "variables": {
+    "rfc": "${CONFIG.rfc}",
+    "erp_api_url": "${CONFIG.erp_api_url}",
+    "whatsapp_number": "${CONFIG.whatsapp_number}",
+    "email": "${CONFIG.email}",
+    "output_path": "${CONFIG.output_path}"
+  },
+  "pasos": [
+    {
+      "id": "step_1",
+      "type": "http_get",
+      "label": "Obtener operaciones con proveedores del mes",
+      "properties": {
+        "url": "${erp_api_url}/api/compras/mensual",
+        "headers": {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer ${CONFIG.erp_token}"
+        },
+        "queryParams": {
+          "mes": "${new Date().getMonth()}",
+          "anio": "${new Date().getFullYear()}"
+        },
+        "saveAs": "operaciones_mes"
+      }
+    },
+    {
+      "id": "step_2",
+      "type": "http_get",
+      "label": "Obtener catalogo de proveedores",
+      "properties": {
+        "url": "${erp_api_url}/api/proveedores",
+        "headers": {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer ${CONFIG.erp_token}"
+        },
+        "saveAs": "catalogo_proveedores"
+      }
+    },
+    {
+      "id": "step_3",
+      "type": "script",
+      "label": "Validar datos DIOT (54 campos)",
+      "properties": {
+        "code": "const operaciones = context.operaciones_mes; const proveedores = context.catalogo_proveedores; const errores = []; const operacionesValidadas = []; operaciones.forEach((op, idx) => { const proveedor = proveedores.find(p => p.rfc === op.rfc_proveedor); const erroresOp = []; if (!op.rfc_proveedor || op.rfc_proveedor.length < 12) erroresOp.push({campo: 'RFC', mensaje: 'RFC proveedor invalido o faltante'}); if (!op.tipo_operacion) erroresOp.push({campo: 'TIPO_OPERACION', mensaje: 'Tipo de operacion requerido'}); if (!op.tipo_tercero) erroresOp.push({campo: 'TIPO_TERCERO', mensaje: 'Tipo de tercero requerido (04=Nacional, 05=Extranjero)'}); if (op.tipo_tercero === '05' && !op.numero_id_fiscal) erroresOp.push({campo: 'ID_FISCAL', mensaje: 'ID fiscal requerido para proveedores extranjeros'}); if (op.tipo_tercero === '05' && !op.pais_residencia) erroresOp.push({campo: 'PAIS', mensaje: 'Pais de residencia requerido para extranjeros'}); if (isNaN(parseFloat(op.valor_actos_gravados))) erroresOp.push({campo: 'VALOR_GRAVADOS', mensaje: 'Valor de actos gravados debe ser numerico'}); if (isNaN(parseFloat(op.iva_trasladado))) erroresOp.push({campo: 'IVA_TRASLADADO', mensaje: 'IVA trasladado debe ser numerico'}); if (erroresOp.length > 0) { errores.push({ operacion: idx + 1, rfc: op.rfc_proveedor, errores: erroresOp }); } else { operacionesValidadas.push(op); } }); context.validacion_diot = { total_operaciones: operaciones.length, operaciones_validas: operacionesValidadas.length, operaciones_con_error: errores.length, errores: errores, operaciones_validadas: operacionesValidadas };",
+        "saveAs": "validacion_diot"
+      }
+    },
+    {
+      "id": "step_4",
+      "type": "if_condition",
+      "label": "Verificar si hay errores de validacion",
+      "properties": {
+        "condition": "${validacion_diot.operaciones_con_error} > 0",
+        "trueSteps": ["step_5", "step_6"],
+        "falseSteps": ["step_7"]
+      }
+    },
+    {
+      "id": "step_5",
+      "type": "http_post",
+      "label": "Enviar reporte de errores por WhatsApp",
+      "properties": {
+        "url": "http://localhost:4301/send/template",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "to": "${whatsapp_number}",
+          "templateName": "diot_validation_errors",
+          "components": [
+            {
+              "type": "body",
+              "parameters": [
+                { "type": "text", "text": "${validacion_diot.operaciones_con_error}" },
+                { "type": "text", "text": "${validacion_diot.total_operaciones}" }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "step_6",
+      "type": "http_post",
+      "label": "Registrar errores en sistema",
+      "properties": {
+        "url": "http://localhost:4000/api/diot/validation-errors",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "rfc": "${rfc}",
+          "periodo": "${new Date().getMonth() + 1}/${new Date().getFullYear()}",
+          "errores": "${validacion_diot.errores}",
+          "timestamp": "${new Date().toISOString()}"
+        }
+      }
+    },
+    {
+      "id": "step_7",
+      "type": "script",
+      "label": "Generar archivo TXT formato DIOT",
+      "properties": {
+        "code": "const ops = context.validacion_diot.operaciones_validadas; let contenidoTxt = ''; ops.forEach(op => { const linea = [ op.tipo_tercero || '04', op.tipo_operacion || '03', op.rfc_proveedor || '', op.numero_id_fiscal || '', op.nombre_proveedor || '', op.pais_residencia || '', op.nacionalidad || '', parseFloat(op.valor_actos_gravados || 0).toFixed(2), parseFloat(op.valor_actos_gravados_10 || 0).toFixed(2), parseFloat(op.valor_actos_gravados_0 || 0).toFixed(2), parseFloat(op.valor_actos_exentos || 0).toFixed(2), parseFloat(op.iva_retenido || 0).toFixed(2), parseFloat(op.iva_trasladado || 0).toFixed(2) ].join('|'); contenidoTxt += linea + '\\n'; }); context.archivo_diot = { nombre: `DIOT_${context.rfc}_${new Date().getMonth() + 1}_${new Date().getFullYear()}.txt`, contenido: contenidoTxt, registros: ops.length };",
+        "saveAs": "archivo_diot"
+      }
+    },
+    {
+      "id": "step_8",
+      "type": "write_file",
+      "label": "Guardar archivo DIOT",
+      "properties": {
+        "path": "${output_path}/${archivo_diot.nombre}",
+        "content": "${archivo_diot.contenido}",
+        "encoding": "utf-8"
+      }
+    },
+    {
+      "id": "step_9",
+      "type": "http_post",
+      "label": "Notificar archivo generado",
+      "properties": {
+        "url": "http://localhost:4301/send/template",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "to": "${whatsapp_number}",
+          "templateName": "diot_file_ready",
+          "components": [
+            {
+              "type": "body",
+              "parameters": [
+                { "type": "text", "text": "${archivo_diot.registros}" },
+                { "type": "text", "text": "${archivo_diot.nombre}" }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "step_10",
+      "type": "log_info",
+      "label": "Registrar ejecucion completada",
+      "properties": {
+        "message": "Proceso DIOT completado",
+        "data": {
+          "rfc": "${rfc}",
+          "periodo": "${new Date().getMonth() + 1}/${new Date().getFullYear()}",
+          "operaciones_procesadas": "${validacion_diot.total_operaciones}",
+          "operaciones_validas": "${validacion_diot.operaciones_validas}",
+          "archivo_generado": "${archivo_diot.nombre}",
+          "timestamp": "${new Date().toISOString()}"
+        }
+      }
+    }
+  ],
+  "configuracion": {
+    "continueOnError": false,
+    "maxRetries": 2,
+    "retryDelaySeconds": 60,
+    "timeout": 300000,
+    "notifications": {
+      "onSuccess": true,
+      "onError": true,
+      "channels": ["email", "whatsapp"]
+    }
+  },
+  "metadata": {
+    "author": "Alqvimia RPA",
+    "createdAt": "2025-01-13",
+    "lastModified": "2025-01-13",
+    "tags": ["sat", "fiscal", "diot", "terceros", "validacion"]
+  }
+}

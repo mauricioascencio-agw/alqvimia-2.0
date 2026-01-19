@@ -1,0 +1,192 @@
+{
+  "id": "wf_sat_cfdi_asistente",
+  "nombre": "Asistente CFDI 4.0 y Complemento de Pagos",
+  "descripcion": "Workflow para validar datos fiscales pre-timbrado y gestionar complementos de pago",
+  "categoria": "fiscal-sat",
+  "version": "1.0.0",
+  "estado": "activo",
+  "trigger": {
+    "type": "schedule",
+    "config": {
+      "frequency": "daily",
+      "runAt": "08:00"
+    }
+  },
+  "variables": {
+    "pac_api_url": "${CONFIG.pac_api_url}",
+    "facturador_api_url": "${CONFIG.facturador_api_url}",
+    "rfc_emisor": "${CONFIG.rfc}",
+    "whatsapp_number": "${CONFIG.whatsapp_number}",
+    "dias_alerta_complemento": 5
+  },
+  "pasos": [
+    {
+      "id": "step_1",
+      "type": "http_get",
+      "label": "Obtener facturas pendientes de pago",
+      "properties": {
+        "url": "${facturador_api_url}/api/facturas/credito",
+        "headers": {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer ${CONFIG.facturador_token}"
+        },
+        "queryParams": {
+          "rfc": "${rfc_emisor}",
+          "status": "pendiente_pago"
+        },
+        "saveAs": "facturas_credito"
+      }
+    },
+    {
+      "id": "step_2",
+      "type": "set_variable",
+      "label": "Calcular facturas que requieren complemento pronto",
+      "properties": {
+        "name": "facturas_urgentes",
+        "value": {
+          "expression": "facturas_credito.filter(f => { const diasRestantes = calcularDiasParaComplemento(f.fecha_pago); return diasRestantes <= dias_alerta_complemento && diasRestantes > 0; })"
+        }
+      }
+    },
+    {
+      "id": "step_3",
+      "type": "if_condition",
+      "label": "Verificar si hay facturas urgentes",
+      "properties": {
+        "condition": "${facturas_urgentes.length} > 0",
+        "trueSteps": ["step_4", "step_5"],
+        "falseSteps": ["step_6"]
+      }
+    },
+    {
+      "id": "step_4",
+      "type": "http_post",
+      "label": "Enviar recordatorio WhatsApp",
+      "properties": {
+        "url": "http://localhost:4301/send/template",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "to": "${whatsapp_number}",
+          "templateName": "cfdi_complemento_reminder",
+          "components": [
+            {
+              "type": "body",
+              "parameters": [
+                { "type": "text", "text": "${facturas_urgentes.length}" },
+                { "type": "text", "text": "${facturas_urgentes[0].cliente}" },
+                { "type": "text", "text": "${facturas_urgentes[0].monto}" }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "step_5",
+      "type": "http_post",
+      "label": "Registrar alertas en sistema",
+      "properties": {
+        "url": "http://localhost:4000/api/alerts/cfdi",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "type": "complemento_pago_pendiente",
+          "facturas": "${facturas_urgentes}",
+          "timestamp": "${new Date().toISOString()}"
+        }
+      }
+    },
+    {
+      "id": "step_6",
+      "type": "http_get",
+      "label": "Obtener facturas para validar pre-timbrado",
+      "properties": {
+        "url": "${facturador_api_url}/api/facturas/borrador",
+        "headers": {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer ${CONFIG.facturador_token}"
+        },
+        "saveAs": "facturas_borrador"
+      }
+    },
+    {
+      "id": "step_7",
+      "type": "for_each",
+      "label": "Validar cada factura borrador",
+      "properties": {
+        "collection": "${facturas_borrador}",
+        "itemVariable": "factura",
+        "steps": ["step_8", "step_9"]
+      }
+    },
+    {
+      "id": "step_8",
+      "type": "script",
+      "label": "Ejecutar validaciones CFDI 4.0",
+      "properties": {
+        "code": "const errores = []; const factura = context.factura; if (!factura.receptor_rfc || factura.receptor_rfc.length < 12) errores.push({code: 'CFDI40001', message: 'RFC receptor invalido'}); if (!factura.receptor_nombre) errores.push({code: 'CFDI40002', message: 'Nombre receptor requerido'}); if (!factura.receptor_regimen_fiscal) errores.push({code: 'CFDI40003', message: 'Regimen fiscal receptor requerido'}); if (!factura.receptor_domicilio_fiscal) errores.push({code: 'CFDI40004', message: 'Domicilio fiscal receptor requerido'}); if (!factura.uso_cfdi) errores.push({code: 'CFDI40005', message: 'Uso de CFDI requerido'}); context.validacion_result = { factura_id: factura.id, valido: errores.length === 0, errores: errores };",
+        "saveAs": "validacion_result"
+      }
+    },
+    {
+      "id": "step_9",
+      "type": "if_condition",
+      "label": "Verificar errores de validacion",
+      "properties": {
+        "condition": "${validacion_result.errores.length} > 0",
+        "trueSteps": ["step_10"],
+        "falseSteps": []
+      }
+    },
+    {
+      "id": "step_10",
+      "type": "http_post",
+      "label": "Notificar errores de validacion",
+      "properties": {
+        "url": "http://localhost:4000/api/cfdi/validation-errors",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "factura_id": "${validacion_result.factura_id}",
+          "errores": "${validacion_result.errores}",
+          "timestamp": "${new Date().toISOString()}"
+        }
+      }
+    },
+    {
+      "id": "step_11",
+      "type": "log_info",
+      "label": "Registrar ejecucion completada",
+      "properties": {
+        "message": "Validacion CFDI 4.0 completada",
+        "data": {
+          "facturas_credito_revisadas": "${facturas_credito.length}",
+          "facturas_urgentes": "${facturas_urgentes.length}",
+          "facturas_validadas": "${facturas_borrador.length}",
+          "timestamp": "${new Date().toISOString()}"
+        }
+      }
+    }
+  ],
+  "configuracion": {
+    "continueOnError": true,
+    "maxRetries": 2,
+    "retryDelaySeconds": 30,
+    "timeout": 180000,
+    "notifications": {
+      "onSuccess": false,
+      "onError": true,
+      "channels": ["email"]
+    }
+  },
+  "metadata": {
+    "author": "Alqvimia RPA",
+    "createdAt": "2025-01-13",
+    "lastModified": "2025-01-13",
+    "tags": ["sat", "fiscal", "cfdi", "complemento-pago", "validacion"]
+  }
+}
