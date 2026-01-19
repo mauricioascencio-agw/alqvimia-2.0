@@ -290,10 +290,31 @@ input:checked + .connection-slider:before {
     z-index: 100;
     position: relative;
     transition: width 0.3s ease, background 0.3s ease, border-color 0.3s ease;
+    overflow-y: auto;
+    height: 100%;
 }
 
 .sidebar.collapsed {
     width: 70px;
+}
+
+/* Scrollbar personalizado para sidebar */
+.sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 3px;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 3px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-hover);
 }
 
 .sidebar.collapsed .nav-item span {
@@ -461,6 +482,12 @@ input:checked + .connection-slider:before {
     padding: 2rem;
     overflow-y: auto;
     position: relative;
+}
+
+/* Eliminar padding para workflows view */
+#workflows-view {
+    margin: -2rem;
+    height: calc(100% + 4rem);
 }
 
 .view {
@@ -2087,5 +2114,114 @@ input:checked + .connection-slider:before {
     .workflow-actions {
         width: 100%;
         margin-top: 0.5rem;
+    }
+}
+
+/* =============================================
+   RESPONSIVE - PANTALLAS PEQUEÑAS (≤1366x768)
+   ============================================= */
+@media (max-width: 1366px) and (max-height: 768px),
+       (max-width: 1366px) {
+    /* Permitir scroll en el body para pantallas pequeñas */
+    body {
+        overflow: auto;
+        overflow-x: hidden;
+    }
+
+    .app-container {
+        min-height: 100vh;
+        height: auto;
+    }
+
+    /* Ajustar contenido principal para permitir scroll */
+    .main-content {
+        height: auto !important;
+        min-height: calc(100vh - 120px);
+        overflow-y: auto;
+    }
+
+    /* Workflow Studio - optimizar altura */
+    .workflow-studio {
+        height: 100% !important;
+        max-height: 100% !important;
+        min-height: auto !important;
+    }
+
+    /* Canvas toolbar - hacer más compacto */
+    .canvas-toolbar {
+        padding: 0.4rem 0.75rem !important;
+        gap: 0.4rem !important;
+    }
+
+    .toolbar-group {
+        gap: 0.3rem !important;
+    }
+
+    /* Centro del workflow - maximizar espacio */
+    .studio-center-panel {
+        height: 100% !important;
+    }
+
+    /* Ajustar sidebar para pantallas pequeñas */
+    .sidebar {
+        min-height: auto;
+    }
+
+    /* Video Conference - ajustar altura */
+    .vc-landing {
+        min-height: 500px;
+    }
+
+    /* Modales - ajustar para pantallas pequeñas */
+    .modal-content {
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    /* Reducir padding en header para ahorrar espacio */
+    .app-header {
+        padding: 0.4rem 1rem;
+        min-height: 48px;
+    }
+
+    .header-left h1 {
+        font-size: 1.1rem;
+    }
+
+    /* Ajustar grid de características */
+    .vc-features-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    /* Botones más compactos en el toolbar */
+    .btn-sm {
+        padding: 0.4rem 0.6rem !important;
+        font-size: 0.85rem !important;
+    }
+
+    .btn-icon-only {
+        width: 32px !important;
+        height: 32px !important;
+        padding: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+}
+
+/* Para pantallas muy pequeñas */
+@media (max-width: 768px) {
+    .vc-features-grid {
+        grid-template-columns: 1fr;
+    }
+
+    /* Hacer más compacto el header */
+    .header-left h1 {
+        font-size: 1rem;
+    }
+
+    .version {
+        font-size: 0.6rem;
+        padding: 0.15rem 0.4rem;
     }
 }

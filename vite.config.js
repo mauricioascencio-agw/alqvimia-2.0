@@ -9,6 +9,10 @@ export default defineConfig(({ mode }) => {
   const VITE_PORT = parseInt(env.VITE_PORT) || 4200
   const BACKEND_PORT = parseInt(env.BACKEND_PORT) || 4000
 
+  // En Docker, usar el nombre del servicio backend; localmente usar localhost
+  const BACKEND_HOST = env.VITE_BACKEND_HOST || 'localhost'
+  const backendTarget = `http://${BACKEND_HOST}:${BACKEND_PORT}`
+
   return {
     plugins: [react()],
     resolve: {
@@ -30,11 +34,11 @@ export default defineConfig(({ mode }) => {
       port: VITE_PORT,
       proxy: {
         '/api': {
-          target: `http://localhost:${BACKEND_PORT}`,
+          target: backendTarget,
           changeOrigin: true
         },
         '/socket.io': {
-          target: `http://localhost:${BACKEND_PORT}`,
+          target: backendTarget,
           ws: true
         }
       }

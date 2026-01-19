@@ -4477,7 +4477,7 @@ const BASE_ACTION_PROPERTIES = {
     ]
   },
 
-  // Esperar Condición - Similar a Automation Anywhere
+  // Esperar Condición - Espera avanzada
   wait_condition: {
     title: 'Esperar Condición',
     icon: 'fa-hourglass-half',
@@ -6364,7 +6364,7 @@ const BASE_ACTION_PROPERTIES = {
     ]
   },
 
-  // Acciones adicionales de Excel (estilo Automation Anywhere)
+  // Acciones adicionales de Excel (estilo avanzado)
   excel_access_protected_sheet: {
     title: 'Acceder a Hoja Protegida',
     icon: 'fa-lock-open',

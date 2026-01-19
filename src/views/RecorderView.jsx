@@ -19,7 +19,7 @@ function RecorderView() {
   const [showWorkflowNameModal, setShowWorkflowNameModal] = useState(false)
   const [showCapturePanel, setShowCapturePanel] = useState(false)
 
-  // Estados para selector de ventana mejorado (tipo Automation Anywhere)
+  // Estados para selector de ventana mejorado (tipo avanzado)
   const [windowSelectorTab, setWindowSelectorTab] = useState('application') // 'browser' | 'application' | 'variable'
   const [windowsList, setWindowsList] = useState([])
   const [browsersList, setBrowsersList] = useState([])
@@ -770,7 +770,7 @@ function RecorderView() {
           </div>
         </div>
 
-        {/* Panel derecho - Propiedades de Captura (estilo Automation Anywhere) */}
+        {/* Panel derecho - Propiedades de Captura (estilo avanzado) */}
         {showCapturePanel && (
           <div className="recorder-capture-panel">
             {/* Selector de Ventana */}

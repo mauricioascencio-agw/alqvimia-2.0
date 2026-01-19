@@ -5,7 +5,11 @@
 
 import express from 'express'
 import crypto from 'crypto'
+import fs from 'fs/promises'
+import path from 'path'
+import os from 'os'
 import * as db from '../services/database.js'
+import { parseRFQDocument } from '../services/rfqParser.js'
 
 // Generar UUID sin dependencia externa
 const generateUUID = () => crypto.randomUUID()
@@ -438,6 +442,130 @@ router.post('/sync', async (req, res) => {
       message: `Sincronización completada: ${results.created} creados, ${results.updated} actualizados`
     })
   } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message
+    })
+  }
+})
+
+// =====================================================
+// RFQ - Parse Document and Generate Workflow
+// =====================================================
+
+/**
+ * POST /api/workflows/parse-rfq
+ * Procesa un documento (PDF/Word/MD) y genera un workflow
+ *
+ * Recibe FormData con el archivo en el campo 'document'
+ * Procesa el archivo usando el servicio rfqParser
+ */
+router.post('/parse-rfq', async (req, res) => {
+  let tempFilePath = null
+
+  try {
+    // Manejar datos FormData manualmente (sin multer)
+    const chunks = []
+    let contentType = req.headers['content-type'] || ''
+    let boundary = ''
+
+    // Extraer boundary del content-type
+    if (contentType.includes('multipart/form-data')) {
+      const boundaryMatch = contentType.match(/boundary=(.+)/)
+      if (boundaryMatch) {
+        boundary = boundaryMatch[1]
+      }
+    }
+
+    // Recopilar el body
+    await new Promise((resolve, reject) => {
+      req.on('data', chunk => chunks.push(chunk))
+      req.on('end', resolve)
+      req.on('error', reject)
+    })
+
+    const body = Buffer.concat(chunks)
+
+    if (!boundary) {
+      // Si no hay boundary, asumir que es un archivo raw
+      const ext = '.txt'
+      tempFilePath = path.join(os.tmpdir(), `rfq_${Date.now()}${ext}`)
+      await fs.writeFile(tempFilePath, body)
+
+      const result = await parseRFQDocument(tempFilePath, 'text/plain')
+      await fs.unlink(tempFilePath)
+      return res.json(result)
+    }
+
+    // Parsear multipart/form-data manualmente
+    const bodyStr = body.toString('binary')
+    const parts = bodyStr.split(`--${boundary}`)
+
+    let fileBuffer = null
+    let fileName = ''
+    let fileMimeType = 'text/plain'
+
+    for (const part of parts) {
+      if (part.includes('Content-Disposition') && part.includes('name="document"')) {
+        // Extraer nombre del archivo
+        const fileNameMatch = part.match(/filename="([^"]+)"/)
+        if (fileNameMatch) {
+          fileName = fileNameMatch[1]
+        }
+
+        // Extraer Content-Type
+        const mimeMatch = part.match(/Content-Type:\s*([^\r\n]+)/)
+        if (mimeMatch) {
+          fileMimeType = mimeMatch[1].trim()
+        }
+
+        // Extraer contenido del archivo
+        const contentStart = part.indexOf('\r\n\r\n') + 4
+        const contentEnd = part.lastIndexOf('\r\n')
+        if (contentStart > 3 && contentEnd > contentStart) {
+          const content = part.substring(contentStart, contentEnd)
+          fileBuffer = Buffer.from(content, 'binary')
+        }
+        break
+      }
+    }
+
+    if (!fileBuffer) {
+      return res.status(400).json({
+        success: false,
+        error: 'No se encontró el archivo en el FormData'
+      })
+    }
+
+    // Determinar extensión
+    const ext = path.extname(fileName) || '.txt'
+    tempFilePath = path.join(os.tmpdir(), `rfq_${Date.now()}${ext}`)
+
+    // Guardar archivo temporal
+    await fs.writeFile(tempFilePath, fileBuffer)
+
+    // Procesar documento
+    const result = await parseRFQDocument(tempFilePath, fileMimeType)
+
+    // Eliminar archivo temporal
+    await fs.unlink(tempFilePath)
+    tempFilePath = null
+
+    // Retornar resultado
+    res.json(result)
+
+  } catch (error) {
+    console.error('Error procesando RFQ:', error)
+
+    // Limpiar archivo temporal si existe
+    if (tempFilePath) {
+      try {
+        await fs.unlink(tempFilePath)
+      } catch (unlinkError) {
+        console.error('Error eliminando archivo temporal:', unlinkError)
+      }
+    }
+
     res.status(500).json({
       success: false,
       error: error.message
