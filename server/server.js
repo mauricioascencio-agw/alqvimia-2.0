@@ -168,69 +168,12 @@ app.get('/api/settings', (req, res) => {
 // API para obtener ventanas de Windows
 app.get('/api/windows', async (req, res) => {
   try {
-    // PowerShell script mejorado para obtener TODAS las ventanas visibles
-    // incluyendo múltiples ventanas de navegadores (Chrome, Edge, Firefox, etc.)
-    const psScript = `
-      Add-Type @"
-        using System;
-        using System.Text;
-        using System.Collections.Generic;
-        using System.Runtime.InteropServices;
+    // Usar script de archivo para evitar problemas de escape en PowerShell
+    const scriptPath = path.join(__dirname, 'scripts', 'get-windows.ps1')
 
-        public class WindowEnumerator {
-          [DllImport("user32.dll")]
-          private static extern bool EnumWindows(EnumWindowsProc lpEnumFunc, IntPtr lParam);
-
-          [DllImport("user32.dll")]
-          private static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
-
-          [DllImport("user32.dll")]
-          private static extern int GetWindowTextLength(IntPtr hWnd);
-
-          [DllImport("user32.dll")]
-          private static extern bool IsWindowVisible(IntPtr hWnd);
-
-          [DllImport("user32.dll")]
-          private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
-
-          private delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
-
-          public static List<object> GetAllWindows() {
-            var windows = new List<object>();
-            EnumWindows((hWnd, lParam) => {
-              if (IsWindowVisible(hWnd)) {
-                int length = GetWindowTextLength(hWnd);
-                if (length > 0) {
-                  StringBuilder sb = new StringBuilder(length + 1);
-                  GetWindowText(hWnd, sb, sb.Capacity);
-                  string title = sb.ToString();
-                  if (!string.IsNullOrWhiteSpace(title)) {
-                    uint processId;
-                    GetWindowThreadProcessId(hWnd, out processId);
-                    try {
-                      var proc = System.Diagnostics.Process.GetProcessById((int)processId);
-                      windows.Add(new {
-                        Handle = hWnd.ToInt64(),
-                        Title = title,
-                        ProcessId = processId,
-                        ProcessName = proc.ProcessName
-                      });
-                    } catch {}
-                  }
-                }
-              }
-              return true;
-            }, IntPtr.Zero);
-            return windows;
-          }
-        }
-"@
-      [WindowEnumerator]::GetAllWindows() | ConvertTo-Json -Compress
-    `
-
-    const { stdout } = await execAsync(`powershell -Command "${psScript.replace(/\n/g, ' ').replace(/"/g, '\\"')}"`, {
+    const { stdout } = await execAsync(`powershell -ExecutionPolicy Bypass -File "${scriptPath}"`, {
       encoding: 'utf8',
-      timeout: 8000
+      timeout: 15000
     })
 
     let windows = []
@@ -245,6 +188,8 @@ app.get('/api/windows', async (req, res) => {
         title: w.Title || 'Sin título',
         processName: w.ProcessName || 'unknown',
         handle: w.Handle ? `0x${w.Handle.toString(16).toUpperCase()}` : '0x0',
+        handleInt: w.Handle || 0,
+        rect: w.Rect || null,
         type: categorizeWindow(w.ProcessName)
       })).filter(w => {
         // Filtrar ventanas del sistema y sin título
@@ -342,7 +287,13 @@ app.post('/api/windows/activate', async (req, res) => {
 function categorizeWindow(processName) {
   const name = (processName || '').toLowerCase()
 
-  if (['chrome', 'firefox', 'msedge', 'opera', 'brave', 'iexplore'].some(b => name.includes(b))) {
+  // Excluir WebView2 (usado por apps como WhatsApp, Teams) - no es un navegador real
+  if (name.includes('webview2') || name.includes('webview')) {
+    return 'application'
+  }
+
+  // Navegadores reales
+  if (['chrome', 'firefox', 'msedge', 'opera', 'brave', 'vivaldi', 'iexplore'].some(b => name.includes(b))) {
     return 'browser'
   }
   if (['code', 'devenv', 'idea', 'sublime', 'notepad', 'atom'].some(e => name.includes(e))) {

@@ -37,17 +37,40 @@ function SpyView() {
 
   // Bookmarklet code para inyectar en cualquier página
   const serverPort = 4000
-  const bookmarkletCode = `javascript:(function(){
-    var s=document.createElement('script');
-    s.src='http://${window.location.hostname}:${serverPort}/spy-injector.js';
-    s.onload=function(){
-      var ws=new WebSocket('ws://${window.location.hostname}:${serverPort}');
-      ws.onopen=function(){console.log('Alqvimia Spy conectado')};
-      ws.onmessage=function(e){console.log('Mensaje:',e.data)};
-      window.AlqvimiaSpyWS=ws;
-    };
-    document.body.appendChild(s);
-  })();`
+  const serverHost = window.location.hostname || 'localhost'
+  const bookmarkletCode = `javascript:(function(){var s=document.createElement('script');s.src='http://${serverHost}:${serverPort}/spy-injector.js';s.onload=function(){var ws=new WebSocket('ws://${serverHost}:${serverPort}');ws.onopen=function(){console.log('Alqvimia Spy conectado');window.AlqvimiaSpyWS=ws};ws.onmessage=function(e){if(e.data){try{var d=JSON.parse(e.data);if(d.type==='element-selected')console.log('Elemento:',d)}catch(x){}}};ws.onerror=function(e){console.error('WebSocket error:',e)}};document.body.appendChild(s)})();`
+
+  // Código legible para mostrar al usuario
+  const bookmarkletCodeReadable = `// Alqvimia Element Spy - Código para consola
+(function() {
+  var script = document.createElement('script');
+  script.src = 'http://${serverHost}:${serverPort}/spy-injector.js';
+  script.onload = function() {
+    console.log('✅ Alqvimia Spy cargado correctamente');
+  };
+  script.onerror = function() {
+    console.error('❌ Error: No se pudo conectar al servidor Alqvimia');
+  };
+  document.body.appendChild(script);
+})();`
+
+  // Función para copiar el código del bookmarklet
+  const copyBookmarkletCode = () => {
+    navigator.clipboard.writeText(bookmarkletCodeReadable)
+    alert('Código copiado. Pégalo en la consola del navegador (F12 > Console)')
+  }
+
+  // Función para ejecutar spy en nueva ventana
+  const openSpyInNewTab = () => {
+    const newWindow = window.open(spyUrl, '_blank')
+    if (newWindow) {
+      // Esperar a que cargue y luego inyectar
+      setTimeout(() => {
+        alert(`Página abierta en nueva pestaña.\n\nPara activar el Spy:\n1. Ve a la nueva pestaña\n2. Presiona F12 para abrir DevTools\n3. Ve a la pestaña "Console"\n4. Pega el código (Ctrl+V)\n5. Presiona Enter\n\n¿Copiar código ahora?`)
+        copyBookmarkletCode()
+      }, 1000)
+    }
+  }
 
   // Generar selectores para un elemento
   const generateSelectors = (element) => {
@@ -310,19 +333,58 @@ function SpyView() {
                   ))}
                 </ul>
               </div>
-              <div className="help-mode">
+              <div className="help-mode bookmarklet-mode">
                 <h5><i className="fas fa-bookmark"></i> {t('spy_mode_bookmarklet')}</h5>
                 <p>{t('spy_mode_bookmarklet_desc')}</p>
-                <div className="bookmarklet-container">
-                  <a
-                    href={bookmarkletCode}
-                    className="bookmarklet-btn"
-                    onClick={(e) => e.preventDefault()}
-                    draggable="true"
-                  >
-                    <i className="fas fa-magic"></i> Alqvimia Spy
-                  </a>
-                  <small>{t('spy_drag_bookmarklet')}</small>
+
+                <div className="bookmarklet-options">
+                  <div className="bookmarklet-option">
+                    <h6><i className="fas fa-bookmark"></i> Opción 1: Crear bookmarklet</h6>
+                    <p>Crea un nuevo favorito y pega este código en el campo URL:</p>
+                    <div className="code-container">
+                      <pre className="bookmarklet-code bookmarklet-url">{bookmarkletCode}</pre>
+                      <button
+                        className="btn btn-sm btn-secondary copy-code-btn"
+                        onClick={() => {
+                          navigator.clipboard.writeText(bookmarkletCode)
+                          alert('Código copiado. Crea un nuevo favorito y pégalo en el campo URL.')
+                        }}
+                      >
+                        <i className="fas fa-copy"></i> Copiar URL
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="bookmarklet-option">
+                    <h6><i className="fas fa-terminal"></i> Opción 2: Ejecutar en consola</h6>
+                    <p>Copia y pega este código en la consola del navegador (F12):</p>
+                    <div className="code-container">
+                      <pre className="bookmarklet-code">{bookmarkletCodeReadable}</pre>
+                      <button className="btn btn-sm btn-primary copy-code-btn" onClick={copyBookmarkletCode}>
+                        <i className="fas fa-copy"></i> Copiar código
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="bookmarklet-option">
+                    <h6><i className="fas fa-external-link-alt"></i> Opción 3: Abrir y ejecutar</h6>
+                    <p>Abre la página en nueva pestaña y ejecuta el spy:</p>
+                    <button className="btn btn-sm btn-secondary" onClick={openSpyInNewTab}>
+                      <i className="fas fa-external-link-alt"></i> Abrir {spyUrl.substring(0, 30)}...
+                    </button>
+                  </div>
+                </div>
+
+                <div className="bookmarklet-steps">
+                  <h6><i className="fas fa-list-ol"></i> Pasos para usar:</h6>
+                  <ol>
+                    <li>Navega a la página que quieres inspeccionar</li>
+                    <li>Usa una de las opciones anteriores para activar el Spy</li>
+                    <li>Verás un indicador "🎯 Alqvimia Spy" en la esquina</li>
+                    <li>Pasa el mouse sobre elementos para resaltarlos</li>
+                    <li>Haz clic para capturar el selector</li>
+                    <li>Presiona ESC para desactivar</li>
+                  </ol>
                 </div>
               </div>
               <div className="help-mode">

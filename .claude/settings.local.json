@@ -39,7 +39,12 @@
       "Bash(docker ps:*)",
       "Bash(docker-compose restart:*)",
       "Bash(docker-compose ps:*)",
-      "Bash(npm run dev:*)"
+      "Bash(npm run dev:*)",
+      "Bash(if not exist \"c:\\\\Git\\\\alqvimia-2.0\\\\server\\\\scripts\" mkdir \"c:\\\\Git\\\\alqvimia-2.0\\\\server\\\\scripts\")",
+      "Bash(taskkill:*)",
+      "Bash(cmd /c \"taskkill /PID 37256 /F\")",
+      "Bash(docker stop:*)",
+      "Bash(timeout:*)"
     ]
   }
 }

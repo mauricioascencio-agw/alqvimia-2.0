@@ -69,6 +69,20 @@ function RecorderView() {
     { id: 'taskbar', title: 'Barra de tareas', description: 'muestra las aplicaciones abiertas', icon: 'fa-tasks', type: 'system' },
   ]
 
+  // Obtener tipo de navegador
+  const getBrowserType = (processName) => {
+    if (!processName) return 'browser'
+    const pn = processName.toLowerCase()
+    if (pn.includes('chrome')) return 'chrome'
+    if (pn.includes('firefox')) return 'firefox'
+    if (pn.includes('msedge') || pn.includes('edge')) return 'edge'
+    if (pn.includes('opera')) return 'opera'
+    if (pn.includes('brave')) return 'brave'
+    if (pn.includes('vivaldi')) return 'vivaldi'
+    if (pn.includes('iexplore')) return 'ie'
+    return 'browser'
+  }
+
   // Cargar ventanas de Windows
   const fetchWindowsList = async () => {
     setLoadingWindows(true)
@@ -77,11 +91,31 @@ function RecorderView() {
       const data = await response.json()
       if (data.success) {
         const windows = data.windows || []
+
         // Separar navegadores de otras aplicaciones
-        const browsers = windows.filter(w => w.type === 'browser')
-        const apps = windows.filter(w => w.type !== 'browser')
+        // Navegadores: chrome, firefox, msedge, opera, brave, vivaldi
+        const browserProcesses = ['chrome', 'firefox', 'msedge', 'opera', 'brave', 'vivaldi', 'iexplore']
+        const browsers = windows.filter(w =>
+          w.type === 'browser' ||
+          browserProcesses.some(bp => w.processName?.toLowerCase().includes(bp))
+        ).map(w => ({
+          ...w,
+          browserType: getBrowserType(w.processName),
+          type: 'browser'
+        }))
+
+        const apps = windows.filter(w =>
+          w.type !== 'browser' &&
+          !browserProcesses.some(bp => w.processName?.toLowerCase().includes(bp))
+        )
+
         setBrowsersList(browsers)
         setWindowsList(apps)
+
+        // Cambiar a tab de navegador si hay navegadores disponibles
+        if (browsers.length > 0) {
+          setWindowSelectorTab('browser')
+        }
       }
     } catch (error) {
       console.error('Error fetching windows:', error)
@@ -92,9 +126,10 @@ function RecorderView() {
         { id: 3, handle: '0x003', title: 'Alqvimia Backend', processName: 'node.exe', type: 'terminal', icon: 'fa-terminal' },
       ])
       setBrowsersList([
-        { id: 4, handle: '0x004', title: 'Alqvimia RPA 2.0', processName: 'chrome.exe', type: 'browser', icon: 'fa-chrome' },
-        { id: 5, handle: '0x005', title: 'Google - Google Chrome', processName: 'chrome.exe', type: 'browser', icon: 'fa-chrome' },
+        { id: 4, handle: '0x004', title: 'Alqvimia RPA 2.0', processName: 'chrome.exe', type: 'browser', icon: 'fa-chrome', browserType: 'chrome' },
+        { id: 5, handle: '0x005', title: 'Google - Google Chrome', processName: 'chrome.exe', type: 'browser', icon: 'fa-chrome', browserType: 'chrome' },
       ])
+      setWindowSelectorTab('browser')
     } finally {
       setLoadingWindows(false)
     }
@@ -205,6 +240,9 @@ function RecorderView() {
 
     setShowWorkflowNameModal(false)
     setShowCapturePanel(true)
+
+    // Cargar ventanas para el panel de captura
+    fetchWindowsList()
 
     // Crear acción de ventana como primera acción
     const windowAction = {
@@ -364,6 +402,13 @@ function RecorderView() {
       }
     }
   }, [socket, addAction])
+
+  // Cargar ventanas cuando se muestra el panel de captura
+  useEffect(() => {
+    if (showCapturePanel) {
+      fetchWindowsList()
+    }
+  }, [showCapturePanel])
 
   // Filtrar ventanas por búsqueda
   const filteredWindows = windowSearchQuery
@@ -784,15 +829,15 @@ function RecorderView() {
               <div className="window-selector-tabs">
                 <button
                   className={`tab-btn ${windowSelectorTab === 'browser' ? 'active' : ''}`}
-                  onClick={() => setWindowSelectorTab('browser')}
+                  onClick={() => { setWindowSelectorTab('browser'); fetchWindowsList(); }}
                 >
-                  Navegador
+                  Navegador {browsersList.length > 0 && `(${browsersList.length})`}
                 </button>
                 <button
                   className={`tab-btn ${windowSelectorTab === 'application' ? 'active' : ''}`}
-                  onClick={() => setWindowSelectorTab('application')}
+                  onClick={() => { setWindowSelectorTab('application'); fetchWindowsList(); }}
                 >
-                  Aplicación
+                  Aplicación {windowsList.length > 0 && `(${windowsList.length})`}
                 </button>
                 <button
                   className={`tab-btn ${windowSelectorTab === 'variable' ? 'active' : ''}`}
@@ -860,23 +905,53 @@ function RecorderView() {
                     </div>
                   )}
 
-                  {/* Navegadores */}
+                  {/* Navegadores - Agrupados por tipo */}
                   {windowSelectorTab === 'browser' && (
-                    <div className="dropdown-section">
-                      <div className="section-label">Google Chrome ({filteredBrowsers.length})</div>
-                      {filteredBrowsers.map(win => (
-                        <div
-                          key={`${win.id}-${win.handle}`}
-                          className={`dropdown-item ${selectedWindow?.handle === win.handle ? 'selected' : ''}`}
-                          onClick={() => selectWindow(win)}
-                        >
-                          <i className={`fas ${getWindowIcon(win.type, win.processName)}`}></i>
-                          <div className="item-content">
-                            <span className="item-title">{win.title}</span>
+                    <>
+                      {['chrome', 'edge', 'firefox', 'opera', 'brave', 'vivaldi', 'browser'].map(browserType => {
+                        const browsersOfType = filteredBrowsers.filter(w => w.browserType === browserType)
+                        if (browsersOfType.length === 0) return null
+
+                        const browserNames = {
+                          chrome: 'Google Chrome',
+                          edge: 'Microsoft Edge',
+                          firefox: 'Mozilla Firefox',
+                          opera: 'Opera',
+                          brave: 'Brave',
+                          vivaldi: 'Vivaldi',
+                          browser: 'Otros'
+                        }
+
+                        return (
+                          <div key={browserType} className="dropdown-section">
+                            <div className="section-label">{browserNames[browserType]} ({browsersOfType.length})</div>
+                            {browsersOfType.map(win => (
+                              <div
+                                key={`${win.id}-${win.handle}`}
+                                className={`dropdown-item ${selectedWindow?.handle === win.handle ? 'selected' : ''}`}
+                                onClick={() => selectWindow(win)}
+                              >
+                                <i className={`fas ${getWindowIcon(win.type, win.processName)}`}></i>
+                                <div className="item-content">
+                                  <span className="item-title">{win.title?.substring(0, 40)}{win.title?.length > 40 ? '...' : ''}</span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )
+                      })}
+                      {filteredBrowsers.length === 0 && (
+                        <div className="dropdown-section">
+                          <div className="section-label">Sin navegadores</div>
+                          <div className="dropdown-item" style={{ opacity: 0.6, cursor: 'default' }}>
+                            <i className="fas fa-info-circle"></i>
+                            <div className="item-content">
+                              <span className="item-desc">Abre un navegador para capturar</span>
+                            </div>
                           </div>
                         </div>
-                      ))}
-                    </div>
+                      )}
+                    </>
                   )}
 
                   {/* Variables */}
@@ -1188,32 +1263,73 @@ function RecorderView() {
                     </div>
                   )}
 
-                  {/* Navegadores */}
+                  {/* Navegadores - Agrupados por tipo */}
                   {windowSelectorTab === 'browser' && (
                     <div className="windows-section">
-                      <h4>Navegadores</h4>
-                      <div className="windows-grid">
-                        {filteredBrowsers.map((win) => (
-                          <div
-                            key={`${win.id}-${win.handle}`}
-                            className={`window-card ${selectedWindow?.handle === win.handle ? 'selected' : ''}`}
-                            onClick={() => selectWindow(win)}
-                          >
-                            <div className="window-card-icon">
-                              <i className={`fas ${getWindowIcon(win.type, win.processName)}`}></i>
+                      {/* Agrupar por tipo de navegador */}
+                      {['chrome', 'edge', 'firefox', 'opera', 'brave', 'vivaldi', 'browser'].map(browserType => {
+                        const browsersOfType = filteredBrowsers.filter(w => w.browserType === browserType)
+                        if (browsersOfType.length === 0) return null
+
+                        const browserNames = {
+                          chrome: 'Google Chrome',
+                          edge: 'Microsoft Edge',
+                          firefox: 'Mozilla Firefox',
+                          opera: 'Opera',
+                          brave: 'Brave',
+                          vivaldi: 'Vivaldi',
+                          browser: 'Otros navegadores'
+                        }
+
+                        const browserIcons = {
+                          chrome: 'fa-brands fa-chrome',
+                          edge: 'fa-brands fa-edge',
+                          firefox: 'fa-brands fa-firefox',
+                          opera: 'fa-brands fa-opera',
+                          brave: 'fa-brands fa-brave',
+                          vivaldi: 'fa-globe',
+                          browser: 'fa-globe'
+                        }
+
+                        return (
+                          <div key={browserType} className="browser-group">
+                            <h4 className="browser-group-title">
+                              <i className={browserIcons[browserType]}></i>
+                              {browserNames[browserType]} ({browsersOfType.length})
+                            </h4>
+                            <div className="windows-grid">
+                              {browsersOfType.map((win) => (
+                                <div
+                                  key={`${win.id}-${win.handle}`}
+                                  className={`window-card browser-card ${selectedWindow?.handle === win.handle ? 'selected' : ''}`}
+                                  onClick={() => selectWindow(win)}
+                                >
+                                  <div className="window-card-icon">
+                                    <i className={browserIcons[browserType]}></i>
+                                  </div>
+                                  <div className="window-card-info">
+                                    <span className="window-card-title">
+                                      {win.title.length > 50 ? win.title.substring(0, 50) + '...' : win.title}
+                                    </span>
+                                    <span className="window-process-name">{win.processName}</span>
+                                  </div>
+                                  {selectedWindow?.handle === win.handle && (
+                                    <i className="fas fa-check-circle window-selected-check"></i>
+                                  )}
+                                </div>
+                              ))}
                             </div>
-                            <div className="window-card-info">
-                              <span className="window-card-title">
-                                {win.title.length > 40 ? win.title.substring(0, 40) + '...' : win.title}
-                              </span>
-                              <span className="window-process-name">{win.processName}</span>
-                            </div>
-                            {selectedWindow?.handle === win.handle && (
-                              <i className="fas fa-check-circle window-selected-check"></i>
-                            )}
                           </div>
-                        ))}
-                      </div>
+                        )
+                      })}
+
+                      {filteredBrowsers.length === 0 && (
+                        <div className="empty-browsers">
+                          <i className="fas fa-globe"></i>
+                          <p>No hay navegadores abiertos</p>
+                          <small>Abre Chrome, Edge, Firefox u otro navegador</small>
+                        </div>
+                      )}
                     </div>
                   )}
 

@@ -2195,3 +2195,76 @@
 .windows-list-container::-webkit-scrollbar-thumb:hover {
   background: var(--primary-color);
 }
+
+/* ========================================
+   GRUPOS DE NAVEGADORES
+   ======================================== */
+
+.browser-group {
+  margin-bottom: 1.5rem;
+}
+
+.browser-group-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--bg-tertiary);
+  border-radius: 8px;
+  border-left: 3px solid var(--primary-color);
+}
+
+.browser-group-title i {
+  font-size: 1.1rem;
+}
+
+/* Iconos específicos de navegadores */
+.browser-group-title i.fa-chrome { color: #4285f4; }
+.browser-group-title i.fa-edge { color: #0078d7; }
+.browser-group-title i.fa-firefox { color: #ff7139; }
+.browser-group-title i.fa-opera { color: #ff1b2d; }
+.browser-group-title i.fa-brave { color: #fb542b; }
+
+.browser-card {
+  position: relative;
+}
+
+.browser-card .window-card-icon i.fa-chrome { color: #4285f4; }
+.browser-card .window-card-icon i.fa-edge { color: #0078d7; }
+.browser-card .window-card-icon i.fa-firefox { color: #ff7139; }
+.browser-card .window-card-icon i.fa-opera { color: #ff1b2d; }
+.browser-card .window-card-icon i.fa-brave { color: #fb542b; }
+
+/* Estado vacío para navegadores */
+.empty-browsers {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 2rem;
+  text-align: center;
+  color: var(--text-muted);
+  background: var(--bg-tertiary);
+  border-radius: 12px;
+  border: 2px dashed var(--border-color);
+}
+
+.empty-browsers i {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.4;
+}
+
+.empty-browsers p {
+  margin: 0 0 0.5rem 0;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.empty-browsers small {
+  font-size: 0.8rem;
+}

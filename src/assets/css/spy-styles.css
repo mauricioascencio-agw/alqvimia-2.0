@@ -160,6 +160,108 @@
     font-size: 0.75rem;
 }
 
+/* Bookmarklet Mode - Opciones expandidas */
+.help-mode.bookmarklet-mode {
+    grid-column: span 2;
+}
+
+.bookmarklet-options {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin: 1rem 0;
+}
+
+.bookmarklet-option {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+.bookmarklet-option h6 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--primary-color);
+    margin: 0 0 0.5rem 0;
+    font-size: 0.85rem;
+}
+
+.bookmarklet-option p {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.75rem;
+}
+
+.code-container {
+    position: relative;
+}
+
+.bookmarklet-code {
+    background: var(--dark-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 0.75rem;
+    font-family: 'Fira Code', 'Consolas', monospace;
+    font-size: 0.7rem;
+    color: #a5f3fc;
+    overflow-x: auto;
+    max-height: 150px;
+    overflow-y: auto;
+    margin: 0 0 0.5rem 0;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+.bookmarklet-code.bookmarklet-url {
+    max-height: 80px;
+    font-size: 0.6rem;
+    color: #fcd34d;
+}
+
+.copy-code-btn {
+    width: 100%;
+}
+
+.bookmarklet-steps {
+    background: rgba(99, 102, 241, 0.1);
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-top: 1rem;
+}
+
+.bookmarklet-steps h6 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--primary-color);
+    margin: 0 0 0.75rem 0;
+    font-size: 0.9rem;
+}
+
+.bookmarklet-steps ol {
+    padding-left: 1.25rem;
+    margin: 0;
+}
+
+.bookmarklet-steps ol li {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.35rem;
+}
+
+@media (max-width: 1024px) {
+    .bookmarklet-options {
+        grid-template-columns: 1fr;
+    }
+
+    .help-mode.bookmarklet-mode {
+        grid-column: span 1;
+    }
+}
+
 .spy-help-panel .help-content ol {
     padding-left: 1.5rem;
     margin: 0.5rem 0;
