@@ -6,7 +6,11 @@
 import { useState, useEffect } from 'react'
 import { useLanguage } from '../context/LanguageContext'
 import { useSocket } from '../context/SocketContext'
+import RequirementUploader from '../components/RequirementUploader'
+import AgentProjectViewer from '../components/AgentProjectViewer'
 import '../assets/css/workflow-templates.css'
+import '../assets/css/requirement-uploader.css'
+import '../assets/css/agent-project-viewer.css'
 
 // Plantillas de workflows disponibles
 const workflowTemplates = [
@@ -134,6 +138,72 @@ function WorkflowTemplatesView() {
   const [showUseModal, setShowUseModal] = useState(false)
   const [workflowConfig, setWorkflowConfig] = useState({})
   const [importing, setImporting] = useState(false)
+  const [showRequirementUploader, setShowRequirementUploader] = useState(false)
+  const [showLinkRequirement, setShowLinkRequirement] = useState(false)
+  const [templateToLink, setTemplateToLink] = useState(null)
+  const [showProjectViewer, setShowProjectViewer] = useState(false)
+  const [currentProjectData, setCurrentProjectData] = useState(null)
+
+  // Abrir visor de proyecto
+  const handleProjectGenerated = (projectData) => {
+    setCurrentProjectData(projectData)
+    setShowProjectViewer(true)
+  }
+
+  // Abrir carpeta del proyecto
+  const openProjectFolder = async (folderPath) => {
+    try {
+      if (window.electronAPI?.openPath) {
+        await window.electronAPI.openPath(folderPath)
+      } else {
+        navigator.clipboard.writeText(folderPath)
+        alert(`Ruta copiada al portapapeles:\n${folderPath}`)
+      }
+    } catch (err) {
+      console.error('Error abriendo carpeta:', err)
+      navigator.clipboard.writeText(folderPath)
+    }
+  }
+
+  // Abrir modal para vincular requerimiento a una plantilla
+  const openLinkRequirementModal = (template) => {
+    setTemplateToLink(template)
+    setShowLinkRequirement(true)
+  }
+
+  // Callback cuando se genera desde requerimientos vinculados a plantilla
+  const handleLinkedWorkflowGenerated = (workflow) => {
+    console.log('[Templates] Workflow generado con plantilla base:', templateToLink?.id, workflow)
+    // Combinar la plantilla base con las personalizaciones de la IA
+    const savedWorkflows = JSON.parse(localStorage.getItem('alqvimia-workflows') || '[]')
+    savedWorkflows.push({
+      ...workflow,
+      templateId: templateToLink?.id,
+      templateName: templateToLink?.nombre,
+      folder: templateToLink?.categoria === 'fiscal-sat' ? 'SAT' : 'Retail',
+      createdAt: new Date().toISOString(),
+      createdFrom: 'template-with-requirements'
+    })
+    localStorage.setItem('alqvimia-workflows', JSON.stringify(savedWorkflows))
+    setShowLinkRequirement(false)
+    setTemplateToLink(null)
+    alert(`Workflow personalizado basado en "${templateToLink?.nombre}" generado exitosamente.`)
+  }
+
+  // Callback cuando se genera un workflow desde requerimientos
+  const handleWorkflowGenerated = (workflow) => {
+    console.log('[Templates] Workflow generado:', workflow)
+    // Guardar en localStorage
+    const savedWorkflows = JSON.parse(localStorage.getItem('alqvimia-workflows') || '[]')
+    savedWorkflows.push({
+      ...workflow,
+      createdAt: new Date().toISOString(),
+      createdFrom: 'ai-requirements'
+    })
+    localStorage.setItem('alqvimia-workflows', JSON.stringify(savedWorkflows))
+    setShowRequirementUploader(false)
+    alert(`Workflow "${workflow.name}" generado exitosamente desde requerimientos.`)
+  }
 
   // Filtrar plantillas
   const getFilteredTemplates = () => {
@@ -245,6 +315,12 @@ function WorkflowTemplatesView() {
           <p>Workflows predefinidos listos para usar en procesos SAT y Retail</p>
         </div>
         <div className="header-actions">
+          <button
+            className="btn-primary"
+            onClick={() => setShowRequirementUploader(true)}
+          >
+            <i className="fas fa-magic"></i> Crear desde Requerimientos
+          </button>
           <button className="btn-secondary">
             <i className="fas fa-upload"></i> Importar Plantilla
           </button>
@@ -346,6 +422,13 @@ function WorkflowTemplatesView() {
                   onClick={() => setSelectedTemplate(selectedTemplate?.id === template.id ? null : template)}
                 >
                   <i className="fas fa-eye"></i> Vista previa
+                </button>
+                <button
+                  className="btn-link-req"
+                  onClick={() => openLinkRequirementModal(template)}
+                  title="Vincular documento de requerimientos"
+                >
+                  <i className="fas fa-file-import"></i>
                 </button>
                 <button
                   className="btn-use"
@@ -463,6 +546,99 @@ function WorkflowTemplatesView() {
                 )}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de generación desde requerimientos */}
+      {showRequirementUploader && (
+        <div className="modal-overlay" onClick={() => setShowRequirementUploader(false)}>
+          <div className="modal requirement-modal modal-xl" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <div className="modal-icon" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
+                <i className="fas fa-magic"></i>
+              </div>
+              <h3>Crear Workflow desde Requerimientos</h3>
+              <button
+                className="modal-close"
+                onClick={() => setShowRequirementUploader(false)}
+              >
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+
+            <div className="modal-body">
+              <p className="modal-description">
+                Adjunta tus documentos de requerimientos y la IA generará automáticamente
+                un workflow personalizado basado en ellos.
+              </p>
+
+              <RequirementUploader
+                mode="workflow"
+                onWorkflowGenerated={handleWorkflowGenerated}
+                onProjectGenerated={handleProjectGenerated}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de vincular requerimiento a plantilla existente */}
+      {showLinkRequirement && templateToLink && (
+        <div className="modal-overlay" onClick={() => { setShowLinkRequirement(false); setTemplateToLink(null) }}>
+          <div className="modal requirement-modal modal-xl" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <div className="modal-icon" style={{ backgroundColor: templateToLink.color }}>
+                <i className={`fas ${templateToLink.icono}`}></i>
+              </div>
+              <h3>Vincular Requerimientos a: {templateToLink.nombre}</h3>
+              <button
+                className="modal-close"
+                onClick={() => { setShowLinkRequirement(false); setTemplateToLink(null) }}
+              >
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+
+            <div className="modal-body">
+              {/* Info de la plantilla base */}
+              <div className="linked-template-info">
+                <div className="template-badge" style={{ backgroundColor: templateToLink.color }}>
+                  <i className={`fas ${templateToLink.icono}`}></i>
+                  <span>{templateToLink.nombre}</span>
+                </div>
+                <div className="template-details">
+                  <span><i className="fas fa-list-ol"></i> {templateToLink.pasosCount} pasos base</span>
+                  <span><i className="fas fa-clock"></i> {getTriggerLabel(templateToLink.trigger)}</span>
+                  <span><i className="fas fa-folder"></i> {templateToLink.categoria === 'fiscal-sat' ? 'SAT' : 'Retail'}</span>
+                </div>
+              </div>
+
+              <p className="modal-description">
+                Adjunta documentos de requerimientos específicos para personalizar esta plantilla.
+                La IA combinará la estructura base de <strong>{templateToLink.nombre}</strong> con
+                tus requerimientos para crear un workflow adaptado a tus necesidades.
+              </p>
+
+              <RequirementUploader
+                mode="workflow"
+                onWorkflowGenerated={handleLinkedWorkflowGenerated}
+                onProjectGenerated={handleProjectGenerated}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Visor de Proyecto */}
+      {showProjectViewer && currentProjectData && (
+        <div className="modal-overlay" onClick={() => setShowProjectViewer(false)}>
+          <div className="modal project-viewer-modal modal-xl" onClick={e => e.stopPropagation()}>
+            <AgentProjectViewer
+              projectData={currentProjectData}
+              onClose={() => setShowProjectViewer(false)}
+              onOpenFolder={openProjectFolder}
+            />
           </div>
         </div>
       )}

@@ -1,0 +1,398 @@
+# Presentación de productos IA para gestión fiscal (Alquimia / Intecfra)
+
+# Full Transcript
+
+<aside>
+💡 Your transcript will appear here
+
+</aside>
+
+**`00:00-01:05`**
+Hola ramón, buenos días, cómo están? Qué tal ramón? Buen día. Bien, todo bien, muchas gracias. Falta aurelio, el contador, que es el principal, el contador. Creo que sí va a ser mario. Dije en la escriba porque creo que también están renan y aurelio con diego y con mau. Me ves en qué momento grabar la sesión, delia? O la pongo de una vez? Yo creo que ya está que suba los que faltan. 
+
+---
+
+**`01:05-02:11`**
+Sí, por favor con gusto ya me escribió aurelio que debe estar en el reunión con mau y con diego ahorita se conecta él también gracias delia sí, de nada elia, buenas tardes, cómo están? Qué tal isaac? Cómo estás? Hola, buenas tardes. Todo bien aurelio y ustedes? Buenas tardes. Bendito sea dios con demasiado trabajo, ando que no sé ni para dónde voltear y traigo juntas desde las eight de la mañana. Pero bueno, a darle que es mole de olla. Pues me permito presentarlos. 
+
+---
+
+**`02:11-03:17`**
+Mario, te presento a delia. Delia es parte del equipo de intecfra. Ella tiene una experiencia muy padre en lo que es estructurar productos completos. Viene de trabajar para grupo urrea, entre otras organizaciones. Y también es hija de los creadores de este producto que te vamos a platicar ahorita. Y bueno, la verdad es que me gusta trabajar con ella, tiene muy buen entendimiento, te lo platico para que sepas que puedes aquí confiar muy bien en ella. Y lo mismo con raúl, los dos tienen muchísimo talento, muchísima capacidad. Raúl está como project manager, la administración de los proyectos que estamos llevando a cabo ahorita. Y le presento al buen mario, pues la verdad es que él es un empresario encargado de la parte fiscal, con muchísima experiencia, tiene un despacho contable que da distintos tipos de servicios para empresas medianas grandes este y bueno creo que ya me ha apoyado en otras situaciones cuando hemos armado justificaciones de arrendamientos y seguimos llevando servicios contables en la organización y por este lado está también acá el buen ramon nava es. 
+
+---
+
+**`03:17-04:23`**
+Who is in the project manager part as well and who has many years working with us in the software development part. Well, to try to be very quick and to where we are going, we want to present to you, mario, a series of products that we have planned for the financial part. I would like to first present them to you in a rápida que delia nos ayude a presentarte cada uno de los productos de manera rápida qué es lo que hace y después de que los conozcas los cinco, comenzamos a platicar qué ves tú pros y contras de cada uno de ellos. Que me interesa que nos puedas ver en el universo, si pueden llegar a funcionar como un paquete o qué cobertura dan. Vaya, y ya de ahí podemos platicar un poquito, sobre todo pues que nos digas si tú le ves un valor, si tú pagarías por un robot que te automatizara esto, si tú ves que esto pueda ser un producto que pueda ser colocable en el mercado. Listo. Muchas gracias y un gusto a todos con saludos. Les voy a presentarles. Y mucho gusto, mario. 
+
+---
+
+**`04:23-05:28`**
+Dile también si comienza la grabación, vale? Me dicen si pueden ver la presentación, por favor. Todavía no se ve. No. No se ve? Ya cargó. Ok. están cortando un poquito el audio, voy a apagar mi cámara para escucharlos mejor. Ajá. Bueno, les presento. Este es un desarrollo de alquimia y dentro de alquimia es una aplicación de software. Dentro de esta aplicación se van a crear como agentes internos, como si fuera un robot, agentes digitales con ia y van dirigidos a todo lo que es el tema contable con el sat. Tenemos cinco robots prioritarios, mario. Te los voy a mostrar uno por uno. Y tenemos uno prioritario ahorita, que es el primero que voy a mostrar. Es un robot agente de buzón tributario. Y aquí no sé si se está cambiando mi presentación, pero díganme si estamos en el mismo sitio. 
+
+---
+
+**`05:28-06:34`**
+No solamente así ya cambió ya verdad la vemos no la vemos en modo presentación pero bueno la vemos como en si se ve extraño a ver déjenme ver no sé si le alcanza a ustedes a ver así sino para igual no moverle así como lo ven ya se ve mejor no a ver permítanme voy a quitar esto i dont know how the presentation looks like. Si se ve mejor o se ve igual? Se ve mejor. Ok. 
+
+---
+
+**`06:34-07:40`**
+Este es el primer robot. Como les comentaba, es un robot asistente de buzón tributario. Y qué problema resuelve? Aquí el tema de las multas. Que van desde 3.000 pesos hasta 11.000 por no habilitar el buzón tributario como tal. Y pues hay empresas que no monitorean las notificaciones del sat. Esto pues pierde lo que son plazos críticos y enfrenta lo que es justamente sanciones costosas, ahora sí, para el usuario. La función que va a tener el robot en este caso es un monitoreo 247 del buzón tributario sin intervención, pues ahora sí que manual, se va a programar para que el robot esté haciendo esta intervención y también se van a agregar lo que son alertas a whatsapp esas alertas van a ser automáticas el sat envía una notificación y te llega al celular recordatorios pues estos van a ser con plazos para responder lo que son requerimientos y en el tema de clasificación pues son notificaciones por urgencia automática no sé que a lo mejor al usuario se le haya ido alguna fecha entonces el robot va a hacer este tipo de notificación integración de software. 
+
+---
+
+**`07:40-08:46`**
+Ojo es el programa que utilizamos dentro de intecfra y se va a hacer como esta compilación de alquimia junto con ojo. Esto va a ser para tener el tema del sistema contable con un registro automático. Y también lo que buscamos con este robot es hacer el tema de acusos automáticos para dar una respuesta de recibo a lo que es el sat ya directamente. O sea, buscamos que ya no haya tanta interferencia automática de persona. Me dicen si se está cambiando la presentación o no. Creo que no. Listo. In technical specialization, the whole issue of the assistance of the tax collection, the prompts of the artificial intelligence, this is going to be to interpret all types of notifications that are received directly from the sat, and the api connector. This serves as. 
+
+---
+
+**`08:46-09:52`**
+Ojo, pues ojo es el programa que utilizamos dentro de intecfra y pues se va a hacer como esta compilación de alquimia junto con soho. Esto va a ser para tener el tema del sistema contable con un registro pues ahora sí que automático y también lo que buscamos con este robot es hacer el tema de acusos automáticos para dar una respuesta de recibo a lo que es el sat ya directamente. O sea, buscamos que ya no haya tanta interferencia automática de persona. Y me dicen si se está cambiando la presentación o no. Creo que no. Listo. Ahora ya cambió. Parece que hay un desfase nada más del día, pero sí cambió. Sí, ok. en especialización técnica, pues todo el tema de la asistencia del buzón tributario, los prompts de la inteligencia artificial, pues esto va a ser para interpretar todos los tipos de notificaciones que se reciban directamente del sat, y pues el conector api. Esto sirve como. 
+
+---
+
+**`09:52-10:58`**
+Personas físicas, por ejemplo, una parte del mercado va dirigida a personas que ganan máximo twelve mil pesos al mes. Y la otra parte del nicho de mercado son personas que ganan más de fifty mil pesos al mes. Entonces, creo, mario, que aquí hay una parte de regulación fiscal, la cual yo todavía no entiendo completamente, y creo que a nivel nacional tenemos falta de educación fiscal, financiera y contable, en el sentido de, oye, mi declaración, por ejemplo yo, tengo que hacer mi declaración anual o no? Si lo tengo que hacer, cada mes tengo que estar facturando mis recibos o no? También, qué tipo de recibos tengo que facturar? Entonces, esta aplicación es para potencializar justamente a nivel, ahora sí, pues, nacional, todo el tema de regulación fiscal. Entonces, mario, aquí la pregunta es, tú crees que es viable darle prioridad a este robot? Hasta en tema de tempos fiscales, de. Salarios, o sea, quién es. Nosotros lo queremos dirigir a dos tipos de público, pero tú realmente crees que. 
+
+---
+
+**`10:58-12:04`**
+Que sea conveniente que este robot sea pues masivo ahora sí miren tres comentarios para responder o que a lo mejor los comentarios responden a la pregunta hay que recordar que el buzón tributario es un es un mecanismo de comunicación solamente okay. This is, lets understand what a media communication is, point one. Point two, the one you develop, the one you develop in a robot that reads you, that receives you, that monitors you, this type of messages through this system,. 
+
+---
+
+**`12:04-13:10`**
+Primero suple a una persona normal, alguien que se meta físicamente a hacerlo, y eso está bien. Lo que no está bien es que, no sé si ustedes lo sepan, pero cuando te llega justamente un musón tributario, un mensaje al musón, depende qué tipo de mensaje sea, si es un aviso, si es una compulsa, que te dan un crédito fiscal, depende que sea, también, por ejemplo, yo lo hago así, yo prefiero no abrirlos, porque en el momento que tú abres un consultorio, él es libre de tener tiempo para comprenderse. Ah, ok. entonces, hay un criterio adicional al respecto del sosol que no nos permite ser tan robotón automatizado. Está muy bien que lo que haga es, te aviso que tienes un sosol, pero eso ya lo hace un correo y lo manda a la misma vía. 
+
+---
+
+**`13:10-14:15`**
+En analizar, etcétera, si tiene que ver con la sensibilidad. Por ejemplo, si yo sé que tengo una autoridad, yo sé que me van a analizar por el contacto. Ya no llegan correos diciendo que la determinación de la autoridad ya es a través del corazón. O sea, la cultura se basa en que todo sea un canal unilateral de comunicación. Entonces, el primero está bien y el tercero es un comentario. Bueno, bueno, bueno, buena nota. Eighty millones seventyeight. 
+
+---
+
+**`14:15-15:21`**
+Son personas físicas. De esos fiftyfive millones de clientes, fifty son asalariados. Es decir, todos esos son los que recibimos un salario que estamos dando a las personas físicas. Y que nuestra obligación con un recete al funcionamiento es mínimo. Casi nula, podemos decir. From that point of view, so. 
+
+---
+
+**`15:21-16:27`**
+El cierre es un problema de revisión pero el problema no es la revisión el problema es en la práctica como se lleva en la práctica como se lleva eso a cabo es que en la práctica no no lo abrimos de nuevo porque no nos conviene lo calentamos hasta tal como que no sé en qué sentido es que entonces no se vaya para el cliente pues no justifica tan fácil el valor no? Yes, we are going to create a very small market for this solution. It is a solution because there are people who do not use it either. Or they dont know how to do it. Look, for me, i think im going to interrupt, my friend, just to tell you a little bit about dla and see how we work. The idea is to have several points of view and have that analysis. I think the analysis of mario has helped us a lot. As soon as you take note of the points of view, you can analyze this part. And thats it. I think it looks gross if they allow it. 
+
+---
+
+**`16:27-17:33`**
+Nos brindamos el que sigue. Me llega a mí un whatsapp tienes tres buzones este porque si puedo leer el título del buzón sin abrirlo o sea entonces tienes esos tres me llega un whatsapp y me dice tienes esos tres buzones quieres abrir el primero y en el mismo whatsapp le pico pues yo leo que es algo que ya lo tengo resuelto le digo sí y los otros dos le pico no y no o sea eso creo que mitiga un poco lo que dices no? Yo no sé hasta qué punto. 
+
+---
+
+**`17:33-18:38`**
+Por eso quería que los explicáramos todos por eso quería que los explicáramos todos por eso quería que los explicáramos todos por eso quería que los explicáramos todos por eso quería que los explicáramos todos por eso quería que los explicáramos todos me permiten menos de un minuto. Este, por ejemplo, mario, si yo le digo, me llega a mí un whatsapp, tienes tres buzones? Este, porque sí puedo leer el título del buzón sin abrirlo. O sea, entonces tienes esos tres, me llega un whatsapp y me dice, tienes esos tres buzones, quieres abrir el primero? Y en el mismo whatsapp le pico, pues yo leo que es algo que ya lo tengo resuelto, le digo sí. Y los otros dos le pico no y no. O sea, eso creo que mitiga un poco lo que dices, no? I dont know. 
+
+---
+
+**`18:38-19:43`**
+Al que recibió el pago y pues muchas empresas por incumplir. The main functions of this robot are automatic reminders. Five days before each month, the reminder is sent. And the validation of tax data, rfc, regime, etc. Income identification, what is pending for payment supplementation. Automatic reports, what are credit invoices. Cancelation alerts, what is out of date fdi. And an intelligent fac, common errors of sfdi 4.0. The technical specialization in this robot is the error dataset of sfdi 4.0, poor integration with fac defacturization. The development time is the same, because these are times that we are taking into account, but this is the second robot, and now if you comment, mario, on how much fac you see the development of this. This one, in particular, is a little more attractive. 
+
+---
+
+**`19:43-20:48`**
+Ha sido una lucha desde hace three años que los complementos se han vuelto cada vez más exigibles por parte de la humanidad pero este año ya van a aplicar más muestras entonces este sí me suena como más interesante de que la solución sea para todos la problemática real que nos enfrentamos es que yo no puedo cerrar una teoría si no tengo complementos a ese nivel ok, sí. Este es un producto que se hace efectivo. Lo único que yo no pondría aquí, porque se vuelve nada más un correvento, o sea, identifica el robotcito, identifica y viste, pero no lo hace. Entonces sería interesante ver si se puede dar, la solución sería esa, hacerlo. No sé si exista esa escuela, porque luego depende de alguien más, no? 
+
+---
+
+**`20:48-21:54`**
+En ppd, que es la función que me hace tener un complemento de pago. Cuando en mi futuro me paga mi cliente twenty mil pesos, yo esos twenty mil pesos hago un complemento de pago en twenty, como necesito. La diferencia es lo que sería importante que tuviera un semáforo, tuviera como este nivel de, oye, tiene que quedar según el código fiscal de la declaración, tal fecha. Entonces, o que el robot también pudiera tener esta comunicación con el ente de la humanidad para que a mi cliente le exigiera un proveedor le exigiera mi mi complemento esta es una manzazaria inclusive en este año si ok cuáles son las multas o los cargos que tiene? 
+
+---
+
+**`21:54-23:00`**
+Aquí es como un. Yo lo veo así. No es que pierda dinero en. Cómo se llama? Por más de hacerlo, porque hay multas. Pero más allá de la multa, no puede tener un contexto o una totalidad completa y por tanto no tiene la sensibilidad del número. Es decir, caemos en una desgracia fiscal porque no subimos la importancia. How could you quantify? Um. 
+
+---
+
+**`23:00-24:06`**
+Vamos a ver cómo se puede llegar a la distancia. Vámonos, vámonos el camino, amigo. Por qué eso tiene desfase de presentación? Robo3 is an electronic accounting system that solves the problems that people have to see in their electronic accounting in the first three days of the second period. There are people who include, sometimes we dont know. Yes, we are given the date, the main functions, the automatic recorders, from day three to people. What are moral people and what are physical people. Also verify the issue of information before sending, so that everything you are seeing is really good. And the integration with erp, which is the contact, aspel and other countable systems, generation of xml, that this is automatic. Accusation tracking, which is the reception that the sat has. And a dashboard, this so that. 
+
+---
+
+**`24:06-25:11`**
+Más el usuario tenga sus métricas de qué es lo que ha llevado el gasto, lo que ha facturado, etc. Y pues especialización técnica, conectores con erps contables, más lo que es el calendario desautomatizado. Sobre este robot, mario, cómo lo ves en el mercado? So, this is a weapon for the contributor, where if you send it and its wrong, you sentence yourself. Thats what they do. Im going to call it that way. The point of value of verification, which continues to be the same, verifying that it is fulfilled, is not energy to the contrary. 
+
+---
+
+**`25:11-26:17`**
+Sino en que tenga una api de el capace que te ayude a interpretar o comparar los resultados de tu tarea real contra los xml que tienes. Es decir. How do you use it? This is basically what it is. What does it do? It has the elements, the xmls, the selected ones, and the visible ones. What it doesnt have is the account status, because thats per person or per company. Here we are going to have the state of account or we should have the state of account and basically it is a compilation of accountability that is what they have to work on and we are not going to do accountability of deduction of what they are going to do, no, but that is a rapid barrier of preparation to understand, i will put it here in the live, i put it there, i put it there, if you send your. 
+
+---
+
+**`26:17-27:22`**
+Que tenga este este una api de que te ayude a interpretar o comparar los resultados de tu realidad real contra los xml que tienes es decir como lo hace el sat este sería básicamente lo del sat el sat que hace el sat tiene dos elementos los xml o las obras emitidas y las recibidas lo que no tiene es el estado de cuenta, porque eso es por persona o por empresa. Aquí nosotros sí vamos a tener el estado de cuenta, o deberíamos tener el estado de cuenta, y básicamente es un acumulado de contabilidad que es lo que tienen que marchar. No vas a hacer una contabilidad de deducción, pero es un barrio rápido de preparación. Para entender yo le pongo ahí. 
+
+---
+
+**`27:22-28:28`**
+Y el tema de integración automática con los sistemas de compras. En este queremos incluir lo que es un tutorial interactivo para la plataforma diode2055 para que el usuario lo pueda utilizar de mejor manera. Y pues la especialización técnica, el dataset de errores de diode, más una validación de formato que es para la carga del archivo ahora sí. Sobre este robot, mario metadios. A lo que tengo entendido sobre este robot, tú le debes de decir. Cómo debe llevar toda la administración? No se debe programar. Justamente por eso tenemos este reunión contigo. Por si nos está faltando o estamos fallando también en algo. Tener tu lado contable, fiscal. De hoy en esto no es así o se hace de otra forma. Y por ello, como tal, es una. 
+
+---
+
+**`28:28-29:33`**
+Crónimos, es una declaración de informativa de operaciones con terceros. Entonces, dónde está el match? O dónde está la importancia de la dio? Es decir, que la une está diciendo alza, que tú tuviste interacción con el tercero. Y esa información la cruza con ese tercero. De tal suerte que te dice, por ejemplo, oye, tú me dices que tú le vendiste a él fifty mil pesos, pero él solamente tiene registrados twenty. Hay una diferencia. La cualidad de la vida entonces este no resuelve así como lo vemos no resuelve nada más además es tutorial porque yo te diría esto podría ser una persona que es el votador pues con la imaginación. 
+
+---
+
+**`29:33-30:38`**
+Sería de. No resuelve una operación, no es que no resuelva nada, no es una operación, una necesidad, vamos a llamarlo así, muy puntual, desde mi óptica, el que tenga su tutorial, el que detecte errores. Sí, pero en qué punto? O sea, qué me vas a dar? Porque eso sale en la declaración anual. Por ejemplo, dices reportes automáticos. Tú los puedes descargar en los xml. Y el compa, cualquier programa de contabilidad te lo da. Ok, ok. sí, sí. A este sí me lo veo. Something that can solve and not even something that can solve it. I dont see it as a normal thing to say, because the two things are very automatic and they always have information for that. We will analyze it in other ways. 
+
+---
+
+**`30:38-31:44`**
+Y el quinto es un calendario más inteligente. Lo ponen en la pantalla? Sí, verdad? Sí, pues el problema resuelve las empresas que tienen fecha límite de múltiples limitaciones fiscales, isr, nida, iems, pontebría electrónica, etcétera. Funciones principales, personalizados según el régimen fiscal del cliente. Y pues aquí igual va a crear acordatores automáticos mediante whatsapp email. 73 o un día antes de la operación, dependiendo del usuario. Un checkin mensual, esto del cumplimiento fiscal y alertas especiales, lo que es la declaración anual, ptu y entre otras críticas. También se van a integrar calendarios, esto con el calendario, el calendario que use el usuario y reportes de cumplimiento para el tipo de dirección ejecutiva. Y el tema de especialización técnica, es motor de reglas establecido por régimen, malintegración de lo que son los calendarios, ahora sí. Sobre este tema. 
+
+---
+
+**`31:44-32:50`**
+Es el último robot que tenemos como prioridad. También quisiéramos saber tus comentarios. Yes, thank you. What i see is that the issue of the robbery of the cemetery and the one of the god, they cant solve. They cant solve a problem. They help with information and thats it. They cant solve a problem. All of us. Whats the name of the other one? The first one? Well. We have this one. Okay, okay. All the elements of the tools that have been added to me, i would even sell it as a package. The package with the easy ability, like those that there are in contal, and those things. 
+
+---
+
+**`32:50-33:55`**
+Yo lo vería así como un tema de dejar la precontabilidad o la identificación de ciertos elementos en manos de este robot, de este programa. Porque yo te voy a decir, te voy a mandar toda la reportería, por ejemplo, pensemos que no hay ninguna situación con la empresa. Ya con el simple hecho de que alguien me está recordando, oye, en fifteen días es tu declaración mensual. Oye, en ese momento no te han pagado estos clientes, por tanto, no has emitido su vehículo de pago. Ese tipo de alarmas en tiempo y forma, recorrectorios, creo que son un común, como les digo, por qué? Porque tendrían que estar todos conectados a un programa contable para que me dijeran más. Sé que se puede, pero en así de pronto todo lo que yo vi es más un. 
+
+---
+
+**`33:55-35:01`**
+Es imposible pero eso es físico y personas morales que sabemos que tienen la necesidad de tener al 100 medido esto. Por un lado, pero por otro, entonces nos gusta más para empresas como nosotros, porque yo voy a tener en un dashboard todo lo que a mis clientes les hace falta. Sabes? Sabes? Hoy, hoy, ya tengo yo todo, sabes? Este producto es como un supervisor, es como un supervisor para mantener la continuidad de 100, y es como para ver, oye, güey, cuánto pierdes? 
+
+---
+
+**`35:01-36:07`**
+No se te pase, evita multas con este sistema. Así lo que hay, sin darle nada, más que actualizar lo que ustedes crean necesario o imposible. Pero es, no pagues, no caigas en discrepancia, mantente atento, o sea, el mensaje es para. Personas físicas y personas morales que sabemos que tienen la necesidad de tener al 100 medido esto. Por un lado, pero por otro, todavía le gusta más para empresas como nosotros que somos trabajadores. Porque yo ya voy a tener en un dashboard foreign is. 
+
+---
+
+**`36:07-37:13`**
+Mantiene y el plus que puedes conectarlo a una interfaz ya estamos en un año de ideas pero ya el que te conectes a un programa contable pues otro costo, otro todo, que sería como lo natural si tú vendes el básico, que la gente busque o los clientes busquen el siguiente nivel. Y un tercer nivel, no lo echen ahí, te acuerdas tú? Cuando este se venda solamente para personas físicas, morales, independientes, no para los espacios de empresas grandes, que también tengan una opción para que puedan vender el tema de la asesoría. Porque este es un preámbulo total y todas estas aplicaciones que ya existen, las hacen limitadas por lo mismo, porque su negocio es agarrar al cliente desde la perspectiva. Es el mismo ejemplo. 
+
+---
+
+**`37:13-38:18`**
+El sueño de todo cliente sería que tuvieras un click y vieras en un dashboard cómo va todo mi negocio a nivel contable? Sería bien padre. Porque ya puedes inclusive con esto de la inteligencia artificial, y ustedes creen que lo traen, no lo veo, pero lo traen, ya pueden hasta hacer un recargo de impuestos. Entonces imagínate, yo antes del fifteen, yo ya sé cuánto voy a pagar. Ya me preocupo por saber qué voy a hacer para pagar tanto. Que es diferente al final del mes enterarme y ahora qué voy a hacer no sé cuánto voy a pagar la información a la mano creo que es el factor más importante que tenemos hasta aquí mi comentario muchas gracias. 
+
+---
+
+**`38:18-39:24`**
+Hay que trabajar muy bien en entender las ofertas de valor de esto que estamos construyendo para ver también estos retos de la inflación a nivel de los productos que se pueden comercializar. Ya están desarrollados, ya están modificados el código constante para llevarlo a. Yes, thats right. Thank you very much for your comments. We had a lot of doubts, in fact, about all these fiscal issues. No, no, and what i want to say is that we need to talk more and talk more about the issue, and im here to help. Very well, mario, thank you very much. If you have any comments, ramón, raúl, any questions. No, no, este, revisar lo que nos dijo. 
+
+---
+
+**`39:24-40:30`**
+Mario to make the adjustments. I really liked the plans, that is, two or three versions. I think its very well segmented, that is, as he said, and make those adjustments. Thank you, mario. No, thank you very much. Raúl, any comments, doubts? Thank you very much for your support. Listo. Listo. Pues bueno. Y cualquier cosa, aurelio, si quieres cerrar la reunión, les agradezco a todos. Sí, muchísimas gracias. 
+
+---
+
+**`40:30-41:35`**
+Gracias, gracias mario yes, yes. For sure. I dont know what youre talking about. 
+
+---
+
+**`41:35-42:41`**
+El tema de, pues, si te va a quedar mal la parte donde está la puerta y con eso, con eso, cerrar esa parte de la pinza. Tú dices, pues, si es así, soluciona el tema que se lo pasa a otras personas. Because they also have two things in mind. The size of the pastel, or of the people who can buy it, or companies, regardless of whether they are big or small, they are very different. For example, a tequila company does not behave the same as a pharmaceutical company. They are totally different in their profitability, in their production. Some are zero, others are thirty,000. If we want to be very specialized, we are going to fight with wall to wall because we will never have a 100 reliable product. Thats why i recommend it. 
+
+---
+
+**`42:41-43:47`**
+No nos metamos en temas muy específicos, porque entonces ahí sí vamos a ver un mercado que yo les mandé una hoja por sectores. El sat se divide en sectores económicos, por entidades económicas. Y entonces cada uno tiene un rubro. Por ejemplo, hace seis años, pongámoslo así, hace seis años todas las actividades agrícolas y de campo estaban separadas. A partir del sexenio pasado hicieron una actuación y entonces ya, además de que es una secretaría, alinearon muchos de los apoyos que tiene el cambio y la ganadería en méxico. Que también tributan algunas cosas, cosas y otras cosas, no? Esto es un caudal de información, pero ya, pero ya. 
+
+---
+
+**`43:47-44:52`**
+No nos metamos en temas muy específicos porque entonces ahí sí vamos a ver un mercado que yo manejo una hoja por sectores. El sat se divide en sectores económicos o de edades económicas. Y entonces cada uno tiene un rubro. Por ejemplo, hace seis años, pongámoslo así, hace seis años, todas las actividades agrícolas y de campo eran estaban agrícolas y ganaderas. Estaban. In addition to the fact that it was a secretariat, they aligned many of the supports that the country has in mexico, which also contribute some things and other things not. This is a very strong flow of information. 
+
+---
+
+**`44:52-45:58`**
+Para esa división, como tú dices, son dos mercados diferentes que debemos analizar un poquito como podemos. Cómo gasta? Cómo consume? Para ver si en realidad tiene un ahorro, al decir, pues yo le meto esto, porque no tengo obligación de hacerlo, porque varía, no? Saber si en realidad, haciendo una corrida. Muy bien, muy bien. 
+
+---
+
+**`45:58-47:03`**
+Mercado no es no creo que tenga valor para ellos y nos enfocamos solamente a otro mercado y en las dos escalas de esos más grandes mercados analizando también cuál puede ser la óptica de uno y de otro porque el de pequeños son personas físicas que son personas que son empresariales ellos sí nos están pagando contador no? Y los empleados que ganan de fifty arriba a lo mejor, pues ellos. Quién sabe cómo lo están haciendo? Y para ese mercado, por qué? Creo que eso es lo que hay. Sí, nada más. Aplicaciones en el mercado. Con boca o mule. Ya existen. Ya hay programas como lo hemos platicado. Hay como cinco que tienen mucha promoción. 
+
+---
+
+**`47:03-48:09`**
+Este, ya ustedes decidirán una forma de introducción al mercado con las cuatro famosas de marketing, pero nada más en quedan algo, si tú vas por el de las personas físicas, tienes un costo pequeño, un precio de venta pequeño. Claro, claro. Youre going to do everything. Youre going to do everything. Youre going to do everything. Youre going to do everything. Youre going to do everything. Youre going to do everything. Youre going to do everything. Youre going to do everything. Youre going to do everything. Youre going to do everything. I still have a second. 
+
+---
+
+**`48:09-49:15`**
+Y si es un poquito más asombroso, era un pedazo mucho de mercado, con un pedazo un poquito mayor a un 100 de mercado, estábamos hablando de three millones de personas, estábamos hablando de una ocasión de thirty millones de personas. O sea, eran números muy grandes que valen la pena analizar ese pedazo de mercado y un enfoque muy específico. 
+
+---
+
+**`49:15-50:20`**
+And the theme is to take it to the cell phone so that all the expenses that you are making on the street, you can take a picture of the ticket and at that moment the robot generates the bill of the walmart, of the commercial store, of. Thats what you just said, that i havent seen a robot, but that would be an additional service. Today, at that moment, that is the added value of buying the application and not buying it from the front. Yes, because thats what it does. I think thats what it does. Its the real value. Also, as i said, thats what were working on doing. Because it makes you feel the humanity, right? It makes it easier for you to take the pin away. 
+
+---
+
+**`50:20-51:26`**
+Cuando yo pienso en tu factura pienso, por lo menos de este lado, como en fifteen clientes que le batallan mucho con eso. Que van al restaurante, a la gasolina, a sams club, a tiendas inclusive grandes, y es una batalla de poder facturar. Entonces digo, eso sí puede ser un valor agregado o un servicio adicional. Ustedes lo ven. Pero no podemos dar la misma solución que ya da el de enfrente. Tenemos que dar algo adicional. Para mí lo adicional sería. La calidad con que yo mando la información. Es decir, si yo abro mi celular y le doy click, yo tengo que ver al cliente, tengo que confiar en la información que me está mostrando y saber que es muy buena y alta calidad. Eso no. 
+
+---
+
+**`51:26-52:31`**
+Sí. Sí. Sí. Sí. Ok, ok, ok, ok, ok. me gustaría, cómo es? Cómo es? Cómo es? Cómo es? Cómo es? Cómo es? 
+
+---
+
+**`52:31-53:36`**
+Sí. Sí. Ok, ok, ok, ok, ok me gustaría, vos contigo amigo, como te decía, de la desinocución que podemos tener en estos. 
+
+---
+
+**`53:36-54:42`**
+La parte bancaria, la parte de pagos, la parte de pagos ya está. Pero la idea es valorar bien la oferta para esos mercados. Para saber qué les puedo decir, qué es lo que meto. Yo te voy a decir, tú vas a pagar menos impuestos en tu patada ahorita. Vas a poder tener una deducción o no. Quiero validar la hipótesis que tengo en mi mente. Correct correct okay. Okay. Okay. 
+
+---
+
+<aside>
+✨ *Equipo presentó cinco robots de Alquimia orientados a automatizar tareas fiscales (buzón tributario, facturación, contabilidad electrónica, DIOT/crónimos y calendario inteligente). Mario y otros dieron retroalimentación sobre viabilidad, límites regulatorios y mercado objetivo; se acordó refinar la propuesta, empaquetar versiones y agendar seguimiento.*
+
+</aside>
+
+## **Decisiones**
+
+- ****Refinar las cinco propuestas y empaquetarlas en versiones escalonadas (básico/intermedio/premium).
+- ****Realizar análisis regulatorio y técnica sobre límites de automatización del buzón tributario antes de habilitar respuestas automáticas.
+- ****Agendar reunión de seguimiento para presentar ajustes (propuesta: martes a las 17:00).
+
+## Introducción y objetivos de la reunión
+
+> *Se presentaron los asistentes y el objetivo: mostrar cinco robots prioritarios para la parte financiera y fiscal, recibir retroalimentación de Mario sobre viabilidad, valoración de mercado y potencial de venta como paquete.*
+> 
+
+Los organizadores introdujeron al equipo (Delia, Raúl, Ramón y otros) y explicaron que Alquimia es una aplicación que crea agentes digitales con IA para asuntos contables y fiscales. El propósito fue presentar cinco robots prioritarios, explicar rápidamente sus funciones y recabar opiniones sobre su utilidad, alcance del mercado y si los usuarios pagarían por estas automatizaciones.
+
+- ***Objetivo: validar viabilidad y valor de cinco robots fiscales.***
+- ***Participación de un contador experimentado (Mario) para evaluar regulación y mercado.***
+- [ ]  **Detallar objetivos por robot**
+Ajustar la presentación para cada robot con casos de uso concretos y métricas de impacto para revisar con Mario.
+
+---
+
+## Robot 1 — Asistente de Buzón Tributario
+
+> *Robot de monitoreo 24/7 del buzón tributario con alertas (WhatsApp), clasificación de notificaciones y emisión de acuses automáticos; preocupaciones sobre qué notificaciones abrir y sensibilidad legal.*
+> 
+
+Se describió un agente que monitorea el buzón tributario, envía alertas automáticas y genera acuses de recibo para reducir intervención manual y evitar multas por no atender notificaciones. Mario advirtió que abrir notificaciones puede tener implicaciones legales o tácticas (por ejemplo, revelar que se recibió un aviso) y sugirió límites: notificar sin abrir y mantener intervención humana en casos sensibles.
+
+- **Mon*itoreo 24/7 y alertas automáticas por WhatsApp para evitar multas.***
+- ***Riesgo legal/sensible al automatizar apertura/respuesta de notificaciones del SAT.***
+- [ ]  **Definir límites de automatización**
+Especificar qué tipos de notificaciones puede abrir el robot y cuándo escalar a revisión humana según criterios de riesgo legal.
+
+---
+
+## Robot 2 — Facturación e identificación de errores SFDI 4.0
+
+> *Agente enfocado en recordatorios, validación de datos fiscales, identificación de errores comunes SFDI 4.0, alertas de cancelación y complementos de pago; percibido como atractivo si puede integrarse para corregir o guiar acciones concretas.*
+> 
+
+El robot enviaría recordatorios antes de vencimientos, validaría RFC/regímenes, detectaría errores en facturas (SFDI 4.0) y alertaría sobre cancelaciones o falta de complementos de pago. Mario lo consideró interesante y viable, pero señaló que el valor real aumenta si la solución no solo identifica errores sino que facilita acciones (semáforo, exigencia de complemento al cliente, integración con procesos para corregir).
+
+- ***Valor agregado al detectar errores SFDI 4.0 y alertar sobre complementos de pago.***
+- **N*ecesidad de que la herramienta facilite la corrección (semáforo, comunicación a proveedores).***
+- [ ]  **Diseñar semáforo y flujos de corrección**
+Crear un semáforo de prioridad para errores y diseñar mensajes automatizados que soliciten complementos o ajustes a clientes/proveedores.
+
+---
+
+## Robot 3 — Contabilidad electrónica y conciliación
+
+> *Robot que automatiza registros contables, genera XML, verifica información y ofrece un dashboard de métricas; la propuesta es útil como precontabilidad y supervisión para despachos y empresas.*
+> 
+
+Se propuso un agente que registra automáticamente la contabilidad electrónica en los primeros días del periodo, integra con ERPs/contables (Aspel, etc.), genera XML y realiza validaciones previas al envío. Los asistentes destacaron valor para despachos y empresas que requieren supervisión continua y metricas, señalando que su fortaleza es la visibilidad y preparación, no sustituir la contabilidad profesional completa.
+
+- **Int*egración con ERPs y dashboard para supervisión de clientes.***
+- ***Es una herramienta de preparación/precontabilidad más que sustitución total de contadores.***
+- [ ]  **Mapear conectores ERP prioritarios**
+Priorizar integraciones con los ERPs/softwares contables más usados por clientes objetivo (p. ej. Aspel) y definir alcance de sincronización.
+
+---
+
+## Robot 4 — DIOT / declaración informativa (Crónimos)
+
+> *Agente para cruzar operaciones con terceros (DIOT), detectar discrepancias y generar tutoriales; se percibe útil como detector de inconsistencias pero con limitaciones para resolver problemas por sí solo.*
+> 
+
+El robot analizaría la información de operaciones con terceros y cruzaría datos para identificar diferencias entre lo declarado por el contribuyente y lo reportado por terceros. Mario comentó que, aunque detecta discrepancias útiles para la declaración anual, no resuelve automáticamente la operación y su principal valor es como herramienta de detección y tutorial para usuarios y contadores.
+
+- ***Detección de discrepancias entre declaraciones y terceros (DIOT).***
+- ***Limitación: no resuelve operaciones, solo detecta y guía.***
+- [ ]  **Definir alcance funcional DIOT**
+Determinar casos concretos que el robot puede resolver vs. los que debe escalar a contador y diseñar tutoriales interactivos para usuarios.
+
+---
+
+## Robot 5 — Calendario inteligente y alertas
+
+> *Calendario personalizado por régimen fiscal que envía recordatorios (WhatsApp/email), chequeos mensuales y reportes de cumplimiento; propuesto como último robot prioritario y bien valorado para evitar multas y mejorar previsión de pagos.*
+> 
+
+El calendario inteligente programaría alertas según el régimen del cliente, integraría con los calendarios que el usuario ya usa y ofrecería reportes de cumplimiento para directivos. Los asistentes vieron potencial para prever obligaciones fiscales (incluso cálculos aproximados de impuestos a pagar) y usarlo como herramienta de supervisión para despachos y empresas.
+
+- **‍ Per*sonalización por régimen y envío de recordatorios automáticos.***
+- ***Valor percibido en previsión y reducción de multas vía recordatorios y dashboard.***
+- [ ]  **Prototipar alertas y calculadora fiscal**
+Construir prototipo del calendario con notificaciones y una estimación simple de obligaciones/pagos para que el usuario prevea costos fiscales.
+
+---
+
+## Mercado, packaging y propuesta de valor
+
+> *Se discutió segmentación (personas físicas con ingresos bajos, empleados, MIPYME, empresas más grandes) y la recomendación de ofrecer versiones escalonadas y vender el paquete básico con opciones premium; enfatizar valor agregado como calidad de datos y captura móvil de tickets.*
+> 
+
+Mario y otros recomendaron segmentar la oferta: versión básica para personas físicas, nivel intermedio para PYMEs y una versión avanzada con asesoría para empresas. Sugirieron vender los robots en paquete con niveles (básico, intermedio, premium) y destacar características diferenciales: integración contable, captura móvil de tickets y calidad de la información. También se discutió fijar precios bajos para masividad y precios mayores para clientes con mayor tolerancia y necesidad de servicios de asesoría.
+
+- ***Vender en paquetes escalonados (básico/intermedio/premium).***
+- ***Diferenciar valor con captura móvil y calidad de datos, no replicar competencia.***
+- [ ]  **Definir oferta y pricing por segmento**
+Crear propuestas de valor y estructuras de precios para personas físicas, PYMEs y empresas, incluyendo niveles de servicio y servicios complementarios.
+
+---
+
+## Restricciones técnicas y regulatorias
+
+> *Se identificaron riesgos regulatorios (abrir notificaciones del SAT), necesidad de datasets de errores (SFDI/Diode), y la importancia de conectores API/ERPs; se recomendó incluir intervención humana para casos de riesgo.*
+> 
+
+Técnicamente, los robots requieren integraciones API con el SAT y ERPs, datasets de errores (SFDI 4.0, Diode) y validaciones de formato para carga de archivos. Legalmente, automatizar respuestas o apertura de ciertos mensajes puede ser delicado; la solución debe contemplar mecanismos de escalamiento a humano y límites de automatización. Se propuso priorizar conectores e identificar riesgos regulatorios antes de autonomía completa.
+
+- ***Necesidad de datasets y conectores API con ERPs y SAT.***
+- ***Requerir intervención humana en casos sensibles por regulación.***
+- [ ]  **Auditoría regulatorias y técnica**
+Realizar un análisis legal y técnico sobre límites de automatización del buzón tributario y requerimientos de integración con SAT/ERPs.
+
+---
+
+## Acuerdos, próximos pasos y seguimiento
+
+> *Se acordó refinar las versiones por segmento, incorporar comentarios de Mario, trabajar el go-to-market y agendar una reunión de seguimiento (martes 5 a las 17:00) para presentar ajustes.*
+> 
+
+Los asistentes agradecieron los comentarios, acordaron que el equipo hará ajustes a las propuestas (versiones segmentadas, mejoras técnicas y clarificación de límites de automatización) y se comprometieron a presentar una propuesta refinada. Se mencionó coordinar una próxima reunión para continuar la discusión y validar hipótesis de mercado y oferta de valor.
+
+- **A*justar productos según retroalimentación y preparar propuesta refinada.***
+- ***Reunión de seguimiento propuesta para martes a las 17:00.***
+- [ ]  **Preparar propuesta refinada**
+Incorporar retroalimentación técnica y de mercado, definir packaging y pricing, y preparar demo/ materiales para la siguiente reunión.
+
+---
+
+- [ ]  **Validar hipótesis de mercado**
+Realizar estudio rápido de mercado para estimar tamaño y disposición a pagar de personas físicas y PYMEs; priorizar segmentos con mayor ROI.

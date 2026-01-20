@@ -1,0 +1,22 @@
+# Dependencias para el sistema de tracking y overlay de Alqvimia
+# Instalar con: pip install -r requirements.txt
+
+# Tracking global del mouse y teclado
+pynput>=1.7.6
+
+# Windows UI Automation (detección de elementos)
+uiautomation>=2.0.18
+
+# APIs de Windows (ventanas, GDI, COM)
+pywin32>=306
+pywin32-ctypes>=0.2.0
+
+# COM Automation (requerido para UI Automation en hilos)
+comtypes>=1.2.0
+
+# Captura de pantalla
+Pillow>=10.0.0
+mss>=9.0.0
+
+# Utilidades adicionales
+pythoncom  # Incluido en pywin32

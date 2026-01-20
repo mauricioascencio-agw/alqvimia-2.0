@@ -158,4 +158,75 @@ export function registerRecorderHandlers(io, socket, serverState) {
       message: 'Sesión de grabación limpiada'
     })
   })
+
+  // Iniciar captura de objeto (requiere inyector en el navegador)
+  socket.on('recorder:start-capture', (data) => {
+    console.log(`[Recorder] Iniciando captura de objeto para ${socket.id}`, data)
+
+    const session = serverState.recordingSessions.get(socket.id)
+    if (session) {
+      session.captureMode = data?.mode || 'auto'
+      session.isCapturing = true
+    }
+
+    // Emitir evento para que el inyector del navegador inicie la captura
+    socket.emit('recorder:capture-started', {
+      success: true,
+      mode: data?.mode || 'auto',
+      windowHandle: data?.windowHandle,
+      message: 'Modo captura activado. Haz clic en un elemento.'
+    })
+
+    // También emitir al room del spy si está activo
+    socket.broadcast.emit('spy:start-element-capture', {
+      clientId: socket.id,
+      mode: data?.mode || 'auto'
+    })
+  })
+
+  // Detener captura de objeto
+  socket.on('recorder:stop-capture', () => {
+    console.log(`[Recorder] Deteniendo captura de objeto para ${socket.id}`)
+
+    const session = serverState.recordingSessions.get(socket.id)
+    if (session) {
+      session.isCapturing = false
+    }
+
+    socket.emit('recorder:capture-stopped', {
+      success: true
+    })
+  })
+
+  // Iniciar detección visual (highlight de elementos)
+  socket.on('recorder:start-visual-detection', (data) => {
+    console.log(`[Recorder] Iniciando detección visual para ${socket.id}`, data)
+
+    socket.emit('recorder:visual-detection-started', {
+      success: true,
+      highlightColor: data?.highlightColor || '#22c55e',
+      highlightWidth: data?.highlightWidth || 3
+    })
+
+    // Notificar al inyector del navegador
+    socket.broadcast.emit('spy:enable-highlight', {
+      clientId: socket.id,
+      color: data?.highlightColor || '#22c55e',
+      width: data?.highlightWidth || 3,
+      windowHandle: data?.windowHandle
+    })
+  })
+
+  // Detener detección visual
+  socket.on('recorder:stop-visual-detection', () => {
+    console.log(`[Recorder] Deteniendo detección visual para ${socket.id}`)
+
+    socket.emit('recorder:visual-detection-stopped', {
+      success: true
+    })
+
+    socket.broadcast.emit('spy:disable-highlight', {
+      clientId: socket.id
+    })
+  })
 }

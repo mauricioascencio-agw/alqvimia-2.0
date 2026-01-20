@@ -78,6 +78,72 @@ function TagsField({ value, onChange, placeholder }) {
   )
 }
 
+// Componente simple para campo de archivo (sin variables)
+function FileFieldSimple({ value, onChange, placeholder, required, accept = '', fileType = 'open' }) {
+  const [isBrowsing, setIsBrowsing] = useState(false)
+
+  const handleBrowse = async () => {
+    if (isBrowsing) return
+    setIsBrowsing(true)
+
+    try {
+      // Si fileType es 'save', usar diálogo de guardar
+      const endpoint = fileType === 'save'
+        ? '/api/system/save-file-dialog'
+        : '/api/system/select-file'
+
+      // Construir filtro basado en accept
+      let filter = 'Todos los archivos (*.*)|*.*'
+      if (accept) {
+        const extensions = accept.split(',').map(ext => ext.trim())
+        const extPattern = extensions.map(ext => `*${ext}`).join(';')
+        filter = `Archivos permitidos (${extPattern})|${extPattern}|Todos los archivos (*.*)|*.*`
+      }
+
+      const response = await fetch(`http://localhost:4000${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: fileType === 'save' ? 'Guardar archivo' : 'Seleccionar archivo',
+          filter: filter,
+          initialDirectory: value ? value.replace(/[/\\][^/\\]*$/, '') : ''
+        })
+      })
+
+      const result = await response.json()
+
+      if (result.success && !result.cancelled && result.path) {
+        onChange(result.path)
+      }
+    } catch (error) {
+      console.error('Error al abrir diálogo:', error)
+    } finally {
+      setIsBrowsing(false)
+    }
+  }
+
+  return (
+    <div className="file-field">
+      <input
+        type="text"
+        value={value || ''}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className={required && !value ? 'invalid' : ''}
+      />
+      <button
+        type="button"
+        className={`file-browse ${isBrowsing ? 'loading' : ''}`}
+        title="Examinar"
+        onClick={handleBrowse}
+        disabled={isBrowsing}
+      >
+        <i className={`fas ${isBrowsing ? 'fa-spinner fa-spin' : 'fa-folder-open'}`}></i>
+      </button>
+    </div>
+  )
+}
+
 // Componente para texto con selector de variables - Usa el nuevo VariableInput
 function TextWithVariableField({ value, onChange, placeholder, required, variables = [], allowedTypes }) {
   return (
@@ -96,11 +162,53 @@ function TextWithVariableField({ value, onChange, placeholder, required, variabl
 }
 
 // Componente para campo de archivo con selector de variables
-function FileWithVariableField({ value, onChange, placeholder, required, variables = [], allowedTypes, browseType = 'file' }) {
+function FileWithVariableField({ value, onChange, placeholder, required, variables = [], allowedTypes, browseType = 'file', accept = '' }) {
   const [showVarSelector, setShowVarSelector] = useState(false)
   const [inputMode, setInputMode] = useState('text') // 'text' o 'variable'
+  const [isBrowsing, setIsBrowsing] = useState(false)
   const inputRef = useRef(null)
   const selectorRef = useRef(null)
+
+  // Función para abrir el diálogo de selección de archivo/carpeta
+  const handleBrowse = async () => {
+    if (isBrowsing) return
+    setIsBrowsing(true)
+
+    try {
+      const endpoint = browseType === 'folder'
+        ? '/api/system/select-folder'
+        : '/api/system/select-file'
+
+      // Construir filtro basado en accept
+      let filter = 'Todos los archivos (*.*)|*.*'
+      if (accept && browseType !== 'folder') {
+        const extensions = accept.split(',').map(ext => ext.trim())
+        const extPattern = extensions.map(ext => `*${ext}`).join(';')
+        filter = `Archivos permitidos (${extPattern})|${extPattern}|Todos los archivos (*.*)|*.*`
+      }
+
+      const response = await fetch(`http://localhost:4000${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: browseType === 'folder' ? 'Seleccionar carpeta' : 'Seleccionar archivo',
+          filter: filter,
+          initialDirectory: value && !value.startsWith('${') ? value.replace(/[/\\][^/\\]*$/, '') : ''
+        })
+      })
+
+      const result = await response.json()
+
+      if (result.success && !result.cancelled && result.path) {
+        onChange(result.path)
+        setInputMode('text')
+      }
+    } catch (error) {
+      console.error('Error al abrir diálogo:', error)
+    } finally {
+      setIsBrowsing(false)
+    }
+  }
 
   // Combinar variables del usuario con las del sistema
   const allVariables = [
@@ -170,8 +278,14 @@ function FileWithVariableField({ value, onChange, placeholder, required, variabl
         >
           <i className="fas fa-times-circle"></i>
         </button>
-        <button type="button" className="file-browse-btn" title={browseType === 'folder' ? 'Seleccionar carpeta' : 'Examinar archivo'}>
-          <i className={`fas ${browseType === 'folder' ? 'fa-folder' : 'fa-folder-open'}`}></i>
+        <button
+          type="button"
+          className={`file-browse-btn ${isBrowsing ? 'loading' : ''}`}
+          title={browseType === 'folder' ? 'Seleccionar carpeta' : 'Examinar archivo'}
+          onClick={handleBrowse}
+          disabled={isBrowsing}
+        >
+          <i className={`fas ${isBrowsing ? 'fa-spinner fa-spin' : (browseType === 'folder' ? 'fa-folder' : 'fa-folder-open')}`}></i>
         </button>
       </div>
       {showVarSelector && (
@@ -669,18 +783,14 @@ function PropertyField({ field, value, onChange, allValues, variables = [] }) {
 
       case 'file':
         return (
-          <div className="file-field">
-            <input
-              type="text"
-              value={localValue}
-              onChange={(e) => handleChange(e.target.value)}
-              placeholder={field.placeholder}
-              className={field.required && !localValue ? 'invalid' : ''}
-            />
-            <button type="button" className="file-browse" title="Examinar">
-              <i className="fas fa-folder-open"></i>
-            </button>
-          </div>
+          <FileFieldSimple
+            value={localValue}
+            onChange={handleChange}
+            placeholder={field.placeholder}
+            required={field.required}
+            accept={field.accept}
+            fileType={field.fileType}
+          />
         )
 
       case 'fileWithVariable':
@@ -693,6 +803,7 @@ function PropertyField({ field, value, onChange, allValues, variables = [] }) {
             variables={variables}
             allowedTypes={field.allowedTypes}
             browseType="file"
+            accept={field.accept}
           />
         )
 
@@ -706,6 +817,7 @@ function PropertyField({ field, value, onChange, allValues, variables = [] }) {
             variables={variables}
             allowedTypes={field.allowedTypes}
             browseType="folder"
+            accept=""
           />
         )
 

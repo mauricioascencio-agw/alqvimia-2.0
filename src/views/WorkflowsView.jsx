@@ -2984,13 +2984,40 @@ function WorkflowsView() {
     URL.revokeObjectURL(url)
   }
 
-  // Función para procesar RFQ desde PDF/Word/MD
+  // Función para procesar RFQ desde PDF/Word/MD con IA y progreso detallado
   const processRFQDocument = async (file) => {
     if (!file) return
 
     setIsProcessingRFQ(true)
     setRfqProcessingProgress(0)
     setRfqContent('')
+    setRfqGeneratedSteps([])
+    setRfqAnalysisResult(null)
+
+    // Definir las fases de procesamiento
+    const processingPhases = [
+      { id: 'upload', label: 'Subiendo documento', icon: 'fa-cloud-upload-alt', progress: 0 },
+      { id: 'extract', label: 'Extrayendo texto', icon: 'fa-file-alt', progress: 15 },
+      { id: 'analyze', label: 'Analizando contenido con IA', icon: 'fa-brain', progress: 30 },
+      { id: 'identify', label: 'Identificando acciones', icon: 'fa-search', progress: 50 },
+      { id: 'generate', label: 'Generando pasos del workflow', icon: 'fa-cogs', progress: 70 },
+      { id: 'variables', label: 'Detectando variables', icon: 'fa-cube', progress: 85 },
+      { id: 'complete', label: 'Completado', icon: 'fa-check-circle', progress: 100 }
+    ]
+
+    setRfqProcessingSteps(processingPhases.map(p => ({ ...p, status: 'pending' })))
+
+    const updatePhase = (phaseId, status = 'active') => {
+      setRfqProcessingSteps(prev => prev.map(p =>
+        p.id === phaseId ? { ...p, status } :
+        status === 'active' && p.status === 'active' ? { ...p, status: 'completed' } : p
+      ))
+      const phase = processingPhases.find(p => p.id === phaseId)
+      if (phase) {
+        setRfqProcessingPhase(phase.label)
+        setRfqProcessingProgress(phase.progress)
+      }
+    }
 
     try {
       // Validar tipo de archivo
@@ -3008,15 +3035,18 @@ function WorkflowsView() {
         return
       }
 
-      setRfqProcessingProgress(20)
+      // Fase 1: Subir documento
+      updatePhase('upload', 'active')
+      await new Promise(r => setTimeout(r, 500))
 
-      // Crear FormData para enviar el archivo al backend
       const formData = new FormData()
       formData.append('document', file)
 
-      setRfqProcessingProgress(40)
+      updatePhase('upload', 'completed')
 
-      // Enviar al backend para procesamiento
+      // Fase 2: Extraer texto
+      updatePhase('extract', 'active')
+
       const response = await fetch('/api/workflows/parse-rfq', {
         method: 'POST',
         body: formData
@@ -3026,37 +3056,269 @@ function WorkflowsView() {
         throw new Error('Error al procesar el documento')
       }
 
-      setRfqProcessingProgress(70)
-
       const result = await response.json()
 
-      if (result.success) {
-        setRfqContent(result.extractedText || '')
-        setRfqProcessingProgress(90)
-
-        // Generar workflow desde el contenido extraído
-        if (result.generatedSteps && result.generatedSteps.length > 0) {
-          setWorkflowName(result.workflowName || file.name.replace(/\.(pdf|docx|doc|md|txt)$/i, ''))
-          setWorkflowSteps(result.generatedSteps)
-          if (result.variables) {
-            setVariables(result.variables)
-          }
-          setRfqProcessingProgress(100)
-          alert(`Workflow generado exitosamente con ${result.generatedSteps.length} pasos!`)
-          setShowRFQModal(false)
-        } else {
-          setRfqProcessingProgress(100)
-          alert('Documento procesado. Revisa el contenido extraído para generar el workflow.')
-        }
-      } else {
-        throw new Error(result.message || 'Error al procesar el documento')
+      if (!result.success) {
+        throw new Error(result.message || 'Error al extraer texto del documento')
       }
+
+      setRfqContent(result.extractedText || '')
+      updatePhase('extract', 'completed')
+
+      // Fase 3: Analizar con IA
+      updatePhase('analyze', 'active')
+
+      // Llamar a la API de IA para análisis profundo del documento
+      let aiAnalysis = null
+      try {
+        const aiResponse = await fetch('/api/ai/analyze-document', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            content: result.extractedText,
+            fileName: file.name,
+            context: 'workflow_generation'
+          })
+        })
+
+        if (aiResponse.ok) {
+          aiAnalysis = await aiResponse.json()
+          // Guardar mensaje de estado de IA si no está configurada
+          if (aiAnalysis.aiMessage) {
+            setRfqAiMessage(aiAnalysis.aiMessage)
+          }
+          if (aiAnalysis.source === 'claude') {
+            setRfqAiMessage(null) // Limpiar si IA funcionó correctamente
+          }
+        }
+      } catch (aiError) {
+        console.log('[RFQ] IA no disponible, usando análisis local:', aiError.message)
+        setRfqAiMessage('Error de conexión con el servidor de IA. Usando análisis local.')
+      }
+
+      updatePhase('analyze', 'completed')
+
+      // Fase 4: Identificar acciones
+      updatePhase('identify', 'active')
+      await new Promise(r => setTimeout(r, 600))
+
+      // Usar el análisis de IA o el análisis local
+      const extractedText = result.extractedText || ''
+      const actionPhrases = extractActionPhrasesFromText(extractedText)
+
+      updatePhase('identify', 'completed')
+
+      // Fase 5: Generar pasos del workflow
+      updatePhase('generate', 'active')
+
+      let generatedSteps = []
+      const timestamp = Date.now()
+
+      if (aiAnalysis?.steps && aiAnalysis.steps.length > 0) {
+        // Usar los pasos generados por IA
+        generatedSteps = aiAnalysis.steps.map((step, index) => ({
+          id: `step_${timestamp}_${index + 1}`,
+          action: step.action || 'comment',
+          icon: step.icon || 'fa-circle',
+          label: step.label || step.description || `Paso ${index + 1}`,
+          params: step.params || {}
+        }))
+      } else if (result.generatedSteps && result.generatedSteps.length > 0) {
+        // Usar los pasos generados por el backend
+        generatedSteps = result.generatedSteps.map((step, index) => ({
+          id: `step_${timestamp}_${index + 1}`,
+          action: step.action || 'comment',
+          icon: getActionIcon(step.action),
+          label: step.label || `Paso ${index + 1}`,
+          params: step.params || {}
+        }))
+      } else {
+        // Generar pasos desde las frases de acción detectadas
+        generatedSteps = actionPhrases.map((phrase, index) => ({
+          id: `step_${timestamp}_${index + 1}`,
+          action: mapVerbToAction(phrase.verb),
+          icon: phrase.icon,
+          label: phrase.label,
+          params: { description: phrase.objeto }
+        }))
+      }
+
+      // Simular progreso gradual de generación
+      for (let i = 0; i < generatedSteps.length; i++) {
+        setRfqGeneratedSteps(prev => [...prev, generatedSteps[i]])
+        await new Promise(r => setTimeout(r, 200))
+      }
+
+      updatePhase('generate', 'completed')
+
+      // Fase 6: Detectar variables
+      updatePhase('variables', 'active')
+      await new Promise(r => setTimeout(r, 400))
+
+      const detectedVariables = result.variables || aiAnalysis?.variables || []
+      updatePhase('variables', 'completed')
+
+      // Fase 7: Completado
+      updatePhase('complete', 'active')
+      await new Promise(r => setTimeout(r, 300))
+      updatePhase('complete', 'completed')
+
+      // Guardar resultado final
+      setRfqAnalysisResult({
+        steps: generatedSteps,
+        variables: detectedVariables,
+        workflowName: result.workflowName || file.name.replace(/\.(pdf|docx|doc|md|txt)$/i, ''),
+        summary: aiAnalysis?.summary || `Se identificaron ${generatedSteps.length} acciones y ${detectedVariables.length} variables en el documento.`
+      })
+
     } catch (error) {
       console.error('Error procesando RFQ:', error)
+      setRfqProcessingSteps(prev => prev.map(p =>
+        p.status === 'active' ? { ...p, status: 'error' } : p
+      ))
       alert(`Error al procesar el documento: ${error.message}`)
     } finally {
       setIsProcessingRFQ(false)
-      setRfqProcessingProgress(0)
+    }
+  }
+
+  // Función auxiliar para extraer frases de acción del texto
+  const extractActionPhrasesFromText = (text) => {
+    const phrases = []
+    const verbPatterns = [
+      { regex: /(abrir|open)\s+(?:el\s+|la\s+|un\s+|una\s+)?(.+?)(?:\s+y\s+|\s*,\s*|\.|$)/gi, verb: 'abrir', icon: 'fa-folder-open' },
+      { regex: /(cerrar|close)\s+(?:el\s+|la\s+)?(.+?)(?:\s+y\s+|\s*,\s*|\.|$)/gi, verb: 'cerrar', icon: 'fa-times' },
+      { regex: /(crear|create|generar)\s+(?:el\s+|la\s+|un\s+|una\s+)?(.+?)(?:\s+y\s+|\s*,\s*|\.|$)/gi, verb: 'crear', icon: 'fa-plus' },
+      { regex: /(leer|read|obtener|get)\s+(?:el\s+|la\s+|los\s+)?(.+?)(?:\s+y\s+|\s*,\s*|\.|$)/gi, verb: 'leer', icon: 'fa-eye' },
+      { regex: /(escribir|write|guardar|save)\s+(?:el\s+|la\s+|en\s+)?(.+?)(?:\s+y\s+|\s*,\s*|\.|$)/gi, verb: 'escribir', icon: 'fa-edit' },
+      { regex: /(enviar|send)\s+(?:el\s+|la\s+|un\s+)?(.+?)(?:\s+a\s+|\s+y\s+|\s*,\s*|\.|$)/gi, verb: 'enviar', icon: 'fa-paper-plane' },
+      { regex: /(navegar|navigate|ir\s+a|visitar)\s+(?:a\s+)?(.+?)(?:\s+y\s+|\s*,\s*|\.|$)/gi, verb: 'navegar', icon: 'fa-compass' },
+      { regex: /(clic|click|presionar)\s+(?:en\s+|el\s+)?(.+?)(?:\s+y\s+|\s*,\s*|\.|$)/gi, verb: 'clic', icon: 'fa-mouse-pointer' },
+      { regex: /(copiar|copy)\s+(?:el\s+|la\s+)?(.+?)(?:\s+a\s+|\s+y\s+|\s*,\s*|\.|$)/gi, verb: 'copiar', icon: 'fa-copy' },
+      { regex: /(eliminar|delete|borrar)\s+(?:el\s+|la\s+)?(.+?)(?:\s+y\s+|\s*,\s*|\.|$)/gi, verb: 'eliminar', icon: 'fa-trash' },
+      { regex: /(validar|verificar|check)\s+(?:el\s+|la\s+|si\s+)?(.+?)(?:\s+y\s+|\s*,\s*|\.|$)/gi, verb: 'validar', icon: 'fa-check' },
+      { regex: /(esperar|wait)\s+(?:a\s+que\s+|hasta\s+)?(.+?)(?:\s+y\s+|\s*,\s*|\.|$)/gi, verb: 'esperar', icon: 'fa-clock' },
+      { regex: /(ejecutar|run|iniciar)\s+(?:el\s+|la\s+)?(.+?)(?:\s+y\s+|\s*,\s*|\.|$)/gi, verb: 'ejecutar', icon: 'fa-play' }
+    ]
+
+    for (const { regex, verb, icon } of verbPatterns) {
+      let match
+      const r = new RegExp(regex.source, regex.flags)
+      while ((match = r.exec(text)) !== null) {
+        const objeto = match[2]?.trim()
+        if (objeto && objeto.length > 1 && objeto.length < 60) {
+          phrases.push({
+            verb,
+            objeto,
+            label: `${verb.charAt(0).toUpperCase() + verb.slice(1)} ${objeto}`,
+            icon
+          })
+        }
+      }
+    }
+
+    return phrases
+  }
+
+  // Mapear verbo a tipo de acción
+  const mapVerbToAction = (verb) => {
+    const mapping = {
+      'abrir': 'browser_open',
+      'cerrar': 'browser_close',
+      'crear': 'file_write',
+      'leer': 'file_read',
+      'escribir': 'type',
+      'enviar': 'send_email',
+      'navegar': 'navigate',
+      'clic': 'click',
+      'copiar': 'file_copy',
+      'eliminar': 'file_delete',
+      'validar': 'if_condition',
+      'esperar': 'delay',
+      'ejecutar': 'execute_code'
+    }
+    return mapping[verb] || 'comment'
+  }
+
+  // Obtener icono para una acción
+  const getActionIcon = (action) => {
+    const icons = {
+      'browser_open': 'fa-globe',
+      'navigate': 'fa-compass',
+      'click': 'fa-mouse-pointer',
+      'type': 'fa-keyboard',
+      'delay': 'fa-clock',
+      'if_condition': 'fa-code-branch',
+      'for_each': 'fa-redo',
+      'excel_open': 'fa-file-excel',
+      'excel_read': 'fa-table',
+      'excel_write': 'fa-edit',
+      'file_read': 'fa-file-alt',
+      'file_write': 'fa-save',
+      'send_email': 'fa-envelope',
+      'comment': 'fa-comment'
+    }
+    return icons[action] || 'fa-circle'
+  }
+
+  // Aplicar el workflow generado con animación de progreso
+  const applyGeneratedRFQWorkflow = async () => {
+    if (!rfqAnalysisResult) return
+
+    const stepsToApply = rfqAnalysisResult.steps || rfqGeneratedSteps
+    if (stepsToApply.length === 0) {
+      alert('No hay pasos para aplicar. Asegúrate de que el documento contenga instrucciones de proceso claras.')
+      return
+    }
+
+    setIsApplyingRFQWorkflow(true)
+    setApplyingProgress(0)
+
+    try {
+      // Establecer nombre del workflow
+      setWorkflowName(rfqAnalysisResult.workflowName || 'Workflow desde Documento')
+
+      // Limpiar workflow actual antes de agregar nuevos pasos
+      setWorkflowSteps([])
+
+      // Agregar cada paso con animación
+      const newSteps = []
+      for (let i = 0; i < stepsToApply.length; i++) {
+        const step = stepsToApply[i]
+        setApplyingCurrentStep(step)
+        setApplyingProgress(Math.round(((i + 1) / stepsToApply.length) * 100))
+
+        // Agregar paso al workflow
+        newSteps.push(step)
+        setWorkflowSteps([...newSteps])
+
+        // Pequeña pausa para mostrar animación
+        await new Promise(r => setTimeout(r, 150))
+      }
+
+      // Agregar variables si existen
+      if (rfqAnalysisResult.variables && rfqAnalysisResult.variables.length > 0) {
+        setVariables(rfqAnalysisResult.variables)
+      }
+
+      // Esperar un momento antes de cerrar
+      await new Promise(r => setTimeout(r, 500))
+
+      // Cerrar modal y limpiar estados
+      setShowRFQModal(false)
+      setRfqContent('')
+      setRfqGeneratedSteps([])
+      setRfqAnalysisResult(null)
+      setRfqProcessingSteps([])
+      setRfqAiMessage(null)
+
+    } catch (error) {
+      console.error('Error aplicando workflow:', error)
+      alert('Error al aplicar el workflow: ' + error.message)
+    } finally {
+      setIsApplyingRFQWorkflow(false)
+      setApplyingProgress(0)
+      setApplyingCurrentStep(null)
     }
   }
 
@@ -3238,6 +3500,14 @@ function WorkflowsView() {
   const [rfqContent, setRfqContent] = useState('')
   const [isProcessingRFQ, setIsProcessingRFQ] = useState(false)
   const [rfqProcessingProgress, setRfqProcessingProgress] = useState(0)
+  const [rfqProcessingPhase, setRfqProcessingPhase] = useState('') // Fase actual de procesamiento
+  const [rfqProcessingSteps, setRfqProcessingSteps] = useState([]) // Pasos del progreso
+  const [rfqGeneratedSteps, setRfqGeneratedSteps] = useState([]) // Steps generados para previsualizar
+  const [rfqAnalysisResult, setRfqAnalysisResult] = useState(null) // Resultado del análisis IA
+  const [rfqAiMessage, setRfqAiMessage] = useState(null) // Mensaje de estado de IA
+  const [isApplyingRFQWorkflow, setIsApplyingRFQWorkflow] = useState(false) // Aplicando workflow
+  const [applyingProgress, setApplyingProgress] = useState(0) // Progreso de aplicación
+  const [applyingCurrentStep, setApplyingCurrentStep] = useState(null) // Step actual siendo agregado
   const rfqFileInputRef = useRef(null)
 
   // Cargar acciones exportadas desde el editor de código
@@ -5834,13 +6104,13 @@ function WorkflowsView() {
 
         {/* Modal de RFQ - Generar desde Documentos */}
         {showRFQModal && (
-          <div className="modal-overlay" onClick={() => setShowRFQModal(false)}>
-            <div className="modal-content modal-lg" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-overlay" onClick={() => !isProcessingRFQ && setShowRFQModal(false)}>
+            <div className="modal-content modal-lg rfq-modal" onClick={(e) => e.stopPropagation()}>
               <div className="modal-header">
                 <h3>
                   <i className="fas fa-file-pdf"></i> Generar Workflow desde RFQ/Documento
                 </h3>
-                <button className="modal-close" onClick={() => setShowRFQModal(false)}>
+                <button className="modal-close" onClick={() => !isProcessingRFQ && setShowRFQModal(false)} disabled={isProcessingRFQ}>
                   <i className="fas fa-times"></i>
                 </button>
               </div>
@@ -5853,7 +6123,8 @@ function WorkflowsView() {
                   onChange={handleRFQFileSelect}
                 />
 
-                {!isProcessingRFQ && !rfqContent && (
+                {/* Estado inicial - Seleccionar archivo */}
+                {!isProcessingRFQ && !rfqAnalysisResult && rfqProcessingSteps.length === 0 && (
                   <div style={{ textAlign: 'center', padding: '2rem' }}>
                     <div style={{ fontSize: '4rem', marginBottom: '1rem', color: 'var(--primary-color)' }}>
                       <i className="fas fa-cloud-upload-alt"></i>
@@ -5883,85 +6154,231 @@ function WorkflowsView() {
                   </div>
                 )}
 
-                {isProcessingRFQ && (
-                  <div style={{ textAlign: 'center', padding: '2rem' }}>
-                    <div style={{ fontSize: '3rem', marginBottom: '1rem', color: 'var(--primary-color)' }}>
-                      <i className="fas fa-spinner fa-spin"></i>
-                    </div>
-                    <h4>Procesando documento...</h4>
-                    <div style={{ marginTop: '1.5rem' }}>
-                      <div style={{
-                        background: 'var(--dark-bg)',
-                        borderRadius: '10px',
-                        height: '20px',
-                        overflow: 'hidden',
-                        position: 'relative'
-                      }}>
-                        <div style={{
-                          background: 'linear-gradient(90deg, var(--primary-color), var(--accent-color))',
-                          height: '100%',
-                          width: `${rfqProcessingProgress}%`,
-                          transition: 'width 0.3s ease',
-                          borderRadius: '10px'
-                        }}></div>
+                {/* Estado de procesamiento con fases detalladas */}
+                {(isProcessingRFQ || (rfqProcessingSteps.length > 0 && !rfqAnalysisResult)) && (
+                  <div className="rfq-processing-container">
+                    {/* Barra de progreso principal */}
+                    <div className="rfq-progress-header">
+                      <div className="rfq-progress-bar-container">
+                        <div
+                          className="rfq-progress-bar"
+                          style={{ width: `${rfqProcessingProgress}%` }}
+                        ></div>
                       </div>
-                      <p style={{ marginTop: '0.5rem', color: 'var(--text-secondary)' }}>
-                        {rfqProcessingProgress}% completado
-                      </p>
+                      <div className="rfq-progress-percentage">{rfqProcessingProgress}%</div>
                     </div>
+
+                    {/* Lista de fases */}
+                    <div className="rfq-phases-list">
+                      {rfqProcessingSteps.map((phase, index) => (
+                        <div
+                          key={phase.id}
+                          className={`rfq-phase-item ${phase.status}`}
+                        >
+                          <div className="rfq-phase-icon">
+                            {phase.status === 'completed' ? (
+                              <i className="fas fa-check-circle"></i>
+                            ) : phase.status === 'active' ? (
+                              <i className="fas fa-spinner fa-spin"></i>
+                            ) : phase.status === 'error' ? (
+                              <i className="fas fa-exclamation-circle"></i>
+                            ) : (
+                              <i className={`fas ${phase.icon}`}></i>
+                            )}
+                          </div>
+                          <div className="rfq-phase-content">
+                            <span className="rfq-phase-label">{phase.label}</span>
+                            {phase.status === 'active' && (
+                              <span className="rfq-phase-status">En progreso...</span>
+                            )}
+                          </div>
+                          <div className="rfq-phase-progress">
+                            {phase.status === 'completed' && <span className="completed-badge">✓</span>}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Preview de pasos generados */}
+                    {rfqGeneratedSteps.length > 0 && (
+                      <div className="rfq-generated-preview">
+                        <h5><i className="fas fa-magic"></i> Pasos generados ({rfqGeneratedSteps.length})</h5>
+                        <div className="rfq-steps-preview-list">
+                          {rfqGeneratedSteps.map((step, index) => (
+                            <div key={step.id} className="rfq-step-preview-item" style={{ animationDelay: `${index * 0.1}s` }}>
+                              <span className="step-number">{index + 1}</span>
+                              <i className={`fas ${step.icon}`}></i>
+                              <span className="step-label">{step.label}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
-                {rfqContent && !isProcessingRFQ && (
-                  <div>
-                    <div style={{ marginBottom: '1rem' }}>
-                      <h4>
-                        <i className="fas fa-check-circle" style={{ color: 'var(--success-color)' }}></i>
-                        Documento procesado exitosamente
-                      </h4>
-                      <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-                        Se ha extraído el siguiente contenido del documento:
-                      </p>
+                {/* Resultado final - Workflow generado */}
+                {rfqAnalysisResult && !isProcessingRFQ && !isApplyingRFQWorkflow && (
+                  <div className="rfq-result-container">
+                    <div className="rfq-success-header">
+                      <div className="rfq-success-icon">
+                        <i className="fas fa-check-circle"></i>
+                      </div>
+                      <div className="rfq-success-info">
+                        <h4>Workflow generado exitosamente</h4>
+                        <p>{rfqAnalysisResult.summary}</p>
+                      </div>
                     </div>
-                    <div style={{
-                      background: 'var(--dark-bg)',
-                      padding: '1rem',
-                      borderRadius: '8px',
-                      maxHeight: '400px',
-                      overflowY: 'auto',
-                      border: '1px solid var(--border-color)'
-                    }}>
-                      <pre style={{
-                        margin: 0,
-                        whiteSpace: 'pre-wrap',
-                        fontSize: '0.85rem',
-                        color: 'var(--text-secondary)'
-                      }}>
-                        {rfqContent}
-                      </pre>
+
+                    {/* Mensaje de advertencia si falta API Key */}
+                    {rfqAiMessage && (
+                      <div className="rfq-ai-warning">
+                        <i className="fas fa-exclamation-triangle"></i>
+                        <div className="warning-content">
+                          <strong>Modo de análisis local</strong>
+                          <p>{rfqAiMessage}</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Resumen del workflow */}
+                    <div className="rfq-workflow-summary">
+                      <div className="rfq-summary-card">
+                        <div className="summary-icon"><i className="fas fa-list-ol"></i></div>
+                        <div className="summary-value">{rfqAnalysisResult.steps?.length || 0}</div>
+                        <div className="summary-label">Pasos</div>
+                      </div>
+                      <div className="rfq-summary-card">
+                        <div className="summary-icon"><i className="fas fa-cube"></i></div>
+                        <div className="summary-value">{rfqAnalysisResult.variables?.length || 0}</div>
+                        <div className="summary-label">Variables</div>
+                      </div>
+                      <div className="rfq-summary-card">
+                        <div className="summary-icon"><i className="fas fa-project-diagram"></i></div>
+                        <div className="summary-value">{rfqAnalysisResult.workflowName}</div>
+                        <div className="summary-label">Nombre</div>
+                      </div>
                     </div>
-                    <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
-                      <button
-                        className="btn btn-secondary"
-                        onClick={() => {
-                          setRfqContent('')
-                          setRfqFile(null)
-                        }}
-                      >
-                        <i className="fas fa-redo"></i> Procesar Otro Documento
-                      </button>
+
+                    {/* Lista de pasos generados */}
+                    <div className="rfq-steps-final-list">
+                      <h5><i className="fas fa-stream"></i> Pasos del Workflow</h5>
+                      <div className="steps-scroll-container">
+                        {(rfqAnalysisResult.steps || rfqGeneratedSteps).map((step, index) => (
+                          <div key={step.id} className="rfq-final-step-item">
+                            <div className="step-index">{index + 1}</div>
+                            <div className="step-icon-wrapper">
+                              <i className={`fas ${step.icon}`}></i>
+                            </div>
+                            <div className="step-details">
+                              <span className="step-label">{step.label}</span>
+                              <span className="step-action">{step.action}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
+
+                    {/* Contenido extraído (colapsable) */}
+                    {rfqContent && (
+                      <details className="rfq-extracted-content">
+                        <summary><i className="fas fa-file-alt"></i> Ver contenido extraído del documento</summary>
+                        <pre>{rfqContent}</pre>
+                      </details>
+                    )}
+                  </div>
+                )}
+
+                {/* Estado de aplicación de workflow */}
+                {isApplyingRFQWorkflow && (
+                  <div className="rfq-applying-container">
+                    <div className="rfq-applying-header">
+                      <div className="applying-icon">
+                        <i className="fas fa-cogs fa-spin"></i>
+                      </div>
+                      <div className="applying-info">
+                        <h4>Generando componentes del workflow</h4>
+                        <p>Agregando pasos al editor de flujo...</p>
+                      </div>
+                    </div>
+
+                    {/* Barra de progreso */}
+                    <div className="rfq-progress-header">
+                      <div className="rfq-progress-bar-container">
+                        <div
+                          className="rfq-progress-bar applying"
+                          style={{ width: `${applyingProgress}%` }}
+                        ></div>
+                      </div>
+                      <div className="rfq-progress-percentage">{applyingProgress}%</div>
+                    </div>
+
+                    {/* Paso actual siendo agregado */}
+                    {applyingCurrentStep && (
+                      <div className="applying-current-step">
+                        <div className="current-step-indicator">
+                          <i className="fas fa-arrow-right"></i>
+                          <span>Agregando:</span>
+                        </div>
+                        <div className="current-step-card">
+                          <div className="step-icon-wrapper">
+                            <i className={`fas ${applyingCurrentStep.icon}`}></i>
+                          </div>
+                          <div className="step-details">
+                            <span className="step-label">{applyingCurrentStep.label}</span>
+                            <span className="step-action">{applyingCurrentStep.action}</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
               <div className="modal-footer">
-                <button className="btn btn-secondary" onClick={() => {
-                  setShowRFQModal(false)
-                  setRfqContent('')
-                  setRfqFile(null)
-                }}>
-                  Cerrar
-                </button>
+                {isApplyingRFQWorkflow ? (
+                  <button className="btn btn-secondary" disabled>
+                    <i className="fas fa-spinner fa-spin"></i> Generando componentes...
+                  </button>
+                ) : rfqAnalysisResult && !isProcessingRFQ ? (
+                  <>
+                    <button
+                      className="btn btn-secondary"
+                      onClick={() => {
+                        setRfqContent('')
+                        setRfqFile(null)
+                        setRfqGeneratedSteps([])
+                        setRfqAnalysisResult(null)
+                        setRfqProcessingSteps([])
+                        setRfqAiMessage(null)
+                      }}
+                    >
+                      <i className="fas fa-redo"></i> Procesar Otro Documento
+                    </button>
+                    <button
+                      className="btn btn-primary"
+                      onClick={applyGeneratedRFQWorkflow}
+                      disabled={(rfqAnalysisResult.steps?.length || 0) === 0}
+                    >
+                      <i className="fas fa-magic"></i> Generar Componentes
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    className="btn btn-secondary"
+                    onClick={() => {
+                      if (!isProcessingRFQ) {
+                        setShowRFQModal(false)
+                        setRfqContent('')
+                        setRfqFile(null)
+                        setRfqProcessingSteps([])
+                        setRfqAiMessage(null)
+                      }
+                    }}
+                    disabled={isProcessingRFQ}
+                  >
+                    {isProcessingRFQ ? 'Procesando...' : 'Cerrar'}
+                  </button>
+                )}
               </div>
             </div>
           </div>

@@ -139,12 +139,21 @@ function SpyView() {
   // Escuchar eventos del socket para modo servidor
   useEffect(() => {
     if (socket) {
-      socket.on('element-selected', (data) => {
+      const handleElementCaptured = (data) => {
+        console.log('[Spy] Elemento recibido:', data)
         setSelectedElement(data)
         setSelectors(generateSelectors(data))
         setInspectorVisible(true)
         setRecentElements(prev => [data, ...prev.slice(0, 9)])
-      })
+      }
+
+      socket.on('element-selected', handleElementCaptured)
+      socket.on('spy:element-captured', handleElementCaptured)
+
+      return () => {
+        socket.off('element-selected', handleElementCaptured)
+        socket.off('spy:element-captured', handleElementCaptured)
+      }
     }
   }, [socket])
 
@@ -566,9 +575,32 @@ function SpyView() {
                   </div>
                 </div>
                 <div className="selected-window-actions">
-                  <button className="btn btn-primary" onClick={() => {
+                  <button className="btn btn-primary" onClick={async () => {
+                    // Primero activar la ventana seleccionada
+                    if (selectedWindow && selectedWindow.handle) {
+                      try {
+                        const response = await fetch('http://localhost:4000/api/windows/activate', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            processId: selectedWindow.id,
+                            handle: selectedWindow.handle,
+                            handleInt: selectedWindow.handleInt,
+                            processName: selectedWindow.processName
+                          })
+                        })
+                        const result = await response.json()
+                        console.log('[Spy] Ventana activada:', result)
+                      } catch (error) {
+                        console.error('[Spy] Error activando ventana:', error)
+                      }
+                    }
+                    // Luego iniciar el spy
                     if (socket) {
-                      socket.emit('spy:start', { targetWindow: selectedWindow })
+                      socket.emit('spy:start', {
+                        targetWindow: selectedWindow,
+                        activateWindow: true
+                      })
                     }
                     setIsSpying(true)
                   }}>

@@ -54,6 +54,31 @@
   color: var(--text-primary, #f1f5f9);
 }
 
+.workflow-templates-view .header-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.workflow-templates-view .btn-primary {
+  padding: 0.75rem 1.25rem;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  border: none;
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+}
+
+.workflow-templates-view .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
 /* Toolbar */
 .templates-toolbar {
   display: flex;
@@ -292,6 +317,79 @@
   filter: brightness(1.1);
 }
 
+/* Botón vincular requerimiento */
+.btn-link-req {
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  border: none;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.btn-link-req i {
+  font-size: 1rem;
+}
+
+.btn-link-req:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+/* Info de plantilla vinculada en modal */
+.linked-template-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+}
+
+.linked-template-info .template-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  color: white;
+  font-weight: 600;
+  font-size: 0.95rem;
+  width: fit-content;
+}
+
+.linked-template-info .template-badge i {
+  font-size: 1rem;
+}
+
+.linked-template-info .template-details {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.linked-template-info .template-details span {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.linked-template-info .template-details span i {
+  color: var(--primary-color);
+  font-size: 0.8rem;
+}
+
 /* Preview expandido */
 .template-preview {
   padding: 1.25rem;
@@ -525,6 +623,22 @@
 .use-template-modal .btn-cancel:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* Modal de Visor de Proyecto */
+.project-viewer-modal {
+  max-width: 1000px;
+  width: 95%;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+}
+
+.project-viewer-modal .agent-project-viewer {
+  flex: 1;
+  overflow: hidden;
 }
 
 /* Responsive */

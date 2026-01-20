@@ -4106,3 +4106,607 @@
         padding: 0.15rem 0.4rem;
     }
 }
+
+/* ==========================================
+   MODAL RFQ - GENERACIÓN DESDE DOCUMENTOS
+   ========================================== */
+
+.rfq-modal .modal-body {
+    padding: 1.5rem;
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+/* Contenedor de procesamiento */
+.rfq-processing-container {
+    padding: 1rem;
+}
+
+/* Barra de progreso principal */
+.rfq-progress-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.rfq-progress-bar-container {
+    flex: 1;
+    height: 12px;
+    background: var(--bg-tertiary);
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+}
+
+.rfq-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary-color), #8b5cf6, #ec4899);
+    background-size: 200% 100%;
+    animation: progressShimmer 2s ease-in-out infinite;
+    border-radius: 10px;
+    transition: width 0.4s ease;
+}
+
+@keyframes progressShimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+.rfq-progress-percentage {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    min-width: 55px;
+    text-align: right;
+}
+
+/* Lista de fases */
+.rfq-phases-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.rfq-phase-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    background: var(--bg-secondary);
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+}
+
+.rfq-phase-item.pending {
+    opacity: 0.5;
+}
+
+.rfq-phase-item.active {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.05));
+    border-color: var(--primary-color);
+    opacity: 1;
+}
+
+.rfq-phase-item.completed {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(16, 185, 129, 0.05));
+    border-color: #22c55e;
+    opacity: 1;
+}
+
+.rfq-phase-item.error {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: #ef4444;
+}
+
+.rfq-phase-icon {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    font-size: 0.9rem;
+}
+
+.rfq-phase-item.pending .rfq-phase-icon {
+    color: var(--text-muted);
+}
+
+.rfq-phase-item.active .rfq-phase-icon {
+    color: var(--primary-color);
+}
+
+.rfq-phase-item.completed .rfq-phase-icon {
+    color: #22c55e;
+}
+
+.rfq-phase-item.error .rfq-phase-icon {
+    color: #ef4444;
+}
+
+.rfq-phase-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.rfq-phase-label {
+    font-weight: 500;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+}
+
+.rfq-phase-status {
+    font-size: 0.75rem;
+    color: var(--primary-color);
+    font-style: italic;
+}
+
+.rfq-phase-progress .completed-badge {
+    color: #22c55e;
+    font-weight: bold;
+}
+
+/* Preview de pasos generados */
+.rfq-generated-preview {
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+    margin-top: 1rem;
+}
+
+.rfq-generated-preview h5 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0 0 1rem 0;
+    color: var(--primary-color);
+    font-size: 0.95rem;
+}
+
+.rfq-steps-preview-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.rfq-step-preview-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.6rem 0.75rem;
+    background: var(--bg-tertiary);
+    border-radius: 8px;
+    animation: slideInFromRight 0.3s ease forwards;
+    opacity: 0;
+    transform: translateX(20px);
+}
+
+@keyframes slideInFromRight {
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.rfq-step-preview-item .step-number {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--primary-color);
+    color: white;
+    border-radius: 50%;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.rfq-step-preview-item i {
+    color: var(--primary-color);
+    font-size: 0.85rem;
+    width: 20px;
+    text-align: center;
+}
+
+.rfq-step-preview-item .step-label {
+    flex: 1;
+    font-size: 0.85rem;
+    color: var(--text-primary);
+}
+
+/* Contenedor de resultado */
+.rfq-result-container {
+    padding: 0.5rem;
+}
+
+.rfq-success-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1.25rem;
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(16, 185, 129, 0.05));
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+}
+
+.rfq-success-icon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #22c55e;
+    color: white;
+    border-radius: 50%;
+    font-size: 1.5rem;
+}
+
+.rfq-success-info h4 {
+    margin: 0 0 0.35rem 0;
+    color: #22c55e;
+    font-size: 1.1rem;
+}
+
+.rfq-success-info p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+/* Resumen del workflow */
+.rfq-workflow-summary {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.rfq-summary-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.rfq-summary-card .summary-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--primary-color);
+    border-radius: 10px;
+    font-size: 1.1rem;
+}
+
+.rfq-summary-card .summary-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.rfq-summary-card .summary-label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Lista final de pasos */
+.rfq-steps-final-list {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.rfq-steps-final-list h5 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0 0 1rem 0;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+}
+
+.rfq-steps-final-list h5 i {
+    color: var(--primary-color);
+}
+
+.steps-scroll-container {
+    max-height: 250px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.rfq-final-step-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    background: var(--bg-tertiary);
+    border-radius: 10px;
+    transition: all 0.2s ease;
+}
+
+.rfq-final-step-item:hover {
+    background: rgba(99, 102, 241, 0.08);
+}
+
+.rfq-final-step-item .step-index {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--primary-color);
+    color: white;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.rfq-final-step-item .step-icon-wrapper {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(99, 102, 241, 0.1);
+    border-radius: 8px;
+    color: var(--primary-color);
+}
+
+.rfq-final-step-item .step-details {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.rfq-final-step-item .step-label {
+    font-weight: 500;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+}
+
+.rfq-final-step-item .step-action {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-family: 'Fira Code', monospace;
+}
+
+/* Contenido extraído colapsable */
+.rfq-extracted-content {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.rfq-extracted-content summary {
+    padding: 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    transition: background 0.2s;
+}
+
+.rfq-extracted-content summary:hover {
+    background: var(--bg-tertiary);
+}
+
+.rfq-extracted-content summary i {
+    color: var(--primary-color);
+}
+
+.rfq-extracted-content pre {
+    margin: 0;
+    padding: 1rem;
+    background: var(--bg-tertiary);
+    font-size: 0.8rem;
+    white-space: pre-wrap;
+    color: var(--text-secondary);
+    max-height: 300px;
+    overflow-y: auto;
+    border-top: 1px solid var(--border-color);
+}
+
+/* Mensaje de advertencia de IA */
+.rfq-ai-warning {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 1rem;
+    background: linear-gradient(135deg, rgba(251, 191, 36, 0.12) 0%, rgba(245, 158, 11, 0.08) 100%);
+    border: 1px solid rgba(251, 191, 36, 0.4);
+    border-radius: 10px;
+    margin-bottom: 1rem;
+}
+
+.rfq-ai-warning > i {
+    color: #f59e0b;
+    font-size: 1.25rem;
+    margin-top: 0.15rem;
+}
+
+.rfq-ai-warning .warning-content {
+    flex: 1;
+}
+
+.rfq-ai-warning .warning-content strong {
+    display: block;
+    color: #f59e0b;
+    font-size: 0.95rem;
+    margin-bottom: 0.25rem;
+}
+
+.rfq-ai-warning .warning-content p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    line-height: 1.5;
+}
+
+/* Contenedor de aplicación de workflow */
+.rfq-applying-container {
+    padding: 1.5rem;
+}
+
+.rfq-applying-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.25rem;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.05));
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+}
+
+.rfq-applying-header .applying-icon {
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--primary-color);
+    color: white;
+    border-radius: 50%;
+    font-size: 1.5rem;
+}
+
+.rfq-applying-header .applying-info h4 {
+    margin: 0 0 0.25rem 0;
+    color: var(--primary-color);
+    font-size: 1.15rem;
+}
+
+.rfq-applying-header .applying-info p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+/* Barra de progreso de aplicación */
+.rfq-progress-bar.applying {
+    background: linear-gradient(90deg, #22c55e, #10b981, #14b8a6);
+    background-size: 200% 100%;
+    animation: progressShimmer 2s ease-in-out infinite;
+}
+
+/* Paso actual siendo agregado */
+.applying-current-step {
+    margin-top: 1.5rem;
+}
+
+.applying-current-step .current-step-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--primary-color);
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+}
+
+.applying-current-step .current-step-indicator i {
+    animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.applying-current-step .current-step-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(16, 185, 129, 0.05));
+    border: 2px solid rgba(34, 197, 94, 0.4);
+    border-radius: 12px;
+    animation: slideInScale 0.3s ease;
+}
+
+@keyframes slideInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.applying-current-step .step-icon-wrapper {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #22c55e;
+    color: white;
+    border-radius: 10px;
+    font-size: 1rem;
+}
+
+.applying-current-step .step-details {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.applying-current-step .step-label {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+}
+
+.applying-current-step .step-action {
+    font-size: 0.8rem;
+    color: #22c55e;
+    font-family: 'Fira Code', monospace;
+}
+
+/* Responsive para RFQ modal */
+@media (max-width: 768px) {
+    .rfq-workflow-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .rfq-summary-card {
+        flex-direction: row;
+        justify-content: flex-start;
+        text-align: left;
+    }
+
+    .rfq-applying-header {
+        flex-direction: column;
+        text-align: center;
+    }
+}

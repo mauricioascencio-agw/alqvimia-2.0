@@ -1266,9 +1266,10 @@ const BASE_ACTION_PROPERTIES = {
       {
         key: 'path',
         label: 'Ruta del Archivo',
-        type: 'file',
+        type: 'fileWithVariable',
         required: true,
-        fileType: 'open'
+        placeholder: 'C:\\ruta\\archivo.txt o ${variable}',
+        allowedTypes: ['file', 'string']
       },
       {
         key: 'encoding',
@@ -1311,9 +1312,10 @@ const BASE_ACTION_PROPERTIES = {
       {
         key: 'path',
         label: 'Ruta del Archivo',
-        type: 'file',
+        type: 'fileWithVariable',
         required: true,
-        fileType: 'save'
+        placeholder: 'C:\\ruta\\archivo.txt o ${variable}',
+        allowedTypes: ['file', 'string']
       },
       {
         key: 'content',
@@ -1361,16 +1363,18 @@ const BASE_ACTION_PROPERTIES = {
       {
         key: 'source',
         label: 'Archivo Origen',
-        type: 'file',
+        type: 'fileWithVariable',
         required: true,
-        fileType: 'open'
+        placeholder: 'C:\\ruta\\origen.txt o ${variable}',
+        allowedTypes: ['file', 'string']
       },
       {
         key: 'destination',
         label: 'Destino',
-        type: 'file',
+        type: 'fileWithVariable',
         required: true,
-        fileType: 'save'
+        placeholder: 'C:\\ruta\\destino.txt o ${variable}',
+        allowedTypes: ['file', 'string']
       },
       {
         key: 'overwrite',
@@ -1389,16 +1393,18 @@ const BASE_ACTION_PROPERTIES = {
       {
         key: 'source',
         label: 'Archivo Origen',
-        type: 'file',
+        type: 'fileWithVariable',
         required: true,
-        fileType: 'open'
+        placeholder: 'C:\\ruta\\origen.txt o ${variable}',
+        allowedTypes: ['file', 'string']
       },
       {
         key: 'destination',
         label: 'Destino',
-        type: 'file',
+        type: 'fileWithVariable',
         required: true,
-        fileType: 'save'
+        placeholder: 'C:\\ruta\\destino.txt o ${variable}',
+        allowedTypes: ['file', 'string']
       },
       {
         key: 'overwrite',
@@ -1417,9 +1423,10 @@ const BASE_ACTION_PROPERTIES = {
       {
         key: 'path',
         label: 'Archivo a Eliminar',
-        type: 'file',
+        type: 'fileWithVariable',
         required: true,
-        fileType: 'open'
+        placeholder: 'C:\\ruta\\archivo.txt o ${variable}',
+        allowedTypes: ['file', 'string']
       },
       {
         key: 'permanent',
@@ -1439,9 +1446,10 @@ const BASE_ACTION_PROPERTIES = {
       {
         key: 'path',
         label: 'Ruta del Archivo',
-        type: 'file',
+        type: 'fileWithVariable',
         required: true,
-        fileType: 'open'
+        placeholder: 'C:\\ruta\\archivo.txt o ${variable}',
+        allowedTypes: ['file', 'string']
       },
       {
         key: 'variable',
@@ -1972,9 +1980,10 @@ const BASE_ACTION_PROPERTIES = {
       {
         key: 'filePath',
         label: 'Archivo Excel',
-        type: 'file',
+        type: 'fileWithVariable',
         required: true,
-        fileType: 'open',
+        placeholder: 'C:\\ruta\\archivo.xlsx o ${variable}',
+        allowedTypes: ['file', 'string'],
         accept: '.xlsx,.xls,.csv'
       },
       {
@@ -2013,9 +2022,10 @@ const BASE_ACTION_PROPERTIES = {
       {
         key: 'filePath',
         label: 'Archivo Excel',
-        type: 'file',
+        type: 'fileWithVariable',
         required: true,
-        fileType: 'save',
+        placeholder: 'C:\\ruta\\archivo.xlsx o ${variable}',
+        allowedTypes: ['file', 'string'],
         accept: '.xlsx'
       },
       {
@@ -2081,7 +2091,8 @@ const BASE_ACTION_PROPERTIES = {
         type: 'fileWithVariable',
         required: true,
         placeholder: 'C:\\ruta\\archivo.xlsx',
-        allowedTypes: ['file', 'string']
+        allowedTypes: ['file', 'string'],
+        accept: '.xlsx,.xls,.xlsm,.csv'
       },
       {
         key: 'readOnly',
@@ -2116,7 +2127,8 @@ const BASE_ACTION_PROPERTIES = {
         type: 'fileWithVariable',
         required: true,
         placeholder: 'C:\\ruta\\nuevo_archivo.xlsx',
-        allowedTypes: ['file', 'string']
+        allowedTypes: ['file', 'string'],
+        accept: '.xlsx,.xls,.xlsm'
       },
       {
         key: 'sheetName',
@@ -3568,7 +3580,9 @@ const BASE_ACTION_PROPERTIES = {
         label: 'Nueva ruta del archivo',
         type: 'fileWithVariable',
         required: true,
-        allowedTypes: ['file', 'string']
+        placeholder: 'C:\\ruta\\archivo.xlsx o ${variable}',
+        allowedTypes: ['file', 'string'],
+        accept: '.xlsx,.xls,.xlsm,.csv'
       },
       {
         key: 'format',
@@ -3615,9 +3629,10 @@ const BASE_ACTION_PROPERTIES = {
       {
         key: 'filePath',
         label: 'Archivo PDF',
-        type: 'file',
+        type: 'fileWithVariable',
         required: true,
-        fileType: 'open',
+        placeholder: 'C:\\ruta\\documento.pdf o ${variable}',
+        allowedTypes: ['file', 'string'],
         accept: '.pdf'
       },
       {
@@ -5535,9 +5550,10 @@ const BASE_ACTION_PROPERTIES = {
       {
         key: 'filePath',
         label: 'Archivo Excel',
-        type: 'file',
+        type: 'fileWithVariable',
         required: true,
-        fileType: 'open',
+        placeholder: 'C:\\ruta\\archivo.xlsx o ${variable}',
+        allowedTypes: ['file', 'string'],
         accept: '.xlsx,.xls,.xlsm,.csv'
       },
       {
@@ -7582,9 +7598,10 @@ const BASE_ACTION_PROPERTIES = {
       {
         key: 'filePath',
         label: 'Archivo Word',
-        type: 'file',
+        type: 'fileWithVariable',
         required: true,
-        fileType: 'open',
+        placeholder: 'C:\\ruta\\documento.docx o ${variable}',
+        allowedTypes: ['file', 'string'],
         accept: '.docx,.doc,.rtf'
       },
       {

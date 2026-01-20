@@ -342,8 +342,10 @@
 }
 
 .window-card:hover {
-  border-color: var(--primary-color);
+  border-color: var(--highlight-color, #22c55e);
+  background: rgba(34, 197, 94, 0.08);
   transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.15);
 }
 
 .window-card.selected {
@@ -1945,6 +1947,130 @@
   min-width: 0;
 }
 
+/* ========================================
+   INJECTION STATUS & BOOKMARKLET
+   ======================================== */
+
+.injection-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-top: 0.75rem;
+  font-size: 0.85rem;
+}
+
+.injection-status.status-success {
+  background: rgba(34, 197, 94, 0.15);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  color: #22c55e;
+}
+
+.injection-status.status-warning {
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: #f59e0b;
+}
+
+.injection-status.status-error {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+}
+
+.bookmarklet-instructions {
+  margin-top: 1rem;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.bookmarklet-instructions .instruction-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(99, 102, 241, 0.1) 100%);
+  border-bottom: 1px solid var(--border-color);
+  font-weight: 600;
+  color: var(--primary-color);
+}
+
+.bookmarklet-instructions .instruction-header .btn-close-small {
+  margin-left: auto;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.25rem;
+}
+
+.bookmarklet-instructions .instruction-header .btn-close-small:hover {
+  color: var(--text-primary);
+}
+
+.bookmarklet-instructions .instruction-steps {
+  padding: 1rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.bookmarklet-instructions .instruction-steps p {
+  margin: 0.5rem 0;
+}
+
+.bookmarklet-instructions .instruction-steps ol {
+  margin: 0.5rem 0;
+  padding-left: 1.25rem;
+}
+
+.bookmarklet-instructions .instruction-steps li {
+  margin: 0.35rem 0;
+}
+
+.bookmarklet-instructions .code-block {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin: 0.75rem 0;
+  background: var(--bg-primary);
+  border-radius: 6px;
+  padding: 0.75rem;
+  overflow: hidden;
+}
+
+.bookmarklet-instructions .code-block code {
+  flex: 1;
+  font-family: 'Fira Code', 'Consolas', monospace;
+  font-size: 0.75rem;
+  color: var(--primary-color);
+  word-break: break-all;
+  line-height: 1.4;
+  max-height: 80px;
+  overflow-y: auto;
+}
+
+.bookmarklet-instructions .btn-copy-small {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: var(--text-muted);
+  padding: 0.35rem 0.5rem;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.bookmarklet-instructions .btn-copy-small:hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.bookmarklet-instructions .btn {
+  margin: 0 1rem 1rem;
+}
+
 .input-with-var .variable-select {
   flex: 1;
   padding: 0.5rem 0.75rem;
@@ -2267,4 +2393,448 @@
 
 .empty-browsers small {
   font-size: 0.8rem;
+}
+
+/* ========================================
+   CHROME RESTART MODAL (Inline)
+   ======================================== */
+
+.chrome-restart-modal {
+  background: linear-gradient(135deg, rgba(66, 133, 244, 0.1) 0%, rgba(66, 133, 244, 0.05) 100%);
+  border: 1px solid rgba(66, 133, 244, 0.3);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-top: 1rem;
+  text-align: center;
+}
+
+.chrome-restart-modal .modal-icon {
+  width: 60px;
+  height: 60px;
+  margin: 0 auto 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(66, 133, 244, 0.15);
+  border-radius: 50%;
+}
+
+.chrome-restart-modal .modal-icon i {
+  font-size: 2rem;
+  color: #4285f4;
+}
+
+.chrome-restart-modal h4 {
+  margin: 0 0 0.75rem 0;
+  font-size: 1.1rem;
+  color: var(--text-primary);
+}
+
+.chrome-restart-modal p {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.chrome-restart-modal .warning-text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 8px;
+  color: #f59e0b;
+  font-size: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.chrome-restart-modal .warning-text i {
+  font-size: 1rem;
+}
+
+.chrome-restart-modal .modal-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+.chrome-restart-modal .modal-actions .btn {
+  min-width: 140px;
+}
+
+/* Injection status info type */
+.injection-status.status-info {
+  background: rgba(99, 102, 241, 0.15);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  color: #6366f1;
+}
+
+/* ========================================
+   MODAL EDITAR ACCIÓN - PROPIEDADES NATIVAS
+   ======================================== */
+
+/* Fila de inputs horizontales (para coordenadas X, Y) */
+.input-row {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-end;
+}
+
+.input-row .form-group {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+/* Input con etiqueta compacta */
+.input-with-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.input-with-label label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.input-with-label input {
+  padding: 0.5rem 0.75rem;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  font-family: 'Fira Code', monospace;
+}
+
+.input-with-label input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+
+/* Display de bounds del elemento */
+.bounds-display {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: var(--bg-tertiary);
+  border-radius: 8px;
+  margin-top: 0.5rem;
+}
+
+.bounds-display .bound-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+.bounds-display .bound-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.bounds-display .bound-value {
+  font-family: 'Fira Code', monospace;
+  font-size: 0.8rem;
+  color: var(--primary-color);
+  background: var(--bg-primary);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  min-width: 50px;
+  text-align: center;
+}
+
+/* Sección de propiedades nativas */
+.native-properties-section {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(139, 92, 246, 0.05) 100%);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: 10px;
+  padding: 1rem;
+  margin-top: 0.5rem;
+}
+
+.native-properties-section h5 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--primary-color);
+  margin: 0 0 0.75rem 0;
+}
+
+.native-properties-section h5 i {
+  font-size: 0.9rem;
+}
+
+/* Grid para propiedades */
+.properties-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+
+@media (max-width: 600px) {
+  .properties-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Separador de sección */
+.section-divider {
+  border: none;
+  border-top: 1px dashed var(--border-color);
+  margin: 1rem 0;
+}
+
+/* Badge de fuente de captura */
+.capture-source-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.capture-source-badge.source-native {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.capture-source-badge.source-browser {
+  background: rgba(59, 130, 246, 0.15);
+  color: #3b82f6;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.capture-source-badge.source-cdp {
+  background: rgba(139, 92, 246, 0.15);
+  color: #8b5cf6;
+  border: 1px solid rgba(139, 92, 246, 0.3);
+}
+
+/* ========================================
+   SELECTOR DE WORKFLOWS GUARDADOS
+   ======================================== */
+
+.workflows-selector-section {
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  padding: 1rem 1.5rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid var(--border-color);
+}
+
+.section-header-compact {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0;
+}
+
+.section-header-compact h4 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.section-header-compact h4 i {
+  color: var(--primary-color);
+}
+
+.workflows-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 0.75rem;
+  margin-top: 1rem;
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 0.25rem;
+}
+
+.workflow-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: var(--bg-primary);
+  border: 2px solid transparent;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.workflow-card:hover {
+  border-color: var(--primary-color);
+  background: rgba(99, 102, 241, 0.05);
+  transform: translateY(-2px);
+}
+
+.workflow-card.active {
+  border-color: var(--success-color, #22c55e);
+  background: rgba(34, 197, 94, 0.08);
+}
+
+.workflow-card-icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-tertiary);
+  border-radius: 8px;
+  color: var(--primary-color);
+  font-size: 1rem;
+}
+
+.workflow-card.active .workflow-card-icon {
+  background: rgba(34, 197, 94, 0.15);
+  color: var(--success-color, #22c55e);
+}
+
+.workflow-card-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.workflow-card-name {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.workflow-card-meta {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.workflow-card-meta i {
+  font-size: 0.65rem;
+}
+
+.workflow-card-actions {
+  display: flex;
+  gap: 0.25rem;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.workflow-card:hover .workflow-card-actions {
+  opacity: 1;
+}
+
+.btn-icon-sm {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-icon-sm:hover {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+}
+
+/* Botón outline */
+.btn-outline {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+}
+
+.btn-outline:hover {
+  background: var(--bg-tertiary);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+/* Scrollbar para workflows grid */
+.workflows-grid::-webkit-scrollbar {
+  width: 6px;
+}
+
+.workflows-grid::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+
+.workflows-grid::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 3px;
+}
+
+.workflows-grid::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-color);
+}
+
+/* Indicador de workflow actual en el header */
+.current-workflow-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.12) 0%, rgba(16, 185, 129, 0.08) 100%);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  margin-bottom: 1rem;
+}
+
+.current-workflow-indicator i {
+  color: var(--success-color, #22c55e);
+}
+
+.current-workflow-indicator .workflow-name {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.current-workflow-indicator .workflow-actions-count {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-left: auto;
+}
+
+.current-workflow-indicator .btn-xs {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  margin-left: 0.5rem;
+}
+
+/* Botón xs general */
+.btn-xs {
+  padding: 0.2rem 0.5rem;
+  font-size: 0.7rem;
+  border-radius: 4px;
 }

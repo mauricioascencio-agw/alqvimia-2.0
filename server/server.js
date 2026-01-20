@@ -32,6 +32,21 @@ import workflowsRoutes from './routes/workflows.js'
 import authRoutes from './routes/auth.js'
 import usersRoutes from './routes/users.js'
 import mcpDatabaseRoutes from './routes/mcp-database.js'
+import aiRoutes from './routes/ai.js'
+
+// Servicios
+import {
+  injectSpyInBrowser,
+  generateBookmarklet,
+  findChromeDebugPort,
+  getChromeTargets,
+  restartChromeAndInject,
+  getChromeDebugStatus,
+  isDebugPortActive
+} from './services/browserInjector.js'
+
+// Servicio de tracking nativo (Python)
+import trackingService from './services/trackingService.js'
 
 const app = express()
 const httpServer = createServer(app)
@@ -65,6 +80,7 @@ app.use('/api/workflows', workflowsRoutes)
 app.use('/api/auth', authRoutes)
 app.use('/api/users', usersRoutes)
 app.use('/api/mcp', mcpDatabaseRoutes)
+app.use('/api/ai', aiRoutes)
 
 // Socket.IO
 const io = new Server(httpServer, {
@@ -129,6 +145,34 @@ io.on('connection', (socket) => {
     }
     socket.emit('pong', { timestamp: Date.now() })
   })
+
+  // Handlers para tracking nativo
+  socket.on('tracking:start', async (data) => {
+    try {
+      console.log('[Tracking] Iniciando tracking via socket...', data)
+
+      if (!trackingService.isRunning) {
+        await trackingService.start()
+      }
+
+      trackingService.startTracking(data?.targetHandle || null)
+
+      socket.emit('tracking:started', { success: true })
+    } catch (error) {
+      socket.emit('tracking:error', { error: error.message })
+    }
+  })
+
+  socket.on('tracking:stop', () => {
+    trackingService.stopTracking()
+    socket.emit('tracking:stopped', { success: true })
+  })
+
+  socket.on('tracking:capture', async (data) => {
+    const { x, y } = data
+    const result = await trackingService.captureElement(x, y)
+    socket.emit('tracking:element-captured', result)
+  })
 })
 
 // Ruta raiz - informacion del servidor
@@ -163,6 +207,223 @@ app.get('/api/settings', (req, res) => {
     serverPort: PORT,
     frontendUrl: `http://localhost:${FRONTEND_PORT}`
   })
+})
+
+// API para inyectar spy en navegador
+app.post('/api/spy/inject', async (req, res) => {
+  try {
+    const { processName, windowTitle, windowHandle, autoRestart } = req.body
+
+    console.log('[Spy Inject] Intentando inyectar:', { processName, windowTitle, autoRestart })
+
+    const result = await injectSpyInBrowser(processName, windowTitle, { autoRestart })
+
+    res.json(result)
+  } catch (error) {
+    console.error('[Spy Inject] Error:', error.message)
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+// API para reiniciar Chrome con debugging y luego inyectar
+app.post('/api/spy/restart-chrome', async (req, res) => {
+  try {
+    const { windowTitle } = req.body
+
+    console.log('[Spy] Reiniciando Chrome con debugging...')
+
+    const result = await restartChromeAndInject(windowTitle)
+
+    res.json(result)
+  } catch (error) {
+    console.error('[Spy Restart] Error:', error.message)
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+// API para obtener estado de Chrome debugging
+app.get('/api/spy/chrome-status', async (req, res) => {
+  try {
+    const status = await getChromeDebugStatus()
+    res.json({ success: true, ...status })
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+// API para obtener pestañas de Chrome (si tiene debugging habilitado)
+app.get('/api/spy/chrome-tabs', async (req, res) => {
+  try {
+    const debugPort = await findChromeDebugPort()
+
+    if (!debugPort) {
+      return res.json({
+        success: false,
+        tabs: [],
+        error: 'Chrome no tiene depuración remota habilitada'
+      })
+    }
+
+    const tabs = await getChromeTargets(debugPort)
+
+    res.json({
+      success: true,
+      tabs: tabs.map(t => ({
+        id: t.id,
+        title: t.title,
+        url: t.url
+      })),
+      debugPort
+    })
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+// API para obtener el bookmarklet
+app.get('/api/spy/bookmarklet', (req, res) => {
+  const serverUrl = req.query.serverUrl || 'http://localhost:4000'
+  const bookmarklet = generateBookmarklet(serverUrl)
+
+  res.json({
+    success: true,
+    bookmarklet,
+    bookmarkletCode: decodeURI(bookmarklet),
+    instructions: [
+      '1. Crea un nuevo marcador en tu navegador',
+      '2. En el campo URL, pega el código del bookmarklet',
+      '3. Nombra el marcador como "Alqvimia Spy"',
+      '4. Cuando quieras capturar elementos, haz clic en el marcador'
+    ]
+  })
+})
+
+// API para recibir elementos capturados desde spy-injector
+app.post('/api/spy/element', (req, res) => {
+  try {
+    const { element, clientId } = req.body
+
+    if (!element) {
+      return res.status(400).json({ success: false, error: 'Elemento requerido' })
+    }
+
+    console.log('[Spy API] Elemento recibido:', element.tag, element.id || element.cssSelector?.substring(0, 30))
+
+    // Broadcast a todos los clientes conectados
+    io.emit('element-selected', {
+      id: `element_${Date.now()}`,
+      source: 'web',
+      ...element,
+      capturedAt: new Date().toISOString()
+    })
+
+    // También emitir como spy:element-captured
+    io.emit('spy:element-captured', {
+      id: `element_${Date.now()}`,
+      source: 'web',
+      ...element,
+      capturedAt: new Date().toISOString()
+    })
+
+    res.json({ success: true, message: 'Elemento recibido' })
+  } catch (error) {
+    console.error('[Spy API] Error:', error.message)
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+// ============================================================
+// API para Tracking Nativo (Python) - Overlay y detección UI
+// ============================================================
+
+// Iniciar el servicio de tracking
+app.post('/api/tracking/start', async (req, res) => {
+  try {
+    const { targetHandle } = req.body
+
+    console.log('[Tracking] Iniciando servicio de tracking...', { targetHandle })
+
+    // Iniciar el servicio Python si no está corriendo
+    if (!trackingService.isRunning) {
+      await trackingService.start()
+    }
+
+    // Iniciar tracking
+    const result = trackingService.startTracking(targetHandle || null)
+
+    res.json({ success: true, ...result })
+  } catch (error) {
+    console.error('[Tracking] Error iniciando:', error.message)
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+// Detener el servicio de tracking
+app.post('/api/tracking/stop', (req, res) => {
+  try {
+    trackingService.stopTracking()
+    res.json({ success: true, message: 'Tracking detenido' })
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+// Obtener estado actual del tracking
+app.get('/api/tracking/status', (req, res) => {
+  const status = trackingService.getStatus()
+  res.json({ success: true, ...status })
+})
+
+// Obtener elemento en una posición
+app.get('/api/tracking/element', async (req, res) => {
+  try {
+    const x = parseInt(req.query.x) || 0
+    const y = parseInt(req.query.y) || 0
+
+    const result = await trackingService.getElementAt(x, y)
+    res.json(result)
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+// Capturar elemento en una posición
+app.post('/api/tracking/capture', async (req, res) => {
+  try {
+    const { x, y } = req.body
+
+    const result = await trackingService.captureElement(x, y)
+    res.json(result)
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+// Obtener clics pendientes
+app.get('/api/tracking/clicks', async (req, res) => {
+  try {
+    const clicks = await trackingService.getPendingClicks()
+    res.json({ success: true, clicks })
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message, clicks: [] })
+  }
+})
+
+// Establecer highlight manual
+app.post('/api/tracking/highlight', (req, res) => {
+  try {
+    const { x, y, width, height, interactive } = req.body
+    trackingService.setHighlight(x, y, width, height, interactive !== false)
+    res.json({ success: true })
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+// Limpiar highlight
+app.post('/api/tracking/clear-highlight', (req, res) => {
+  trackingService.clearHighlight()
+  res.json({ success: true })
 })
 
 // API para obtener ventanas de Windows
@@ -213,66 +474,43 @@ app.get('/api/windows', async (req, res) => {
 // API para activar (poner en primer plano) una ventana de Windows
 app.post('/api/windows/activate', async (req, res) => {
   try {
-    const { processId, handle, processName } = req.body
+    const { processId, handle, handleInt: handleIntParam } = req.body
 
-    if (!processId && !handle) {
+    if (!processId && !handle && !handleIntParam) {
       return res.json({ success: false, error: 'Se requiere processId o handle' })
     }
 
-    // PowerShell script para activar ventana usando handle o processId
-    let psScript
-    if (handle && handle !== '0x0') {
-      // Usar handle directamente
-      const handleInt = parseInt(handle, 16)
-      psScript = `
-        Add-Type @"
-        using System;
-        using System.Runtime.InteropServices;
-        public class Win32 {
-          [DllImport("user32.dll")]
-          public static extern bool SetForegroundWindow(IntPtr hWnd);
-          [DllImport("user32.dll")]
-          public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
-        }
-"@
-        $handle = [IntPtr]${handleInt}
-        [Win32]::ShowWindow($handle, 9)
-        [Win32]::SetForegroundWindow($handle)
-        Write-Output "OK"
-      `
-    } else {
-      // Usar processId
-      psScript = `
-        $proc = Get-Process -Id ${processId} -ErrorAction SilentlyContinue
-        if ($proc -and $proc.MainWindowHandle -ne 0) {
-          Add-Type @"
-          using System;
-          using System.Runtime.InteropServices;
-          public class Win32 {
-            [DllImport("user32.dll")]
-            public static extern bool SetForegroundWindow(IntPtr hWnd);
-            [DllImport("user32.dll")]
-            public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
-          }
-"@
-          [Win32]::ShowWindow($proc.MainWindowHandle, 9)
-          [Win32]::SetForegroundWindow($proc.MainWindowHandle)
-          Write-Output "OK"
-        } else {
-          Write-Output "NOT_FOUND"
-        }
-      `
+    // Usar script de archivo para evitar problemas de escape con here-strings
+    const scriptPath = path.join(__dirname, 'scripts', 'activate-window.ps1')
+
+    // Construir argumentos
+    let args = []
+    if (handleIntParam) {
+      args.push(`-Handle ${handleIntParam}`)
+    } else if (handle && handle !== '0x0') {
+      const parsedHandle = parseInt(handle, 16)
+      args.push(`-Handle ${parsedHandle}`)
+    }
+    if (processId) {
+      args.push(`-ProcessId ${processId}`)
     }
 
-    const { stdout } = await execAsync(`powershell -Command "${psScript.replace(/\n/g, ' ').replace(/"/g, '\\"')}"`, {
-      encoding: 'utf8',
-      timeout: 5000
-    })
+    const { stdout } = await execAsync(
+      `powershell -ExecutionPolicy Bypass -File "${scriptPath}" ${args.join(' ')}`,
+      { encoding: 'utf8', timeout: 5000 }
+    )
 
-    const success = stdout.trim().includes('OK')
+    let result = { success: false }
+    try {
+      result = JSON.parse(stdout.trim())
+    } catch (e) {
+      result.success = stdout.includes('true')
+    }
+
     res.json({
-      success,
-      message: success ? 'Ventana activada' : 'No se pudo activar la ventana'
+      success: result.success,
+      message: result.success ? 'Ventana activada' : 'No se pudo activar la ventana',
+      handle: result.handle
     })
   } catch (error) {
     console.error('[API] Error activando ventana:', error.message)
@@ -844,6 +1082,31 @@ app.get('/api/system/info', async (req, res) => {
     console.error('[System] Error obteniendo info:', error.message)
     res.status(500).json({ success: false, error: error.message })
   }
+})
+
+// Conectar eventos del tracking service con Socket.IO
+trackingService.on('hover', (data) => {
+  io.emit('tracking:hover', data)
+})
+
+trackingService.on('click', (data) => {
+  io.emit('tracking:click', data)
+  // También emitir como elemento capturado para compatibilidad
+  if (data.element) {
+    io.emit('element-selected', {
+      id: `element_${Date.now()}`,
+      source: 'native',
+      ...data.element,
+      clickType: data.clickType,
+      x: data.x,
+      y: data.y,
+      capturedAt: data.timestamp
+    })
+  }
+})
+
+trackingService.on('element_captured', (element) => {
+  io.emit('tracking:element-captured', { success: true, element })
 })
 
 // Función de inicio del servidor

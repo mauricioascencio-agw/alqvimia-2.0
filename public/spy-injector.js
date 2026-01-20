@@ -704,6 +704,24 @@
       console.warn('[Alqvimia Spy] No se pudo enviar postMessage:', e);
     }
 
+    // Enviar via fetch al servidor (fallback para modo bookmarklet)
+    try {
+      const serverUrl = window.AlqvimiaSpyServerUrl || 'http://localhost:4000';
+      fetch(`${serverUrl}/api/spy/element`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ element: info })
+      }).then(res => {
+        if (res.ok) {
+          console.log('[Alqvimia Spy] Elemento enviado al servidor');
+        }
+      }).catch(err => {
+        console.warn('[Alqvimia Spy] Error enviando al servidor:', err.message);
+      });
+    } catch (e) {
+      console.warn('[Alqvimia Spy] Error en fetch:', e);
+    }
+
     // Si no es modo continuo, desactivar después de capturar
     if (!SPY.continuousMode) {
       setTimeout(() => {

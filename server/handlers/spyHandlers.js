@@ -179,10 +179,37 @@ export function registerSpyHandlers(io, socket, serverState) {
   socket.on('spy:start', async (data) => {
     console.log(`[Spy] Iniciando sesión para ${socket.id}`, data)
 
+    const targetWindow = data?.targetWindow || null
+
+    // Activar la ventana si se solicita
+    if (data?.activateWindow && targetWindow) {
+      try {
+        const handle = targetWindow.handleInt || parseInt(targetWindow.handle, 16) || 0
+        const processId = targetWindow.id || 0
+
+        if (handle || processId) {
+          const scriptPath = path.join(__dirname, '..', 'scripts', 'activate-window.ps1')
+          const args = []
+          if (handle) args.push(`-Handle ${handle}`)
+          if (processId && !handle) args.push(`-ProcessId ${processId}`)
+
+          const { stdout } = await execAsync(`powershell -ExecutionPolicy Bypass -File "${scriptPath}" ${args.join(' ')}`, {
+            encoding: 'utf8',
+            timeout: 5000
+          })
+
+          const result = JSON.parse(stdout || '{}')
+          console.log(`[Spy] Ventana activada desde spy:start:`, result)
+        }
+      } catch (error) {
+        console.error('[Spy] Error activando ventana en spy:start:', error.message)
+      }
+    }
+
     serverState.spySessions.set(socket.id, {
       active: true,
       startedAt: new Date(),
-      targetWindow: data?.targetWindow || null,
+      targetWindow: targetWindow,
       mode: data?.mode || 'web',
       continuousMode: false
     })
@@ -190,7 +217,8 @@ export function registerSpyHandlers(io, socket, serverState) {
     socket.emit('spy:started', {
       success: true,
       message: 'Sesión de espionaje iniciada',
-      sessionId: socket.id
+      sessionId: socket.id,
+      windowActivated: !!data?.activateWindow
     })
   })
 
