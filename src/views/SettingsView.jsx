@@ -318,6 +318,15 @@ function SettingsView() {
   const [userForm, setUserForm] = useState({ nombre: '', email: '', password: '', rol: 'usuario', activo: true })
   const [selectedAITemplate, setSelectedAITemplate] = useState(null)
   const [selectedAgentTemplate, setSelectedAgentTemplate] = useState(null)
+
+  // Estados para API Keys de IA
+  const [apiKeyInput, setApiKeyInput] = useState('')
+  const [apiKeyName, setApiKeyName] = useState('Default')
+  const [apiKeyStatus, setApiKeyStatus] = useState(null) // { configured: false, source: 'none' }
+  const [apiKeyLoading, setApiKeyLoading] = useState(false)
+  const [apiKeyTesting, setApiKeyTesting] = useState(false)
+  const [apiUsageStats, setApiUsageStats] = useState(null)
+  const [usagePeriod, setUsagePeriod] = useState('30d')
   const [currentTheme, setCurrentTheme] = useState(() => {
     return localStorage.getItem('alqvimia-theme') || 'midnight-blue'
   })
@@ -407,6 +416,125 @@ function SettingsView() {
       loadUsers()
     }
   }, [activeTab, isAdmin])
+
+  // Cargar estado de API key y estadísticas de uso
+  useEffect(() => {
+    if (activeTab === 'ai') {
+      loadApiKeyStatus()
+      loadApiUsageStats()
+    }
+  }, [activeTab, usagePeriod])
+
+  const loadApiKeyStatus = async () => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000'}/api/ai/status`, {
+        headers: { 'x-user-id': user?.id || '1' }
+      })
+      const data = await response.json()
+      if (data.success) {
+        setApiKeyStatus(data.data)
+      }
+    } catch (error) {
+      console.error('Error cargando estado de API key:', error)
+    }
+  }
+
+  const loadApiUsageStats = async () => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000'}/api/api-keys/usage/stats?period=${usagePeriod}`, {
+        headers: { 'x-user-id': user?.id || '1' }
+      })
+      const data = await response.json()
+      if (data.success) {
+        setApiUsageStats(data.data)
+      }
+    } catch (error) {
+      console.error('Error cargando estadísticas:', error)
+    }
+  }
+
+  const handleSaveApiKey = async () => {
+    if (!apiKeyInput.trim()) {
+      alert('Por favor ingresa una API Key')
+      return
+    }
+
+    setApiKeyLoading(true)
+    try {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000'}/api/api-keys`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': user?.id || '1'
+        },
+        body: JSON.stringify({
+          provider: 'anthropic',
+          apiKey: apiKeyInput,
+          nombre: apiKeyName
+        })
+      })
+      const data = await response.json()
+      if (data.success) {
+        alert('API Key guardada correctamente')
+        setApiKeyInput('')
+        loadApiKeyStatus()
+      } else {
+        alert(data.error || 'Error al guardar API Key')
+      }
+    } catch (error) {
+      alert('Error: ' + error.message)
+    } finally {
+      setApiKeyLoading(false)
+    }
+  }
+
+  const handleTestApiKey = async () => {
+    if (!apiKeyInput.trim()) {
+      alert('Por favor ingresa una API Key para probar')
+      return
+    }
+
+    setApiKeyTesting(true)
+    try {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000'}/api/api-keys/test/anthropic`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': user?.id || '1'
+        },
+        body: JSON.stringify({ apiKey: apiKeyInput })
+      })
+      const data = await response.json()
+      if (data.success) {
+        alert(`✅ API Key válida!\nModelo: ${data.data.model}\nTiempo de respuesta: ${data.data.responseTime}ms`)
+      } else {
+        alert(`❌ API Key inválida: ${data.error}`)
+      }
+    } catch (error) {
+      alert('Error probando API Key: ' + error.message)
+    } finally {
+      setApiKeyTesting(false)
+    }
+  }
+
+  const handleDeleteApiKey = async (keyId) => {
+    if (!confirm('¿Estás seguro de eliminar esta API Key?')) return
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000'}/api/api-keys/${keyId}`, {
+        method: 'DELETE',
+        headers: { 'x-user-id': user?.id || '1' }
+      })
+      const data = await response.json()
+      if (data.success) {
+        loadApiKeyStatus()
+      } else {
+        alert(data.error || 'Error al eliminar API Key')
+      }
+    } catch (error) {
+      alert('Error: ' + error.message)
+    }
+  }
 
   // Crear/Editar usuario
   const handleSaveUser = async () => {
@@ -1216,77 +1344,292 @@ function SettingsView() {
 
           {activeTab === 'ai' && (
             <div>
-              <h3 style={{ marginBottom: '1.5rem' }}>Configuración de IA</h3>
+              <h3 style={{ marginBottom: '1.5rem' }}>
+                <i className="fas fa-brain" style={{ marginRight: '0.5rem', color: 'var(--primary-color)' }}></i>
+                Configuración de IA
+              </h3>
 
-              <div className="form-group" style={{ marginBottom: '1.5rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>
-                  Proveedor
-                </label>
-                <select
-                  value={settings.ai.provider}
-                  onChange={(e) => setSettings({
-                    ...settings,
-                    ai: { ...settings.ai, provider: e.target.value }
-                  })}
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    background: 'var(--dark-bg)',
-                    border: '1px solid var(--border-color)',
-                    borderRadius: '8px',
-                    color: 'var(--text-primary)'
-                  }}
-                >
-                  <option value="openai">OpenAI</option>
-                  <option value="anthropic">Anthropic (Claude)</option>
-                  <option value="google">Google (Gemini)</option>
-                  <option value="azure">Azure OpenAI</option>
-                </select>
+              {/* Estado actual de la configuración */}
+              <div style={{
+                padding: '1rem',
+                background: apiKeyStatus?.configured ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)',
+                border: `1px solid ${apiKeyStatus?.configured ? 'rgba(16, 185, 129, 0.3)' : 'rgba(245, 158, 11, 0.3)'}`,
+                borderRadius: '8px',
+                marginBottom: '1.5rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '1rem'
+              }}>
+                <i className={`fas ${apiKeyStatus?.configured ? 'fa-check-circle' : 'fa-exclamation-triangle'}`}
+                   style={{ fontSize: '1.5rem', color: apiKeyStatus?.configured ? '#10b981' : '#f59e0b' }}></i>
+                <div>
+                  <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+                    {apiKeyStatus?.configured ? 'API Key configurada' : 'API Key no configurada'}
+                  </div>
+                  <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                    {apiKeyStatus?.configured
+                      ? `Fuente: ${apiKeyStatus.source === 'database' ? 'Base de datos (encriptada)' : 'Variable de entorno (.env)'}`
+                      : 'Configura una API Key para usar las funciones de IA'}
+                  </div>
+                </div>
               </div>
 
-              <div className="form-group" style={{ marginBottom: '1.5rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>
-                  Modelo
-                </label>
-                <select
-                  value={settings.ai.model}
-                  onChange={(e) => setSettings({
-                    ...settings,
-                    ai: { ...settings.ai, model: e.target.value }
-                  })}
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    background: 'var(--dark-bg)',
-                    border: '1px solid var(--border-color)',
-                    borderRadius: '8px',
-                    color: 'var(--text-primary)'
-                  }}
-                >
-                  <option value="gpt-4">GPT-4</option>
-                  <option value="gpt-4-turbo">GPT-4 Turbo</option>
-                  <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-                  <option value="claude-3-opus">Claude 3 Opus</option>
-                  <option value="claude-3-sonnet">Claude 3 Sonnet</option>
-                </select>
+              {/* Configurar API Key */}
+              <div style={{
+                padding: '1.5rem',
+                background: 'var(--card-bg)',
+                borderRadius: '12px',
+                border: '1px solid var(--border-color)',
+                marginBottom: '1.5rem'
+              }}>
+                <h4 style={{ margin: '0 0 1rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <i className="fas fa-key" style={{ color: 'var(--primary-color)' }}></i>
+                  Configurar API Key de Anthropic (Claude)
+                </h4>
+
+                <div style={{ marginBottom: '1rem' }}>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+                    Nombre (opcional)
+                  </label>
+                  <input
+                    type="text"
+                    value={apiKeyName}
+                    onChange={(e) => setApiKeyName(e.target.value)}
+                    placeholder="Mi API Key"
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      background: 'var(--dark-bg)',
+                      border: '1px solid var(--border-color)',
+                      borderRadius: '8px',
+                      color: 'var(--text-primary)'
+                    }}
+                  />
+                </div>
+
+                <div style={{ marginBottom: '1rem' }}>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+                    API Key
+                  </label>
+                  <input
+                    type="password"
+                    value={apiKeyInput}
+                    onChange={(e) => setApiKeyInput(e.target.value)}
+                    placeholder="sk-ant-api03-..."
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      background: 'var(--dark-bg)',
+                      border: '1px solid var(--border-color)',
+                      borderRadius: '8px',
+                      color: 'var(--text-primary)',
+                      fontFamily: 'monospace'
+                    }}
+                  />
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>
+                    <i className="fas fa-shield-alt" style={{ marginRight: '0.25rem' }}></i>
+                    La API Key se almacena encriptada (AES-256-GCM) en la base de datos
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '0.75rem' }}>
+                  <button
+                    onClick={handleTestApiKey}
+                    disabled={apiKeyTesting || !apiKeyInput.trim()}
+                    style={{
+                      padding: '0.75rem 1.5rem',
+                      background: 'var(--dark-bg)',
+                      border: '1px solid var(--border-color)',
+                      borderRadius: '8px',
+                      color: 'var(--text-primary)',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem'
+                    }}
+                  >
+                    {apiKeyTesting ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-flask"></i>}
+                    Probar Key
+                  </button>
+                  <button
+                    onClick={handleSaveApiKey}
+                    disabled={apiKeyLoading || !apiKeyInput.trim()}
+                    style={{
+                      padding: '0.75rem 1.5rem',
+                      background: 'var(--primary-color)',
+                      border: 'none',
+                      borderRadius: '8px',
+                      color: 'white',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem'
+                    }}
+                  >
+                    {apiKeyLoading ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-save"></i>}
+                    Guardar Key
+                  </button>
+                </div>
+
+                <div style={{ marginTop: '1rem', padding: '0.75rem', background: 'rgba(var(--primary-rgb), 0.1)', borderRadius: '8px', fontSize: '0.85rem' }}>
+                  <i className="fas fa-info-circle" style={{ marginRight: '0.5rem', color: 'var(--primary-color)' }}></i>
+                  Obtén tu API Key en <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary-color)' }}>console.anthropic.com</a>
+                </div>
               </div>
 
-              <div className="form-group" style={{ marginBottom: '1.5rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>
-                  Temperature: {settings.ai.temperature}
-                </label>
-                <input
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.1"
-                  value={settings.ai.temperature}
-                  onChange={(e) => setSettings({
-                    ...settings,
-                    ai: { ...settings.ai, temperature: e.target.value }
-                  })}
-                  style={{ width: '100%' }}
-                />
+              {/* Estadísticas de uso */}
+              <div style={{
+                padding: '1.5rem',
+                background: 'var(--card-bg)',
+                borderRadius: '12px',
+                border: '1px solid var(--border-color)',
+                marginBottom: '1.5rem'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                  <h4 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <i className="fas fa-chart-bar" style={{ color: 'var(--primary-color)' }}></i>
+                    Estadísticas de Uso
+                  </h4>
+                  <select
+                    value={usagePeriod}
+                    onChange={(e) => setUsagePeriod(e.target.value)}
+                    style={{
+                      padding: '0.5rem 0.75rem',
+                      background: 'var(--dark-bg)',
+                      border: '1px solid var(--border-color)',
+                      borderRadius: '6px',
+                      color: 'var(--text-primary)',
+                      fontSize: '0.85rem'
+                    }}
+                  >
+                    <option value="24h">Últimas 24 horas</option>
+                    <option value="7d">Últimos 7 días</option>
+                    <option value="30d">Últimos 30 días</option>
+                  </select>
+                </div>
+
+                {apiUsageStats?.totals ? (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem' }}>
+                    <div style={{ padding: '1rem', background: 'var(--dark-bg)', borderRadius: '8px', textAlign: 'center' }}>
+                      <div style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--primary-color)' }}>
+                        {apiUsageStats.totals.total_llamadas || 0}
+                      </div>
+                      <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Llamadas API</div>
+                    </div>
+                    <div style={{ padding: '1rem', background: 'var(--dark-bg)', borderRadius: '8px', textAlign: 'center' }}>
+                      <div style={{ fontSize: '1.75rem', fontWeight: 700, color: '#10b981' }}>
+                        {((apiUsageStats.totals.total_tokens || 0) / 1000).toFixed(1)}K
+                      </div>
+                      <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Tokens</div>
+                    </div>
+                    <div style={{ padding: '1rem', background: 'var(--dark-bg)', borderRadius: '8px', textAlign: 'center' }}>
+                      <div style={{ fontSize: '1.75rem', fontWeight: 700, color: '#f59e0b' }}>
+                        ${(apiUsageStats.totals.costo_total || 0).toFixed(4)}
+                      </div>
+                      <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Costo Estimado</div>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>
+                    <i className="fas fa-chart-line" style={{ fontSize: '2rem', marginBottom: '0.5rem', opacity: 0.5 }}></i>
+                    <div>Sin datos de uso aún</div>
+                  </div>
+                )}
+
+                {apiUsageStats?.byModel && apiUsageStats.byModel.length > 0 && (
+                  <div style={{ marginTop: '1.5rem' }}>
+                    <h5 style={{ marginBottom: '0.75rem', color: 'var(--text-secondary)' }}>Uso por Modelo</h5>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      {apiUsageStats.byModel.map((model, index) => (
+                        <div key={index} style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          padding: '0.75rem',
+                          background: 'var(--dark-bg)',
+                          borderRadius: '6px'
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <i className="fas fa-microchip" style={{ color: 'var(--primary-color)' }}></i>
+                            <span>{model.modelo}</span>
+                          </div>
+                          <div style={{ display: 'flex', gap: '1.5rem', fontSize: '0.85rem' }}>
+                            <span style={{ color: 'var(--text-secondary)' }}>{model.total_llamadas} llamadas</span>
+                            <span style={{ color: '#10b981' }}>{(model.total_tokens / 1000).toFixed(1)}K tokens</span>
+                            <span style={{ color: '#f59e0b' }}>${parseFloat(model.costo_total || 0).toFixed(4)}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Configuración de modelo y temperatura */}
+              <div style={{
+                padding: '1.5rem',
+                background: 'var(--card-bg)',
+                borderRadius: '12px',
+                border: '1px solid var(--border-color)'
+              }}>
+                <h4 style={{ margin: '0 0 1rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <i className="fas fa-sliders-h" style={{ color: 'var(--primary-color)' }}></i>
+                  Configuración del Modelo
+                </h4>
+
+                <div className="form-group" style={{ marginBottom: '1rem' }}>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>
+                    Modelo por defecto
+                  </label>
+                  <select
+                    value={settings.ai.model}
+                    onChange={(e) => setSettings({
+                      ...settings,
+                      ai: { ...settings.ai, model: e.target.value }
+                    })}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      background: 'var(--dark-bg)',
+                      border: '1px solid var(--border-color)',
+                      borderRadius: '8px',
+                      color: 'var(--text-primary)'
+                    }}
+                  >
+                    <optgroup label="Anthropic (Claude)">
+                      <option value="claude-3-5-sonnet-20241022">Claude 3.5 Sonnet ($3/$15 por 1M tokens)</option>
+                      <option value="claude-3-5-haiku-20241022">Claude 3.5 Haiku ($0.80/$4 por 1M tokens)</option>
+                      <option value="claude-3-opus-20240229">Claude 3 Opus ($15/$75 por 1M tokens)</option>
+                    </optgroup>
+                    <optgroup label="OpenAI">
+                      <option value="gpt-4o">GPT-4o ($5/$15 por 1M tokens)</option>
+                      <option value="gpt-4o-mini">GPT-4o Mini ($0.15/$0.60 por 1M tokens)</option>
+                      <option value="gpt-4-turbo">GPT-4 Turbo ($10/$30 por 1M tokens)</option>
+                    </optgroup>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>
+                    Temperature: {settings.ai.temperature}
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.1"
+                    value={settings.ai.temperature}
+                    onChange={(e) => setSettings({
+                      ...settings,
+                      ai: { ...settings.ai, temperature: e.target.value }
+                    })}
+                    style={{ width: '100%' }}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                    <span>Preciso</span>
+                    <span>Creativo</span>
+                  </div>
+                </div>
               </div>
             </div>
           )}

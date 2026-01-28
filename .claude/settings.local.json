@@ -46,7 +46,9 @@
       "Bash(docker stop:*)",
       "Bash(timeout:*)",
       "Bash(cmd /c \"taskkill /PID 35008 /F\")",
-      "Bash(pip install:*)"
+      "Bash(pip install:*)",
+      "Bash(docker-compose logs:*)",
+      "Bash(docker volume:*)"
     ]
   }
 }

@@ -10,11 +10,40 @@ import fs from 'fs'
 import { fileURLToPath } from 'url'
 import Anthropic from '@anthropic-ai/sdk'
 import agentProjectService from '../services/agentProjectService.js'
+import { getApiKey, trackUsage, getUsageSummary, hasApiKey } from '../services/aiUsageTracker.js'
 
 const router = express.Router()
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
+
+/**
+ * Obtiene un cliente de Anthropic usando la API key de la BD o del .env
+ * @param {number} userId - ID del usuario
+ * @returns {Promise<{client: Anthropic, keyId: number|null}>}
+ */
+async function getAnthropicClient(userId) {
+  // Primero intentar obtener de la BD
+  const keyData = await getApiKey(userId, 'anthropic')
+  if (keyData?.apiKey) {
+    return {
+      client: new Anthropic({ apiKey: keyData.apiKey }),
+      keyId: keyData.keyId,
+      source: 'database'
+    }
+  }
+
+  // Fallback al .env
+  if (process.env.ANTHROPIC_API_KEY) {
+    return {
+      client: new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY }),
+      keyId: null,
+      source: 'env'
+    }
+  }
+
+  return { client: null, keyId: null, source: null }
+}
 
 // Configurar multer para subida de archivos
 const storage = multer.diskStorage({
@@ -54,17 +83,36 @@ const upload = multer({
   }
 })
 
-// Inicializar cliente de Anthropic (Claude)
-let anthropicClient = null
-try {
-  if (process.env.ANTHROPIC_API_KEY) {
-    anthropicClient = new Anthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY
+/**
+ * GET /api/ai/status
+ * Verifica el estado de la configuración de IA
+ */
+router.get('/status', async (req, res) => {
+  try {
+    const userId = req.headers['x-user-id'] || 1
+
+    const hasDbKey = await hasApiKey(userId, 'anthropic')
+    const hasEnvKey = !!process.env.ANTHROPIC_API_KEY
+
+    // Obtener resumen de uso
+    const usage = await getUsageSummary(userId, '30d')
+
+    res.json({
+      success: true,
+      data: {
+        configured: hasDbKey || hasEnvKey,
+        source: hasDbKey ? 'database' : hasEnvKey ? 'env' : 'none',
+        provider: 'anthropic',
+        usage
+      }
+    })
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message
     })
   }
-} catch (error) {
-  console.warn('[AI] No se pudo inicializar Anthropic:', error.message)
-}
+})
 
 /**
  * POST /api/ai/generate-from-requirements
@@ -174,13 +222,20 @@ Asegúrate de:
 6. Documentar supuestos y recomendaciones`
 
     let result = null
+    const userId = req.headers['x-user-id'] || 1
+
+    // Obtener cliente de Anthropic
+    const { client: anthropicClient, keyId, source } = await getAnthropicClient(userId)
 
     // Usar Claude si está disponible
     if (anthropicClient) {
-      console.log('[AI] Usando Claude para análisis...')
+      console.log(`[AI] Usando Claude para análisis... (source: ${source})`)
+
+      const startTime = Date.now()
+      const model = 'claude-3-sonnet-20240229'
 
       const response = await anthropicClient.messages.create({
-        model: 'claude-3-sonnet-20240229',
+        model,
         max_tokens: 4096,
         messages: [
           {
@@ -191,7 +246,22 @@ Asegúrate de:
         system: systemPrompt
       })
 
+      const responseTime = Date.now() - startTime
       const responseText = response.content[0].text
+
+      // Trackear uso
+      await trackUsage({
+        userId,
+        apiKeyId: keyId,
+        provider: 'anthropic',
+        model,
+        endpoint: '/generate-from-requirements',
+        inputTokens: response.usage?.input_tokens || 0,
+        outputTokens: response.usage?.output_tokens || 0,
+        responseTimeMs: responseTime,
+        status: 'success',
+        metadata: { filesCount: files.length, agentType }
+      })
 
       // Extraer JSON de la respuesta
       try {

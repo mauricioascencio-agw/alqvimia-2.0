@@ -869,5 +869,84 @@ INSERT INTO configuraciones_sistema (clave, valor, tipo, categoria, descripcion)
 ('recorder_auto_variable_name', 'true', 'boolean', 'recorder', 'Generar nombres de variable automáticamente');
 
 -- =====================================================
+-- TABLA: api_keys_ia
+-- API Keys encriptadas para servicios de IA
+-- =====================================================
+CREATE TABLE IF NOT EXISTS api_keys_ia (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    usuario_id INT,
+    provider ENUM('anthropic', 'openai', 'google', 'azure', 'cohere', 'mistral') NOT NULL,
+    api_key_encrypted TEXT NOT NULL,
+    nombre VARCHAR(100) DEFAULT 'Default',
+    activo BOOLEAN DEFAULT TRUE,
+    ultimo_uso DATETIME DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+    INDEX idx_provider (provider),
+    INDEX idx_usuario (usuario_id),
+    INDEX idx_activo (activo)
+) ENGINE=InnoDB;
+
+-- =====================================================
+-- TABLA: uso_api_ia
+-- Tracking de uso de APIs de IA (tokens, costos)
+-- =====================================================
+CREATE TABLE IF NOT EXISTS uso_api_ia (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    usuario_id INT,
+    api_key_id INT,
+    provider ENUM('anthropic', 'openai', 'google', 'azure', 'cohere', 'mistral') NOT NULL,
+    modelo VARCHAR(100) NOT NULL,
+    endpoint VARCHAR(100),
+    tokens_entrada INT DEFAULT 0,
+    tokens_salida INT DEFAULT 0,
+    tokens_total INT DEFAULT 0,
+    costo_estimado DECIMAL(10, 6) DEFAULT 0,
+    tiempo_respuesta_ms INT DEFAULT 0,
+    estado ENUM('success', 'error', 'timeout') DEFAULT 'success',
+    error_mensaje TEXT,
+    metadata JSON,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL,
+    FOREIGN KEY (api_key_id) REFERENCES api_keys_ia(id) ON DELETE SET NULL,
+    INDEX idx_usuario (usuario_id),
+    INDEX idx_provider (provider),
+    INDEX idx_modelo (modelo),
+    INDEX idx_fecha (created_at),
+    INDEX idx_estado (estado)
+) ENGINE=InnoDB;
+
+-- =====================================================
+-- TABLA: costos_modelos_ia
+-- Precios por token de cada modelo (actualizable)
+-- =====================================================
+CREATE TABLE IF NOT EXISTS costos_modelos_ia (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    provider ENUM('anthropic', 'openai', 'google', 'azure', 'cohere', 'mistral') NOT NULL,
+    modelo VARCHAR(100) NOT NULL,
+    costo_input_por_millon DECIMAL(10, 4) NOT NULL COMMENT 'Costo por millón de tokens de entrada en USD',
+    costo_output_por_millon DECIMAL(10, 4) NOT NULL COMMENT 'Costo por millón de tokens de salida en USD',
+    max_tokens INT DEFAULT 4096,
+    activo BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_provider_modelo (provider, modelo),
+    INDEX idx_provider (provider)
+) ENGINE=InnoDB;
+
+-- Insertar precios de modelos de Anthropic (Enero 2025)
+INSERT INTO costos_modelos_ia (provider, modelo, costo_input_por_millon, costo_output_por_millon, max_tokens) VALUES
+('anthropic', 'claude-3-5-sonnet-20241022', 3.00, 15.00, 8192),
+('anthropic', 'claude-3-5-haiku-20241022', 0.80, 4.00, 8192),
+('anthropic', 'claude-3-opus-20240229', 15.00, 75.00, 4096),
+('anthropic', 'claude-3-sonnet-20240229', 3.00, 15.00, 4096),
+('anthropic', 'claude-3-haiku-20240307', 0.25, 1.25, 4096),
+('openai', 'gpt-4-turbo', 10.00, 30.00, 4096),
+('openai', 'gpt-4o', 5.00, 15.00, 4096),
+('openai', 'gpt-4o-mini', 0.15, 0.60, 16384),
+('openai', 'gpt-3.5-turbo', 0.50, 1.50, 4096);
+
+-- =====================================================
 -- FIN DEL ESQUEMA
 -- =====================================================

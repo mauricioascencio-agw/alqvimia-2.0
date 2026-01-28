@@ -33,6 +33,7 @@ import authRoutes from './routes/auth.js'
 import usersRoutes from './routes/users.js'
 import mcpDatabaseRoutes from './routes/mcp-database.js'
 import aiRoutes from './routes/ai.js'
+import apiKeysRoutes from './routes/apiKeys.js'
 
 // Servicios
 import {
@@ -81,6 +82,7 @@ app.use('/api/auth', authRoutes)
 app.use('/api/users', usersRoutes)
 app.use('/api/mcp', mcpDatabaseRoutes)
 app.use('/api/ai', aiRoutes)
+app.use('/api/api-keys', apiKeysRoutes)
 
 // Socket.IO
 const io = new Server(httpServer, {
