@@ -1064,8 +1064,9 @@
   border-color: var(--primary-color, rgba(255, 255, 255, 0.3));
 }
 
-.language-btn .lang-flag {
-  font-size: 0.95rem;
+.language-btn .fa-globe {
+  font-size: 0.85rem;
+  opacity: 0.8;
 }
 
 .language-btn .lang-code {
@@ -1143,8 +1144,19 @@
   background: rgba(var(--primary-rgb), 0.2);
 }
 
-.language-option .lang-flag {
-  font-size: 1.2rem;
+.language-option .lang-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 20px;
+  background: rgba(var(--primary-rgb, 37, 99, 235), 0.2);
+  border: 1px solid rgba(var(--primary-rgb, 37, 99, 235), 0.3);
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--primary-color, #2563eb);
+  letter-spacing: 0.5px;
 }
 
 .language-option .lang-name {

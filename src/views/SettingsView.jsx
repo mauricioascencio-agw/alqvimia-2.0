@@ -304,6 +304,15 @@ const agentTemplates = [
   }
 ]
 
+const AI_PROVIDERS = [
+  { id: 'anthropic', name: 'Anthropic (Claude)', icon: 'fa-brain', color: '#d97706', prefix: 'sk-ant-', placeholder: 'sk-ant-api03-...', url: 'https://console.anthropic.com/settings/keys', description: 'Claude 3.5 Sonnet, Haiku, Opus', models: ['Claude 3.5 Sonnet', 'Claude 3.5 Haiku', 'Claude 3 Opus'] },
+  { id: 'openai', name: 'OpenAI', icon: 'fa-robot', color: '#10b981', prefix: 'sk-', placeholder: 'sk-proj-...', url: 'https://platform.openai.com/api-keys', description: 'GPT-4o, GPT-4 Turbo, DALL-E', models: ['GPT-4o', 'GPT-4o Mini', 'GPT-4 Turbo'] },
+  { id: 'google', name: 'Google (Gemini)', icon: 'fa-globe', color: '#4285f4', prefix: '', placeholder: 'AIza...', url: 'https://aistudio.google.com/apikey', description: 'Gemini Pro, Gemini Ultra', models: ['Gemini 1.5 Pro', 'Gemini 1.5 Flash'] },
+  { id: 'azure', name: 'Azure OpenAI', icon: 'fa-cloud', color: '#0078d4', prefix: '', placeholder: 'tu-api-key-azure...', url: 'https://portal.azure.com/', description: 'GPT-4, GPT-3.5 via Azure', models: ['GPT-4', 'GPT-3.5 Turbo'] },
+  { id: 'mistral', name: 'Mistral AI', icon: 'fa-wind', color: '#ff7000', prefix: '', placeholder: 'tu-api-key-mistral...', url: 'https://console.mistral.ai/api-keys', description: 'Mistral Large, Medium, Small', models: ['Mistral Large', 'Mistral Medium'] },
+  { id: 'cohere', name: 'Cohere', icon: 'fa-atom', color: '#39594d', prefix: '', placeholder: 'tu-api-key-cohere...', url: 'https://dashboard.cohere.com/api-keys', description: 'Command, Embed, Rerank', models: ['Command R+', 'Command R'] }
+]
+
 function SettingsView() {
   const { t } = useLanguage()
   const { user, isAdmin, authFetch, updateProfile, changePassword } = useAuth()
@@ -319,6 +328,10 @@ function SettingsView() {
   const [selectedAITemplate, setSelectedAITemplate] = useState(null)
   const [selectedAgentTemplate, setSelectedAgentTemplate] = useState(null)
 
+  // Estados para permisos de dashboards
+  const [dashboardPermisos, setDashboardPermisos] = useState([])
+  const [loadingDashPermisos, setLoadingDashPermisos] = useState(false)
+
   // Estados para API Keys de IA
   const [apiKeyInput, setApiKeyInput] = useState('')
   const [apiKeyName, setApiKeyName] = useState('Default')
@@ -327,6 +340,9 @@ function SettingsView() {
   const [apiKeyTesting, setApiKeyTesting] = useState(false)
   const [apiUsageStats, setApiUsageStats] = useState(null)
   const [usagePeriod, setUsagePeriod] = useState('30d')
+  const [selectedProvider, setSelectedProvider] = useState('anthropic')
+  const [savedApiKeys, setSavedApiKeys] = useState([])
+  const [loadingKeys, setLoadingKeys] = useState(false)
   const [currentTheme, setCurrentTheme] = useState(() => {
     return localStorage.getItem('alqvimia-theme') || 'midnight-blue'
   })
@@ -390,7 +406,7 @@ function SettingsView() {
 
   // Agregar tab de usuarios solo para admin
   const tabs = isAdmin
-    ? [...baseTabs, { id: 'users', label: 'Usuarios', icon: 'fa-users' }]
+    ? [...baseTabs, { id: 'dashboards', label: 'Dashboards', icon: 'fa-tachometer-alt' }, { id: 'users', label: 'Usuarios', icon: 'fa-users' }]
     : baseTabs
 
   // Cargar usuarios (solo admin)
@@ -417,13 +433,78 @@ function SettingsView() {
     }
   }, [activeTab, isAdmin])
 
+  // Cargar permisos de dashboards al cambiar a esa tab
+  useEffect(() => {
+    if (activeTab === 'dashboards' && isAdmin) {
+      loadDashboardPermisos()
+    }
+  }, [activeTab, isAdmin])
+
+  const loadDashboardPermisos = async () => {
+    setLoadingDashPermisos(true)
+    try {
+      const response = await authFetch(`${import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000'}/api/dashboards/permisos`)
+      const data = await response.json()
+      if (data.success) {
+        setDashboardPermisos(data.data || [])
+      }
+    } catch (err) {
+      console.error('[Settings] Error cargando permisos dashboards:', err)
+    } finally {
+      setLoadingDashPermisos(false)
+    }
+  }
+
+  const handleDashPermToggle = async (rol, campo, valor) => {
+    try {
+      const perm = dashboardPermisos.find(p => p.rol === rol)
+      if (!perm) return
+      const updated = { ...perm, [campo]: valor }
+      const response = await authFetch(`${import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000'}/api/dashboards/permisos`, {
+        method: 'PUT',
+        body: JSON.stringify({ rol, permisos: updated })
+      })
+      const data = await response.json()
+      if (data.success) {
+        setDashboardPermisos(prev => prev.map(p => p.rol === rol ? { ...p, [campo]: valor } : p))
+      }
+    } catch (err) {
+      console.error('[Settings] Error actualizando permiso dashboard:', err)
+    }
+  }
+
   // Cargar estado de API key y estadísticas de uso
   useEffect(() => {
     if (activeTab === 'ai') {
       loadApiKeyStatus()
       loadApiUsageStats()
+      loadSavedKeys()
     }
   }, [activeTab, usagePeriod])
+
+  // Escuchar navegación desde otras vistas (AI Dashboard)
+  useEffect(() => {
+    const handleOpenAITab = () => setActiveTab('ai')
+    window.addEventListener('settings-open-ai-tab', handleOpenAITab)
+    return () => window.removeEventListener('settings-open-ai-tab', handleOpenAITab)
+  }, [])
+
+  const loadSavedKeys = async () => {
+    setLoadingKeys(true)
+    try {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000'}/api/api-keys`, {
+        headers: { 'x-user-id': user?.id || '1' }
+      })
+      const data = await response.json()
+      if (data.success) {
+        setSavedApiKeys(data.data || [])
+      }
+    } catch (error) {
+      console.error('Error cargando API keys guardadas:', error)
+    } finally {
+      setLoadingKeys(false)
+    }
+  }
 
   const loadApiKeyStatus = async () => {
     try {
@@ -459,6 +540,7 @@ function SettingsView() {
       return
     }
 
+    const provider = AI_PROVIDERS.find(p => p.id === selectedProvider)
     setApiKeyLoading(true)
     try {
       const response = await fetch(`${import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000'}/api/api-keys`, {
@@ -468,16 +550,18 @@ function SettingsView() {
           'x-user-id': user?.id || '1'
         },
         body: JSON.stringify({
-          provider: 'anthropic',
+          provider: selectedProvider,
           apiKey: apiKeyInput,
-          nombre: apiKeyName
+          nombre: apiKeyName || provider?.name || 'Default'
         })
       })
       const data = await response.json()
       if (data.success) {
-        alert('API Key guardada correctamente')
+        alert(`API Key de ${provider?.name || selectedProvider} guardada correctamente`)
         setApiKeyInput('')
+        setApiKeyName('Default')
         loadApiKeyStatus()
+        loadSavedKeys()
       } else {
         alert(data.error || 'Error al guardar API Key')
       }
@@ -496,7 +580,7 @@ function SettingsView() {
 
     setApiKeyTesting(true)
     try {
-      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000'}/api/api-keys/test/anthropic`, {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000'}/api/api-keys/test/${selectedProvider}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -506,9 +590,12 @@ function SettingsView() {
       })
       const data = await response.json()
       if (data.success) {
-        alert(`✅ API Key válida!\nModelo: ${data.data.model}\nTiempo de respuesta: ${data.data.responseTime}ms`)
+        const msg = data.data?.model
+          ? `API Key valida!\nModelo: ${data.data.model}\nTiempo: ${data.data.responseTime}ms`
+          : data.message || 'API Key aceptada'
+        alert(msg)
       } else {
-        alert(`❌ API Key inválida: ${data.error}`)
+        alert(`API Key invalida: ${data.error}`)
       }
     } catch (error) {
       alert('Error probando API Key: ' + error.message)
@@ -528,6 +615,7 @@ function SettingsView() {
       const data = await response.json()
       if (data.success) {
         loadApiKeyStatus()
+        loadSavedKeys()
       } else {
         alert(data.error || 'Error al eliminar API Key')
       }
@@ -1346,136 +1434,289 @@ function SettingsView() {
             <div>
               <h3 style={{ marginBottom: '1.5rem' }}>
                 <i className="fas fa-brain" style={{ marginRight: '0.5rem', color: 'var(--primary-color)' }}></i>
-                Configuración de IA
+                Configuracion de Proveedores de IA
               </h3>
 
-              {/* Estado actual de la configuración */}
+              {/* Resumen de estado */}
               <div style={{
                 padding: '1rem',
-                background: apiKeyStatus?.configured ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)',
-                border: `1px solid ${apiKeyStatus?.configured ? 'rgba(16, 185, 129, 0.3)' : 'rgba(245, 158, 11, 0.3)'}`,
+                background: savedApiKeys.filter(k => k.activo).length > 0 ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)',
+                border: `1px solid ${savedApiKeys.filter(k => k.activo).length > 0 ? 'rgba(16, 185, 129, 0.3)' : 'rgba(245, 158, 11, 0.3)'}`,
                 borderRadius: '8px',
                 marginBottom: '1.5rem',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '1rem'
               }}>
-                <i className={`fas ${apiKeyStatus?.configured ? 'fa-check-circle' : 'fa-exclamation-triangle'}`}
-                   style={{ fontSize: '1.5rem', color: apiKeyStatus?.configured ? '#10b981' : '#f59e0b' }}></i>
+                <i className={`fas ${savedApiKeys.filter(k => k.activo).length > 0 ? 'fa-check-circle' : 'fa-exclamation-triangle'}`}
+                   style={{ fontSize: '1.5rem', color: savedApiKeys.filter(k => k.activo).length > 0 ? '#10b981' : '#f59e0b' }}></i>
                 <div>
                   <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
-                    {apiKeyStatus?.configured ? 'API Key configurada' : 'API Key no configurada'}
+                    {savedApiKeys.filter(k => k.activo).length > 0
+                      ? `${savedApiKeys.filter(k => k.activo).length} proveedor(es) configurado(s)`
+                      : 'Ningun proveedor configurado'}
                   </div>
                   <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                    {apiKeyStatus?.configured
-                      ? `Fuente: ${apiKeyStatus.source === 'database' ? 'Base de datos (encriptada)' : 'Variable de entorno (.env)'}`
-                      : 'Configura una API Key para usar las funciones de IA'}
+                    {savedApiKeys.filter(k => k.activo).length > 0
+                      ? `Activos: ${[...new Set(savedApiKeys.filter(k => k.activo).map(k => k.provider))].join(', ')}`
+                      : 'Selecciona un proveedor y configura tu API Key para usar las funciones de IA'}
                   </div>
                 </div>
               </div>
 
-              {/* Configurar API Key */}
+              {/* Grid de proveedores */}
               <div style={{
-                padding: '1.5rem',
-                background: 'var(--card-bg)',
-                borderRadius: '12px',
-                border: '1px solid var(--border-color)',
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
+                gap: '0.75rem',
                 marginBottom: '1.5rem'
               }}>
-                <h4 style={{ margin: '0 0 1rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <i className="fas fa-key" style={{ color: 'var(--primary-color)' }}></i>
-                  Configurar API Key de Anthropic (Claude)
-                </h4>
-
-                <div style={{ marginBottom: '1rem' }}>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-                    Nombre (opcional)
-                  </label>
-                  <input
-                    type="text"
-                    value={apiKeyName}
-                    onChange={(e) => setApiKeyName(e.target.value)}
-                    placeholder="Mi API Key"
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem',
-                      background: 'var(--dark-bg)',
-                      border: '1px solid var(--border-color)',
-                      borderRadius: '8px',
-                      color: 'var(--text-primary)'
-                    }}
-                  />
-                </div>
-
-                <div style={{ marginBottom: '1rem' }}>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-                    API Key
-                  </label>
-                  <input
-                    type="password"
-                    value={apiKeyInput}
-                    onChange={(e) => setApiKeyInput(e.target.value)}
-                    placeholder="sk-ant-api03-..."
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem',
-                      background: 'var(--dark-bg)',
-                      border: '1px solid var(--border-color)',
-                      borderRadius: '8px',
-                      color: 'var(--text-primary)',
-                      fontFamily: 'monospace'
-                    }}
-                  />
-                  <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>
-                    <i className="fas fa-shield-alt" style={{ marginRight: '0.25rem' }}></i>
-                    La API Key se almacena encriptada (AES-256-GCM) en la base de datos
-                  </div>
-                </div>
-
-                <div style={{ display: 'flex', gap: '0.75rem' }}>
-                  <button
-                    onClick={handleTestApiKey}
-                    disabled={apiKeyTesting || !apiKeyInput.trim()}
-                    style={{
-                      padding: '0.75rem 1.5rem',
-                      background: 'var(--dark-bg)',
-                      border: '1px solid var(--border-color)',
-                      borderRadius: '8px',
-                      color: 'var(--text-primary)',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem'
-                    }}
-                  >
-                    {apiKeyTesting ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-flask"></i>}
-                    Probar Key
-                  </button>
-                  <button
-                    onClick={handleSaveApiKey}
-                    disabled={apiKeyLoading || !apiKeyInput.trim()}
-                    style={{
-                      padding: '0.75rem 1.5rem',
-                      background: 'var(--primary-color)',
-                      border: 'none',
-                      borderRadius: '8px',
-                      color: 'white',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem'
-                    }}
-                  >
-                    {apiKeyLoading ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-save"></i>}
-                    Guardar Key
-                  </button>
-                </div>
-
-                <div style={{ marginTop: '1rem', padding: '0.75rem', background: 'rgba(var(--primary-rgb), 0.1)', borderRadius: '8px', fontSize: '0.85rem' }}>
-                  <i className="fas fa-info-circle" style={{ marginRight: '0.5rem', color: 'var(--primary-color)' }}></i>
-                  Obtén tu API Key en <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary-color)' }}>console.anthropic.com</a>
-                </div>
+                {AI_PROVIDERS.map(provider => {
+                  const providerKeys = savedApiKeys.filter(k => k.provider === provider.id && k.activo)
+                  const isConfigured = providerKeys.length > 0
+                  const isSelected = selectedProvider === provider.id
+                  return (
+                    <div
+                      key={provider.id}
+                      onClick={() => setSelectedProvider(provider.id)}
+                      style={{
+                        padding: '1rem',
+                        background: isSelected ? `${provider.color}15` : 'var(--card-bg)',
+                        border: `2px solid ${isSelected ? provider.color : isConfigured ? 'rgba(16, 185, 129, 0.4)' : 'var(--border-color)'}`,
+                        borderRadius: '12px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        position: 'relative',
+                        textAlign: 'center'
+                      }}
+                    >
+                      {isConfigured && (
+                        <div style={{
+                          position: 'absolute',
+                          top: '6px',
+                          right: '6px',
+                          width: '18px',
+                          height: '18px',
+                          borderRadius: '50%',
+                          background: '#10b981',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}>
+                          <i className="fas fa-check" style={{ color: 'white', fontSize: '0.6rem' }}></i>
+                        </div>
+                      )}
+                      <div style={{
+                        width: '44px',
+                        height: '44px',
+                        borderRadius: '12px',
+                        background: `${provider.color}20`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        margin: '0 auto 0.5rem'
+                      }}>
+                        <i className={`fas ${provider.icon}`} style={{ color: provider.color, fontSize: '1.2rem' }}></i>
+                      </div>
+                      <div style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--text-primary)', marginBottom: '0.25rem' }}>
+                        {provider.name}
+                      </div>
+                      <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', lineHeight: 1.3 }}>
+                        {provider.description}
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
+
+              {/* Formulario de configuracion del proveedor seleccionado */}
+              {(() => {
+                const provider = AI_PROVIDERS.find(p => p.id === selectedProvider)
+                if (!provider) return null
+                const providerKeys = savedApiKeys.filter(k => k.provider === provider.id)
+                const activeKey = providerKeys.find(k => k.activo)
+                return (
+                  <div style={{
+                    padding: '1.5rem',
+                    background: 'var(--card-bg)',
+                    borderRadius: '12px',
+                    border: `2px solid ${provider.color}40`,
+                    marginBottom: '1.5rem'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
+                      <div style={{
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '10px',
+                        background: `${provider.color}20`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}>
+                        <i className={`fas ${provider.icon}`} style={{ color: provider.color, fontSize: '1.1rem' }}></i>
+                      </div>
+                      <div>
+                        <h4 style={{ margin: 0 }}>Configurar {provider.name}</h4>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                          Modelos: {provider.models.join(', ')}
+                        </div>
+                      </div>
+                      {activeKey && (
+                        <span style={{
+                          marginLeft: 'auto',
+                          padding: '0.25rem 0.75rem',
+                          background: 'rgba(16, 185, 129, 0.15)',
+                          color: '#10b981',
+                          borderRadius: '20px',
+                          fontSize: '0.75rem',
+                          fontWeight: 600
+                        }}>
+                          <i className="fas fa-check-circle" style={{ marginRight: '0.25rem' }}></i>
+                          Configurada
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Key guardada activa */}
+                    {activeKey && (
+                      <div style={{
+                        padding: '0.75rem 1rem',
+                        background: 'rgba(16, 185, 129, 0.08)',
+                        border: '1px solid rgba(16, 185, 129, 0.2)',
+                        borderRadius: '8px',
+                        marginBottom: '1rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between'
+                      }}>
+                        <div>
+                          <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                            <i className="fas fa-key" style={{ marginRight: '0.5rem', color: '#10b981' }}></i>
+                            {activeKey.nombre || 'Default'}
+                          </div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
+                            Guardada: {new Date(activeKey.created_at).toLocaleDateString()}
+                            {activeKey.ultimo_uso && ` | Ultimo uso: ${new Date(activeKey.ultimo_uso).toLocaleDateString()}`}
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => handleDeleteApiKey(activeKey.id)}
+                          style={{
+                            padding: '0.4rem 0.75rem',
+                            background: 'rgba(239, 68, 68, 0.1)',
+                            border: '1px solid rgba(239, 68, 68, 0.3)',
+                            borderRadius: '6px',
+                            color: '#ef4444',
+                            cursor: 'pointer',
+                            fontSize: '0.8rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.35rem'
+                          }}
+                        >
+                          <i className="fas fa-trash-alt"></i>
+                          Eliminar
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Formulario */}
+                    <div style={{ marginBottom: '1rem' }}>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+                        Nombre (opcional)
+                      </label>
+                      <input
+                        type="text"
+                        value={apiKeyName}
+                        onChange={(e) => setApiKeyName(e.target.value)}
+                        placeholder={`Mi key de ${provider.name}`}
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          background: 'var(--dark-bg)',
+                          border: '1px solid var(--border-color)',
+                          borderRadius: '8px',
+                          color: 'var(--text-primary)'
+                        }}
+                      />
+                    </div>
+
+                    <div style={{ marginBottom: '1rem' }}>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+                        API Key
+                      </label>
+                      <input
+                        type="password"
+                        value={apiKeyInput}
+                        onChange={(e) => setApiKeyInput(e.target.value)}
+                        placeholder={provider.placeholder}
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          background: 'var(--dark-bg)',
+                          border: '1px solid var(--border-color)',
+                          borderRadius: '8px',
+                          color: 'var(--text-primary)',
+                          fontFamily: 'monospace'
+                        }}
+                      />
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>
+                        <i className="fas fa-shield-alt" style={{ marginRight: '0.25rem' }}></i>
+                        Se almacena encriptada (AES-256-GCM) en la base de datos
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                      <button
+                        onClick={handleTestApiKey}
+                        disabled={apiKeyTesting || !apiKeyInput.trim()}
+                        style={{
+                          padding: '0.75rem 1.5rem',
+                          background: 'var(--dark-bg)',
+                          border: '1px solid var(--border-color)',
+                          borderRadius: '8px',
+                          color: 'var(--text-primary)',
+                          cursor: apiKeyTesting || !apiKeyInput.trim() ? 'not-allowed' : 'pointer',
+                          opacity: apiKeyTesting || !apiKeyInput.trim() ? 0.5 : 1,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem'
+                        }}
+                      >
+                        {apiKeyTesting ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-flask"></i>}
+                        Probar Key
+                      </button>
+                      <button
+                        onClick={handleSaveApiKey}
+                        disabled={apiKeyLoading || !apiKeyInput.trim()}
+                        style={{
+                          padding: '0.75rem 1.5rem',
+                          background: apiKeyLoading || !apiKeyInput.trim() ? 'var(--dark-bg)' : provider.color,
+                          border: 'none',
+                          borderRadius: '8px',
+                          color: 'white',
+                          cursor: apiKeyLoading || !apiKeyInput.trim() ? 'not-allowed' : 'pointer',
+                          opacity: apiKeyLoading || !apiKeyInput.trim() ? 0.5 : 1,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem'
+                        }}
+                      >
+                        {apiKeyLoading ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-save"></i>}
+                        {activeKey ? 'Reemplazar Key' : 'Guardar Key'}
+                      </button>
+                    </div>
+
+                    <div style={{ marginTop: '1rem', padding: '0.75rem', background: `${provider.color}10`, borderRadius: '8px', fontSize: '0.85rem', border: `1px solid ${provider.color}20` }}>
+                      <i className="fas fa-external-link-alt" style={{ marginRight: '0.5rem', color: provider.color }}></i>
+                      Obten tu API Key en{' '}
+                      <a href={provider.url} target="_blank" rel="noopener noreferrer" style={{ color: provider.color, fontWeight: 600 }}>
+                        {provider.url.replace('https://', '').split('/')[0]}
+                      </a>
+                    </div>
+                  </div>
+                )
+              })()}
 
               {/* Estadísticas de uso */}
               <div style={{
@@ -1488,7 +1729,7 @@ function SettingsView() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                   <h4 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <i className="fas fa-chart-bar" style={{ color: 'var(--primary-color)' }}></i>
-                    Estadísticas de Uso
+                    Estadisticas de Uso
                   </h4>
                   <select
                     value={usagePeriod}
@@ -1502,9 +1743,9 @@ function SettingsView() {
                       fontSize: '0.85rem'
                     }}
                   >
-                    <option value="24h">Últimas 24 horas</option>
-                    <option value="7d">Últimos 7 días</option>
-                    <option value="30d">Últimos 30 días</option>
+                    <option value="24h">Ultimas 24 horas</option>
+                    <option value="7d">Ultimos 7 dias</option>
+                    <option value="30d">Ultimos 30 dias</option>
                   </select>
                 </div>
 
@@ -1532,7 +1773,7 @@ function SettingsView() {
                 ) : (
                   <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>
                     <i className="fas fa-chart-line" style={{ fontSize: '2rem', marginBottom: '0.5rem', opacity: 0.5 }}></i>
-                    <div>Sin datos de uso aún</div>
+                    <div>Sin datos de uso aun</div>
                   </div>
                 )}
 
@@ -1565,7 +1806,7 @@ function SettingsView() {
                 )}
               </div>
 
-              {/* Configuración de modelo y temperatura */}
+              {/* Configuracion de modelo y temperatura */}
               <div style={{
                 padding: '1.5rem',
                 background: 'var(--card-bg)',
@@ -1574,7 +1815,7 @@ function SettingsView() {
               }}>
                 <h4 style={{ margin: '0 0 1rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <i className="fas fa-sliders-h" style={{ color: 'var(--primary-color)' }}></i>
-                  Configuración del Modelo
+                  Configuracion del Modelo
                 </h4>
 
                 <div className="form-group" style={{ marginBottom: '1rem' }}>
@@ -1605,6 +1846,14 @@ function SettingsView() {
                       <option value="gpt-4o">GPT-4o ($5/$15 por 1M tokens)</option>
                       <option value="gpt-4o-mini">GPT-4o Mini ($0.15/$0.60 por 1M tokens)</option>
                       <option value="gpt-4-turbo">GPT-4 Turbo ($10/$30 por 1M tokens)</option>
+                    </optgroup>
+                    <optgroup label="Google (Gemini)">
+                      <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                      <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                    </optgroup>
+                    <optgroup label="Mistral">
+                      <option value="mistral-large-latest">Mistral Large</option>
+                      <option value="mistral-medium-latest">Mistral Medium</option>
                     </optgroup>
                   </select>
                 </div>
@@ -3165,6 +3414,78 @@ function SettingsView() {
                     <i className="fas fa-save"></i> Guardar
                   </button>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* Permisos de Dashboards (solo admin) */}
+          {activeTab === 'dashboards' && isAdmin && (
+            <div className="settings-section">
+              <h3><i className="fas fa-tachometer-alt"></i> {t('dash_permisos_title') || 'Permisos de Dashboards'}</h3>
+              <p className="section-description">Controla qué puede hacer cada rol con los dashboards</p>
+
+              {loadingDashPermisos ? (
+                <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                  <i className="fas fa-spinner fa-spin"></i> Cargando permisos...
+                </div>
+              ) : (
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '1rem' }}>
+                    <thead>
+                      <tr style={{ borderBottom: '2px solid var(--border-color)' }}>
+                        <th style={{ textAlign: 'left', padding: '0.75rem', color: 'var(--text-primary)' }}>Rol</th>
+                        <th style={{ textAlign: 'center', padding: '0.75rem', color: 'var(--text-primary)' }}>{t('dash_perm_ver') || 'Ver'}</th>
+                        <th style={{ textAlign: 'center', padding: '0.75rem', color: 'var(--text-primary)' }}>{t('dash_perm_crear') || 'Crear'}</th>
+                        <th style={{ textAlign: 'center', padding: '0.75rem', color: 'var(--text-primary)' }}>{t('dash_perm_editar') || 'Editar'}</th>
+                        <th style={{ textAlign: 'center', padding: '0.75rem', color: 'var(--text-primary)' }}>{t('dash_perm_compartir') || 'Compartir'}</th>
+                        <th style={{ textAlign: 'center', padding: '0.75rem', color: 'var(--text-primary)' }}>{t('dash_perm_minisite') || 'Mini-sitio'}</th>
+                        <th style={{ textAlign: 'center', padding: '0.75rem', color: 'var(--text-primary)' }}>{t('dash_perm_max') || 'Máx'}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {dashboardPermisos.map(perm => (
+                        <tr key={perm.rol} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                          <td style={{ padding: '0.75rem', fontWeight: 600, color: 'var(--text-primary)', textTransform: 'capitalize' }}>
+                            {perm.rol}
+                          </td>
+                          {['puede_ver', 'puede_crear', 'puede_editar', 'puede_compartir', 'puede_crear_minisite'].map(campo => (
+                            <td key={campo} style={{ textAlign: 'center', padding: '0.75rem' }}>
+                              <input
+                                type="checkbox"
+                                checked={!!perm[campo]}
+                                onChange={(e) => handleDashPermToggle(perm.rol, campo, e.target.checked)}
+                                style={{ width: 18, height: 18, cursor: 'pointer' }}
+                              />
+                            </td>
+                          ))}
+                          <td style={{ textAlign: 'center', padding: '0.75rem' }}>
+                            <input
+                              type="number"
+                              min={1}
+                              max={999}
+                              value={perm.max_dashboards || 5}
+                              onChange={(e) => handleDashPermToggle(perm.rol, 'max_dashboards', parseInt(e.target.value, 10) || 5)}
+                              style={{
+                                width: 60,
+                                textAlign: 'center',
+                                padding: '0.25rem',
+                                borderRadius: 'var(--border-radius-sm)',
+                                border: '1px solid var(--border-color)',
+                                background: 'var(--bg-secondary)',
+                                color: 'var(--text-primary)'
+                              }}
+                            />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              <div style={{ marginTop: '1rem', padding: '0.75rem', background: 'var(--bg-tertiary)', borderRadius: 'var(--border-radius-sm)', fontSize: 13, color: 'var(--text-secondary)' }}>
+                <i className="fas fa-info-circle" style={{ marginRight: 6 }}></i>
+                Si "Ver" está desmarcado, el Dashboard Creator no aparecerá en el menú para ese rol.
               </div>
             </div>
           )}

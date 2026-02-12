@@ -393,7 +393,19 @@ input[type="checkbox"] {
 #settings-view .view-header {
     width: 100%;
     text-align: center;
-    margin-bottom: 2rem;
+    margin-bottom: 0.5rem;
+    padding: 0;
+}
+
+#settings-view .view-header h2 {
+    font-size: 1.15rem;
+    margin-bottom: 0.1rem;
+    justify-content: center;
+}
+
+#settings-view .view-header p {
+    font-size: 0.8rem;
+    margin: 0;
 }
 
 /* Theme Selector */

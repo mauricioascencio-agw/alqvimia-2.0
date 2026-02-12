@@ -107,6 +107,20 @@
     color: var(--text-secondary, #94a3b8);
 }
 
+/* Delete Controls */
+.delete-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.toolbar-btn.delete-btn:hover:not(:disabled),
+.toolbar-btn.delete-all-btn:hover:not(:disabled) {
+    background: var(--danger-color, #ef4444);
+    border-color: var(--danger-color, #ef4444);
+    color: white;
+}
+
 /* ========================================
    SEARCH BAR
    ======================================== */
@@ -271,6 +285,100 @@
 }
 
 /* ========================================
+   PROJECT TREE
+   ======================================== */
+.project-group {
+    margin-bottom: 2px;
+}
+
+.project-header {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.45rem 0.75rem;
+    cursor: pointer;
+    transition: background 0.2s;
+    user-select: none;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.project-header:hover {
+    background: var(--hover-bg, rgba(37, 99, 235, 0.1));
+}
+
+.project-header.active {
+    background: var(--active-bg, rgba(37, 99, 235, 0.15));
+}
+
+.project-chevron {
+    font-size: 0.6rem;
+    color: var(--text-muted, #64748b);
+    width: 12px;
+    text-align: center;
+    transition: transform 0.2s;
+}
+
+.project-name {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--text-primary, #e2e8f0);
+}
+
+.project-actions {
+    display: flex;
+    gap: 0.15rem;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.project-header:hover .project-actions {
+    opacity: 1;
+}
+
+.project-action-btn {
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    color: var(--text-muted, #64748b);
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    transition: all 0.2s;
+}
+
+.project-action-btn:hover {
+    background: var(--primary-color, #2563eb);
+    color: white;
+}
+
+.project-action-btn.delete:hover {
+    background: var(--danger-color, #ef4444);
+    color: white;
+}
+
+.project-files {
+    padding-left: 0.5rem;
+}
+
+.project-files .file-item {
+    padding-left: 1.75rem;
+}
+
+.empty-project-hint {
+    padding: 0.4rem 1.75rem;
+    font-size: 0.75rem;
+    color: var(--text-muted, #64748b);
+    font-style: italic;
+}
+
+/* ========================================
    EDITOR PANEL
    ======================================== */
 .editor-panel {
@@ -366,73 +474,7 @@
     background: var(--bg-primary, #0f172a);
 }
 
-.line-numbers {
-    padding: 1rem 0.5rem;
-    background: var(--bg-secondary, #1e293b);
-    color: var(--text-muted, #64748b);
-    font-family: 'Fira Code', 'Consolas', 'Monaco', monospace;
-    font-size: inherit;
-    line-height: 1.5;
-    text-align: right;
-    user-select: none;
-    border-right: 1px solid var(--border-color, #334155);
-    min-width: 50px;
-    overflow: hidden;
-}
-
-.line-number {
-    padding: 0 0.5rem;
-    font-size: 0.85em;
-}
-
-.code-input {
-    flex: 1;
-    padding: 1rem;
-    background: transparent;
-    color: var(--text-primary, #e2e8f0);
-    border: none;
-    outline: none;
-    font-family: 'Fira Code', 'Consolas', 'Monaco', monospace;
-    line-height: 1.5;
-    resize: none;
-    tab-size: 4;
-    overflow: auto;
-}
-
-.code-input::selection {
-    background: var(--primary-color, #2563eb);
-    color: white;
-}
-
-/* Minimap */
-.editor-minimap {
-    width: 100px;
-    background: var(--bg-secondary, #1e293b);
-    border-left: 1px solid var(--border-color, #334155);
-    overflow: hidden;
-    position: relative;
-}
-
-.minimap-content {
-    padding: 0.5rem;
-    color: var(--text-muted, #64748b);
-    overflow: hidden;
-    opacity: 0.5;
-}
-
-.minimap-line {
-    overflow: hidden;
-    white-space: nowrap;
-}
-
-.minimap-viewport {
-    position: absolute;
-    left: 0;
-    right: 0;
-    background: rgba(37, 99, 235, 0.2);
-    border: 1px solid var(--primary-color, #2563eb);
-    pointer-events: none;
-}
+/* Monaco Editor handles line numbers, minimap, scrollbars, and code input natively */
 
 /* No File Open */
 .no-file-open {
@@ -465,24 +507,69 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0.25rem 1rem;
-    background: var(--primary-color, #2563eb);
+    padding: 0.4rem 1rem;
+    background: linear-gradient(135deg,
+        rgba(var(--primary-rgb, 37, 99, 235), 0.95),
+        rgba(var(--primary-rgb, 37, 99, 235), 0.7),
+        rgba(var(--primary-rgb, 37, 99, 235), 0.85));
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
     color: white;
     font-size: 0.75rem;
+    font-weight: 500;
     flex-shrink: 0;
+    box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.15);
 }
 
 .status-left,
 .status-right {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 0.35rem;
 }
 
 .status-item {
     display: flex;
     align-items: center;
-    gap: 0.4rem;
+    gap: 0.35rem;
+    padding: 0.25rem 0.7rem;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    color: white;
+    font-weight: 500;
+    letter-spacing: 0.2px;
+    transition: all 0.25s ease;
+    cursor: default;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+.status-item:hover {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.4);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.status-item i {
+    font-size: 0.7rem;
+    filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.3));
+}
+
+/* Primer item (lenguaje) - highlight especial */
+.status-left .status-item:first-child {
+    background: rgba(255, 255, 255, 0.25);
+    border-color: rgba(255, 255, 255, 0.35);
+    font-weight: 600;
+}
+
+/* Ultimo item (guardado) - estado visual */
+.status-right .status-item:last-child {
+    background: rgba(255, 255, 255, 0.25);
+    border-color: rgba(255, 255, 255, 0.35);
+    font-weight: 600;
 }
 
 /* ========================================
@@ -1361,10 +1448,6 @@
 
     .command-grid {
         grid-template-columns: repeat(2, 1fr);
-    }
-
-    .line-numbers {
-        display: none;
     }
 
     .ai-panel {

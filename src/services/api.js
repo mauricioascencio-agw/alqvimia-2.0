@@ -20,8 +20,8 @@ async function request(endpoint, options = {}) {
     const response = await fetch(url, config)
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: 'Error de red' }))
-      throw new Error(error.message || `HTTP Error: ${response.status}`)
+      const errorData = await response.json().catch(() => ({}))
+      throw new Error(errorData.error || errorData.message || `HTTP Error: ${response.status}`)
     }
 
     return await response.json()
@@ -114,7 +114,9 @@ export const videoConferenceService = {
 export const aiService = {
   loadConfig: () => api.get('/api/ai-config/load'),
   saveConfig: (config) => api.post('/api/ai-config/save', config),
-  testConnection: (provider) => api.post('/api/ai-config/test', provider)
+  testConnection: (provider) => api.post('/api/ai-config/test', provider),
+  chat: (message, images, history) => api.post('/api/ai/chat', { message, images, history }),
+  status: () => api.get('/api/ai/status')
 }
 
 // Servicio para acciones del sistema (RPA Workflows)
@@ -192,6 +194,21 @@ export const systemService = {
   // Mostrar InputBox nativo de Windows
   inputDialog: (title, message = '', defaultValue = '') =>
     api.post('/api/system/input-dialog', { title, message, defaultValue })
+}
+
+// Dashboard Creator service (uses authFetch from AuthContext)
+export const dashboardService = {
+  getAll: () => api.get('/api/dashboards'),
+  getById: (id) => api.get(`/api/dashboards/${id}`),
+  create: (data) => api.post('/api/dashboards', data),
+  update: (id, data) => api.put(`/api/dashboards/${id}`, data),
+  delete: (id) => api.delete(`/api/dashboards/${id}`),
+  duplicate: (id) => api.post(`/api/dashboards/${id}/duplicate`),
+  getPermisos: () => api.get('/api/dashboards/permisos'),
+  updatePermisos: (rol, permisos) => api.put('/api/dashboards/permisos', { rol, permisos }),
+  getWidgetData: (tipo, config = {}) => api.post(`/api/dashboards/widget-data/${tipo}`, config),
+  // Helper: build full URL for authFetch usage
+  url: (path = '') => `${API_BASE}/api/dashboards${path}`
 }
 
 export default api

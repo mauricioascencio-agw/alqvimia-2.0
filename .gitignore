@@ -34,3 +34,7 @@ id_rsa*
 *.tmp
 *.temp
 nul
+~$*
+
+# Downloads folder
+Descargas/

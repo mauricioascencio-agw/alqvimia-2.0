@@ -102,7 +102,8 @@ router.post('/', async (req, res) => {
       pasos = [],
       variables = {},
       configuracion = {},
-      usuario_creador_id = 1
+      usuario_creador_id = 1,
+      carpeta_id = null
     } = req.body
 
     if (!nombre) {
@@ -122,7 +123,8 @@ router.post('/', async (req, res) => {
       pasos,
       variables,
       configuracion,
-      usuario_creador_id
+      usuario_creador_id,
+      carpeta_id
     })
 
     res.status(201).json({

@@ -1,20 +1,112 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import Editor from '@monaco-editor/react'
 import { useLanguage } from '../context/LanguageContext'
+
+// Genera tema Monaco a partir de CSS variables del tema activo de Alqvimia
+const createMonacoTheme = () => {
+  const root = document.documentElement
+  const style = getComputedStyle(root)
+  const getVar = (name, fallback) => {
+    const val = style.getPropertyValue(name).trim()
+    return val || fallback
+  }
+
+  const bgPrimary = getVar('--bg-primary', '#0f172a')
+  const bgSecondary = getVar('--bg-secondary', '#1e293b')
+  const textPrimary = getVar('--text-primary', '#e2e8f0')
+  const textSecondary = getVar('--text-secondary', '#94a3b8')
+  const primaryColor = getVar('--primary-color', '#2563eb')
+  const borderColor = getVar('--border-color', '#334155')
+
+  // Detectar si es tema claro
+  const r = parseInt(bgPrimary.replace('#', '').substring(0, 2), 16)
+  const isLight = r > 128
+
+  return {
+    base: isLight ? 'vs' : 'vs-dark',
+    inherit: true,
+    rules: [
+      { token: 'comment', foreground: '6A9955', fontStyle: 'italic' },
+      { token: 'keyword', foreground: 'C586C0' },
+      { token: 'string', foreground: 'CE9178' },
+      { token: 'number', foreground: 'B5CEA8' },
+      { token: 'function', foreground: 'DCDCAA' },
+      { token: 'variable', foreground: '9CDCFE' },
+      { token: 'type', foreground: '4EC9B0' },
+      { token: 'tag', foreground: '569CD6' },
+      { token: 'attribute.name', foreground: '9CDCFE' },
+      { token: 'attribute.value', foreground: 'CE9178' },
+      { token: 'delimiter', foreground: 'D4D4D4' },
+      { token: 'operator', foreground: 'D4D4D4' },
+    ],
+    colors: {
+      'editor.background': bgPrimary,
+      'editor.foreground': textPrimary,
+      'editor.lineHighlightBackground': bgSecondary,
+      'editor.selectionBackground': primaryColor + '40',
+      'editorLineNumber.foreground': textSecondary,
+      'editorLineNumber.activeForeground': primaryColor,
+      'editorCursor.foreground': primaryColor,
+      'editor.findMatchBackground': primaryColor + '60',
+      'editor.findMatchHighlightBackground': primaryColor + '30',
+      'minimap.background': bgSecondary,
+      'scrollbar.shadow': borderColor,
+      'scrollbarSlider.background': borderColor + '80',
+      'scrollbarSlider.hoverBackground': primaryColor + '80',
+      'scrollbarSlider.activeBackground': primaryColor,
+      'editorWidget.background': bgSecondary,
+      'editorWidget.border': borderColor,
+      'editorSuggestWidget.background': bgSecondary,
+      'editorSuggestWidget.border': borderColor,
+      'editorSuggestWidget.foreground': textPrimary,
+      'editorSuggestWidget.highlightForeground': primaryColor,
+      'editorSuggestWidget.selectedBackground': primaryColor + '30',
+      'input.background': bgPrimary,
+      'input.foreground': textPrimary,
+      'input.border': borderColor,
+      'focusBorder': primaryColor,
+      'list.activeSelectionBackground': primaryColor + '40',
+      'list.hoverBackground': bgSecondary,
+    }
+  }
+}
 
 function CodeEditorView() {
   const { t } = useLanguage()
-  // Estado de archivos y editor
-  const [files, setFiles] = useState(() => {
-    const saved = localStorage.getItem('alqvimia_code_files')
-    return saved ? JSON.parse(saved) : [
-      { id: 1, name: 'main.js', language: 'javascript', content: '// Bienvenido al Editor de Código\n// Usa comandos de IA con Ctrl+I o el panel lateral\n\nconsole.log("Hello, Alqvimia!");', saved: true },
-      { id: 2, name: 'styles.css', language: 'css', content: '/* Estilos del proyecto */\n\n.container {\n  display: flex;\n  justify-content: center;\n}', saved: true },
-      { id: 3, name: 'index.html', language: 'html', content: '<!DOCTYPE html>\n<html lang="es">\n<head>\n  <meta charset="UTF-8">\n  <title>Mi Proyecto</title>\n</head>\n<body>\n  <h1>Hola Mundo</h1>\n</body>\n</html>', saved: true }
-    ]
+  // Estado de proyectos y editor
+  const [projects, setProjects] = useState(() => {
+    const savedProjects = localStorage.getItem('alqvimia_code_projects')
+    if (savedProjects) return JSON.parse(savedProjects)
+    // Migrar formato viejo
+    const savedFiles = localStorage.getItem('alqvimia_code_files')
+    if (savedFiles) {
+      localStorage.removeItem('alqvimia_code_files')
+      return [{ id: 1, name: 'Mi Proyecto', expanded: true, files: JSON.parse(savedFiles) }]
+    }
+    return [{
+      id: 1, name: 'Mi Proyecto', expanded: true,
+      files: [
+        { id: 1, name: 'main.js', language: 'javascript', content: '// Bienvenido al Editor de Código\n// Usa comandos de IA con Ctrl+I o el panel lateral\n\nconsole.log("Hello, Alqvimia!");', saved: true },
+        { id: 2, name: 'styles.css', language: 'css', content: '/* Estilos del proyecto */\n\n.container {\n  display: flex;\n  justify-content: center;\n}', saved: true },
+        { id: 3, name: 'index.html', language: 'html', content: '<!DOCTYPE html>\n<html lang="es">\n<head>\n  <meta charset="UTF-8">\n  <title>Mi Proyecto</title>\n</head>\n<body>\n  <h1>Hola Mundo</h1>\n</body>\n</html>', saved: true }
+      ]
+    }]
   })
 
-  const [activeFileId, setActiveFileId] = useState(files[0]?.id || null)
+  const [activeProjectId, setActiveProjectId] = useState(() => {
+    const saved = localStorage.getItem('alqvimia_code_projects')
+    if (saved) { const p = JSON.parse(saved); return p[0]?.id || null }
+    return 1
+  })
+  const [activeFileId, setActiveFileId] = useState(() => {
+    const saved = localStorage.getItem('alqvimia_code_projects')
+    if (saved) { const p = JSON.parse(saved); return p[0]?.files[0]?.id || null }
+    return 1
+  })
   const [showNewFileModal, setShowNewFileModal] = useState(false)
+  const [showNewProjectModal, setShowNewProjectModal] = useState(false)
+  const [newProjectName, setNewProjectName] = useState('')
+  const [addFileToProjectId, setAddFileToProjectId] = useState(null)
   const [showAIPanel, setShowAIPanel] = useState(true)
   const [showAICommandModal, setShowAICommandModal] = useState(false)
   const [aiPrompt, setAiPrompt] = useState('')
@@ -44,7 +136,8 @@ function CodeEditorView() {
   const [dictationBuffer, setDictationBuffer] = useState('')
 
   const editorRef = useRef(null)
-  const textareaRef = useRef(null)
+  const monacoEditorRef = useRef(null)
+  const monacoInstanceRef = useRef(null)
   const recognitionRef = useRef(null)
   const aiPromptRef = useRef(null)
   const [dictationTarget, setDictationTarget] = useState('aiPrompt') // 'editor' o 'aiPrompt' - default to aiPrompt
@@ -94,15 +187,24 @@ function CodeEditorView() {
     { id: 'fix', label: 'Corregir error', icon: 'fa-wrench', prompt: 'Corrige el siguiente error en el código:' }
   ]
 
-  // Archivo activo
-  const activeFile = useMemo(() => {
-    return files.find(f => f.id === activeFileId) || null
-  }, [files, activeFileId])
+  // Todos los archivos aplanados con projectId
+  const allFiles = useMemo(() => {
+    return projects.flatMap(p => p.files.map(f => ({ ...f, projectId: p.id, projectName: p.name })))
+  }, [projects])
 
-  // Guardar archivos en localStorage
+  // Archivo y proyecto activo
+  const activeFile = useMemo(() => {
+    return allFiles.find(f => f.id === activeFileId) || null
+  }, [allFiles, activeFileId])
+
+  const activeProject = useMemo(() => {
+    return projects.find(p => p.id === activeProjectId) || null
+  }, [projects, activeProjectId])
+
+  // Guardar proyectos en localStorage
   useEffect(() => {
-    localStorage.setItem('alqvimia_code_files', JSON.stringify(files))
-  }, [files])
+    localStorage.setItem('alqvimia_code_projects', JSON.stringify(projects))
+  }, [projects])
 
   // Mantener el ref sincronizado con el state del target de dictado
   useEffect(() => {
@@ -208,37 +310,25 @@ function CodeEditorView() {
       return
     }
 
-    // Destino: editor de código
-    if (!textareaRef.current) return
+    // Destino: editor de código (Monaco)
+    if (!monacoEditorRef.current || !monacoInstanceRef.current) return
 
-    const textarea = textareaRef.current
-    const start = textarea.selectionStart
-    const end = textarea.selectionEnd
+    const editor = monacoEditorRef.current
+    const monaco = monacoInstanceRef.current
+    const selection = editor.getSelection()
 
-    // Obtener el contenido actual del archivo activo
-    setFiles(prev => {
-      const currentActiveFile = prev.find(f => f.id === activeFileId)
-      if (!currentActiveFile) return prev
+    editor.executeEdits('voice-dictation', [{
+      range: new monaco.Range(
+        selection.startLineNumber,
+        selection.startColumn,
+        selection.endLineNumber,
+        selection.endColumn
+      ),
+      text: text,
+      forceMoveMarkers: true
+    }])
 
-      const currentContent = currentActiveFile.content
-      const newContent = currentContent.substring(0, start) + text + currentContent.substring(end)
-
-      return prev.map(f =>
-        f.id === activeFileId
-          ? { ...f, content: newContent, saved: false }
-          : f
-      )
-    })
-
-    // Mover el cursor al final del texto insertado
-    setTimeout(() => {
-      if (textareaRef.current) {
-        const newPosition = start + text.length
-        textareaRef.current.selectionStart = newPosition
-        textareaRef.current.selectionEnd = newPosition
-        textareaRef.current.focus()
-      }
-    }, 0)
+    editor.focus()
   }, [activeFileId])
 
   // Mantener la ref actualizada con la última versión de la función
@@ -308,10 +398,15 @@ function CodeEditorView() {
     // Dictado de código
     else if (command.startsWith('escribir ') || command.startsWith('dictar ')) {
       const textToWrite = command.replace(/^(escribir |dictar )/, '')
-      if (textareaRef.current && activeFile) {
-        const start = textareaRef.current.selectionStart
-        const newContent = activeFile.content.substring(0, start) + textToWrite + activeFile.content.substring(start)
-        setFiles(prev => prev.map(f => f.id === activeFileId ? { ...f, content: newContent, saved: false } : f))
+      if (monacoEditorRef.current && monacoInstanceRef.current && activeFile) {
+        const editor = monacoEditorRef.current
+        const monaco = monacoInstanceRef.current
+        const position = editor.getPosition()
+        editor.executeEdits('voice-command', [{
+          range: new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column),
+          text: textToWrite,
+          forceMoveMarkers: true
+        }])
         speak('Texto insertado')
       }
     }
@@ -375,21 +470,18 @@ function CodeEditorView() {
         e.preventDefault()
         setShowAICommandModal(true)
       }
-      // Ctrl+N = Nuevo archivo
+      // Ctrl+N = Nuevo proyecto
       if (e.ctrlKey && e.key === 'n') {
         e.preventDefault()
-        setShowNewFileModal(true)
+        setShowNewProjectModal(true)
       }
-      // Ctrl+F = Buscar
-      if (e.ctrlKey && e.key === 'f') {
-        e.preventDefault()
-        setShowSearch(true)
-      }
+      // Ctrl+F = Monaco maneja su propio buscador nativo
       // Escape = Cerrar modales
       if (e.key === 'Escape') {
         setShowSearch(false)
         setShowAICommandModal(false)
         setShowNewFileModal(false)
+        setShowNewProjectModal(false)
       }
       // Ctrl++ = Aumentar fuente
       if (e.ctrlKey && e.key === '+') {
@@ -407,46 +499,57 @@ function CodeEditorView() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [activeFile])
 
-  // Actualizar posición del cursor
-  const handleCursorChange = useCallback(() => {
-    if (textareaRef.current) {
-      const textarea = textareaRef.current
-      const text = textarea.value.substring(0, textarea.selectionStart)
-      const lines = text.split('\n')
-      const line = lines.length
-      const column = lines[lines.length - 1].length + 1
-      setCursorPosition({ line, column })
+  // Handler de montaje de Monaco Editor
+  const handleEditorMount = useCallback((editor, monaco) => {
+    monacoEditorRef.current = editor
+    monacoInstanceRef.current = monaco
 
-      // Capturar texto seleccionado
-      const start = textarea.selectionStart
-      const end = textarea.selectionEnd
-      if (start !== end) {
-        setSelectedText(textarea.value.substring(start, end))
-      } else {
-        setSelectedText('')
+    // Registrar y aplicar tema
+    monaco.editor.defineTheme('alqvimia-theme', createMonacoTheme())
+    monaco.editor.setTheme('alqvimia-theme')
+
+    // Track cursor position
+    editor.onDidChangeCursorPosition((e) => {
+      setCursorPosition({
+        line: e.position.lineNumber,
+        column: e.position.column
+      })
+    })
+
+    // Track selection
+    editor.onDidChangeCursorSelection((e) => {
+      const model = editor.getModel()
+      if (model) {
+        const selection = model.getValueInRange(e.selection)
+        setSelectedText(selection || '')
       }
-    }
+    })
+
+    // Set dictation target on focus
+    editor.onDidFocusEditorText(() => {
+      setDictationTarget('editor')
+    })
+
+    editor.focus()
   }, [])
 
-  // Actualizar contenido del archivo
-  const handleContentChange = useCallback((e) => {
-    const newContent = e.target.value
-    setFiles(prev => prev.map(f =>
-      f.id === activeFileId
-        ? { ...f, content: newContent, saved: false }
-        : f
-    ))
+  // Actualizar contenido del archivo (Monaco pasa valor directo, no event)
+  const handleContentChange = useCallback((newContent) => {
+    if (newContent === undefined) return
+    setProjects(prev => prev.map(p => ({
+      ...p,
+      files: p.files.map(f => f.id === activeFileId ? { ...f, content: newContent, saved: false } : f)
+    })))
   }, [activeFileId])
 
   // Guardar archivo
   const handleSaveFile = useCallback(() => {
     if (!activeFile) return
 
-    setFiles(prev => prev.map(f =>
-      f.id === activeFileId
-        ? { ...f, saved: true }
-        : f
-    ))
+    setProjects(prev => prev.map(p => ({
+      ...p,
+      files: p.files.map(f => f.id === activeFileId ? { ...f, saved: true } : f)
+    })))
 
     // Simular guardado (en producción esto iría al backend)
     setConsoleOutput(prev => [...prev, {
@@ -471,12 +574,21 @@ function CodeEditorView() {
       saved: false
     }
 
-    setFiles(prev => [...prev, newFile])
+    const targetProjectId = addFileToProjectId || activeProjectId
+    if (!targetProjectId) return
+
+    setProjects(prev => prev.map(p =>
+      p.id === targetProjectId
+        ? { ...p, files: [...p.files, newFile], expanded: true }
+        : p
+    ))
     setActiveFileId(newFile.id)
+    setActiveProjectId(targetProjectId)
     setShowNewFileModal(false)
     setNewFileName('')
     setNewFileLanguage('javascript')
-  }, [newFileName, newFileLanguage])
+    setAddFileToProjectId(null)
+  }, [newFileName, newFileLanguage, addFileToProjectId, activeProjectId])
 
   // Contenido por defecto según lenguaje
   const getDefaultContent = (lang) => {
@@ -500,7 +612,7 @@ function CodeEditorView() {
   // Cerrar archivo
   const handleCloseFile = useCallback((fileId, e) => {
     e.stopPropagation()
-    const file = files.find(f => f.id === fileId)
+    const file = allFiles.find(f => f.id === fileId)
 
     if (file && !file.saved) {
       if (!confirm(`¿Cerrar ${file.name} sin guardar los cambios?`)) {
@@ -508,13 +620,17 @@ function CodeEditorView() {
       }
     }
 
-    setFiles(prev => prev.filter(f => f.id !== fileId))
+    setProjects(prev => prev.map(p => ({
+      ...p,
+      files: p.files.filter(f => f.id !== fileId)
+    })))
 
     if (activeFileId === fileId) {
-      const remaining = files.filter(f => f.id !== fileId)
+      const remaining = allFiles.filter(f => f.id !== fileId)
       setActiveFileId(remaining[0]?.id || null)
+      if (remaining[0]) setActiveProjectId(remaining[0].projectId)
     }
-  }, [files, activeFileId])
+  }, [allFiles, activeFileId])
 
   // Ejecutar comando de IA
   const executeAICommand = useCallback(async (command, customPrompt = '') => {
@@ -579,20 +695,93 @@ function CodeEditorView() {
     const codeMatch = aiResponse.match(/```[\w]*\n([\s\S]*?)```/)
     const codeToInsert = codeMatch ? codeMatch[1] : aiResponse
 
-    const textarea = textareaRef.current
-    if (textarea) {
-      const start = textarea.selectionStart
-      const end = textarea.selectionEnd
-      const currentContent = activeFile.content
-      const newContent = currentContent.substring(0, start) + '\n' + codeToInsert + '\n' + currentContent.substring(end)
+    if (monacoEditorRef.current && monacoInstanceRef.current) {
+      const editor = monacoEditorRef.current
+      const monaco = monacoInstanceRef.current
+      const selection = editor.getSelection()
 
-      setFiles(prev => prev.map(f =>
-        f.id === activeFileId
-          ? { ...f, content: newContent, saved: false }
-          : f
-      ))
+      editor.executeEdits('ai-insert', [{
+        range: new monaco.Range(
+          selection.startLineNumber,
+          selection.startColumn,
+          selection.endLineNumber,
+          selection.endColumn
+        ),
+        text: '\n' + codeToInsert + '\n',
+        forceMoveMarkers: true
+      }])
+
+      editor.focus()
     }
   }, [aiResponse, activeFile, activeFileId])
+
+  // Eliminar archivo activo o todos los proyectos
+  const handleDeleteFiles = useCallback((deleteAll = false) => {
+    if (deleteAll) {
+      if (!confirm('¿Eliminar TODOS los proyectos? Esta acción no se puede deshacer.')) return
+      setProjects([])
+      setActiveFileId(null)
+      setActiveProjectId(null)
+      localStorage.removeItem('alqvimia_code_projects')
+      setConsoleOutput(prev => [...prev, {
+        type: 'info',
+        message: 'Todos los proyectos eliminados',
+        timestamp: new Date().toLocaleTimeString()
+      }])
+    } else {
+      if (!activeFile) return
+      if (!confirm(`¿Eliminar "${activeFile.name}"?`)) return
+      setProjects(prev => prev.map(p => ({
+        ...p,
+        files: p.files.filter(f => f.id !== activeFileId)
+      })))
+      const remaining = allFiles.filter(f => f.id !== activeFileId)
+      setActiveFileId(remaining[0]?.id || null)
+      setConsoleOutput(prev => [...prev, {
+        type: 'info',
+        message: `Archivo ${activeFile.name} eliminado`,
+        timestamp: new Date().toLocaleTimeString()
+      }])
+    }
+  }, [activeFile, activeFileId, allFiles])
+
+  // Eliminar proyecto completo
+  const handleDeleteProject = useCallback((projectId, e) => {
+    e.stopPropagation()
+    const project = projects.find(p => p.id === projectId)
+    if (!project) return
+    if (!confirm(`¿Eliminar el proyecto "${project.name}" y todos sus archivos?`)) return
+
+    setProjects(prev => prev.filter(p => p.id !== projectId))
+
+    if (activeFile && activeFile.projectId === projectId) {
+      const remaining = allFiles.filter(f => f.projectId !== projectId)
+      setActiveFileId(remaining[0]?.id || null)
+      setActiveProjectId(remaining[0]?.projectId || null)
+    }
+  }, [projects, activeFile, allFiles])
+
+  // Crear proyecto
+  const handleCreateProject = useCallback(() => {
+    if (!newProjectName.trim()) return
+    const newProject = {
+      id: Date.now(),
+      name: newProjectName.trim(),
+      expanded: true,
+      files: []
+    }
+    setProjects(prev => [...prev, newProject])
+    setActiveProjectId(newProject.id)
+    setShowNewProjectModal(false)
+    setNewProjectName('')
+  }, [newProjectName])
+
+  // Toggle expandir/colapsar proyecto
+  const toggleProjectExpanded = useCallback((projectId) => {
+    setProjects(prev => prev.map(p =>
+      p.id === projectId ? { ...p, expanded: !p.expanded } : p
+    ))
+  }, [])
 
   // Exportar a Workflow
   const exportToWorkflow = useCallback(() => {
@@ -652,40 +841,40 @@ function CodeEditorView() {
     return lang?.color || '#888'
   }
 
-  // Renderizar números de línea
-  const renderLineNumbers = useMemo(() => {
-    if (!activeFile || !lineNumbers) return null
-    const lines = activeFile.content.split('\n')
-    return lines.map((_, i) => (
-      <div key={i} className="line-number">{i + 1}</div>
-    ))
-  }, [activeFile?.content, lineNumbers])
+  // Sincronizar tema Monaco cuando cambia el tema de la app
+  useEffect(() => {
+    if (monacoEditorRef.current && monacoInstanceRef.current) {
+      const newTheme = createMonacoTheme()
+      monacoInstanceRef.current.editor.defineTheme('alqvimia-theme', newTheme)
+      monacoInstanceRef.current.editor.setTheme('alqvimia-theme')
+    }
+  }, [theme])
 
-  // Minimap
-  const renderMinimap = useMemo(() => {
-    if (!activeFile || !showMinimap) return null
-    return (
-      <div className="editor-minimap">
-        <div className="minimap-content" style={{ fontSize: '2px', lineHeight: '3px' }}>
-          {activeFile.content.split('\n').map((line, i) => (
-            <div key={i} className="minimap-line">{line.substring(0, 100)}</div>
-          ))}
-        </div>
-        <div className="minimap-viewport" style={{
-          top: `${(cursorPosition.line / (activeFile.content.split('\n').length || 1)) * 100}%`,
-          height: '20%'
-        }} />
-      </div>
-    )
-  }, [activeFile?.content, showMinimap, cursorPosition.line])
+  // Observer para detectar cambios de tema en data-theme del HTML
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      if (monacoEditorRef.current && monacoInstanceRef.current) {
+        const newTheme = createMonacoTheme()
+        monacoInstanceRef.current.editor.defineTheme('alqvimia-theme', newTheme)
+        monacoInstanceRef.current.editor.setTheme('alqvimia-theme')
+      }
+    })
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme']
+    })
+
+    return () => observer.disconnect()
+  }, [])
 
   return (
     <div className="code-editor-container">
       {/* Toolbar */}
       <div className="editor-toolbar">
         <div className="toolbar-left">
-          <button className="toolbar-btn" onClick={() => setShowNewFileModal(true)} title={t('ce_new_file')}>
-            <i className="fas fa-plus"></i>
+          <button className="toolbar-btn" onClick={() => setShowNewProjectModal(true)} title="Nuevo Proyecto">
+            <i className="fas fa-folder-plus"></i>
             <span>{t('wf_new')}</span>
           </button>
           <button className="toolbar-btn" onClick={handleSaveFile} disabled={!activeFile || activeFile.saved} title={t('ce_save_file')}>
@@ -736,6 +925,16 @@ function CodeEditorView() {
               )}
             </div>
           )}
+          <div className="toolbar-divider"></div>
+          <div className="delete-controls">
+            <button className="toolbar-btn delete-btn" onClick={() => handleDeleteFiles(false)} disabled={!activeFile} title="Eliminar archivo actual">
+              <i className="fas fa-file-minus"></i>
+              <span>Eliminar</span>
+            </button>
+            <button className="toolbar-btn delete-all-btn" onClick={() => handleDeleteFiles(true)} disabled={projects.length === 0} title="Eliminar todos los proyectos">
+              <i className="fas fa-trash-alt"></i>
+            </button>
+          </div>
         </div>
 
         <div className="toolbar-right">
@@ -780,31 +979,66 @@ function CodeEditorView() {
 
       {/* Main Editor Area */}
       <div className="editor-main">
-        {/* File Explorer */}
+        {/* File Explorer - Project Tree */}
         <div className="file-explorer">
           <div className="explorer-header">
-            <i className="fas fa-folder-open"></i>
-            <span>Archivos</span>
+            <i className="fas fa-layer-group"></i>
+            <span>Proyectos</span>
           </div>
           <div className="file-list">
-            {files.map(file => (
-              <div
-                key={file.id}
-                className={`file-item ${activeFileId === file.id ? 'active' : ''} ${!file.saved ? 'unsaved' : ''}`}
-                onClick={() => setActiveFileId(file.id)}
-              >
-                <i className={`fab ${getLanguageIcon(file.language)}`} style={{ color: getLanguageColor(file.language) }}></i>
-                <span className="file-name">{file.name}</span>
-                {!file.saved && <span className="unsaved-dot">●</span>}
-                <button className="close-file-btn" onClick={(e) => handleCloseFile(file.id, e)}>
-                  <i className="fas fa-times"></i>
-                </button>
+            {projects.map(project => (
+              <div key={project.id} className="project-group">
+                <div
+                  className={`project-header ${activeProjectId === project.id ? 'active' : ''}`}
+                  onClick={() => toggleProjectExpanded(project.id)}
+                >
+                  <i className={`fas fa-chevron-${project.expanded ? 'down' : 'right'} project-chevron`}></i>
+                  <i className="fas fa-folder" style={{ color: '#f59e0b' }}></i>
+                  <span className="project-name">{project.name}</span>
+                  <div className="project-actions">
+                    <button
+                      className="project-action-btn"
+                      onClick={(e) => { e.stopPropagation(); setAddFileToProjectId(project.id); setShowNewFileModal(true) }}
+                      title="Agregar archivo"
+                    >
+                      <i className="fas fa-plus"></i>
+                    </button>
+                    <button
+                      className="project-action-btn delete"
+                      onClick={(e) => handleDeleteProject(project.id, e)}
+                      title="Eliminar proyecto"
+                    >
+                      <i className="fas fa-trash"></i>
+                    </button>
+                  </div>
+                </div>
+                {project.expanded && (
+                  <div className="project-files">
+                    {project.files.map(file => (
+                      <div
+                        key={file.id}
+                        className={`file-item ${activeFileId === file.id ? 'active' : ''} ${!file.saved ? 'unsaved' : ''}`}
+                        onClick={() => { setActiveFileId(file.id); setActiveProjectId(project.id) }}
+                      >
+                        <i className={`fab ${getLanguageIcon(file.language)}`} style={{ color: getLanguageColor(file.language) }}></i>
+                        <span className="file-name">{file.name}</span>
+                        {!file.saved && <span className="unsaved-dot">●</span>}
+                        <button className="close-file-btn" onClick={(e) => handleCloseFile(file.id, e)}>
+                          <i className="fas fa-times"></i>
+                        </button>
+                      </div>
+                    ))}
+                    {project.files.length === 0 && (
+                      <div className="empty-project-hint">Sin archivos</div>
+                    )}
+                  </div>
+                )}
               </div>
             ))}
           </div>
-          <button className="add-file-btn" onClick={() => setShowNewFileModal(true)}>
-            <i className="fas fa-plus"></i>
-            <span>Nuevo archivo</span>
+          <button className="add-file-btn" onClick={() => setShowNewProjectModal(true)}>
+            <i className="fas fa-folder-plus"></i>
+            <span>Nuevo Proyecto</span>
           </button>
         </div>
 
@@ -812,11 +1046,11 @@ function CodeEditorView() {
         <div className="editor-panel">
           {/* Tabs */}
           <div className="editor-tabs">
-            {files.map(file => (
+            {allFiles.map(file => (
               <div
                 key={file.id}
                 className={`editor-tab ${activeFileId === file.id ? 'active' : ''}`}
-                onClick={() => setActiveFileId(file.id)}
+                onClick={() => { setActiveFileId(file.id); setActiveProjectId(file.projectId) }}
               >
                 <i className={`fab ${getLanguageIcon(file.language)}`} style={{ color: getLanguageColor(file.language) }}></i>
                 <span>{file.name}</span>
@@ -844,41 +1078,69 @@ function CodeEditorView() {
             </div>
           )}
 
-          {/* Code Editor */}
+          {/* Code Editor - Monaco */}
           <div className="code-area" ref={editorRef}>
             {activeFile ? (
-              <>
-                {lineNumbers && (
-                  <div className="line-numbers">
-                    {renderLineNumbers}
-                  </div>
-                )}
-                <textarea
-                  ref={textareaRef}
-                  className="code-input"
-                  value={activeFile.content}
-                  onChange={handleContentChange}
-                  onSelect={handleCursorChange}
-                  onClick={handleCursorChange}
-                  onKeyUp={handleCursorChange}
-                  onFocus={() => setDictationTarget('editor')}
-                  style={{
-                    fontSize: `${fontSize}px`,
-                    whiteSpace: wordWrap ? 'pre-wrap' : 'pre',
-                    overflowX: wordWrap ? 'hidden' : 'auto'
-                  }}
-                  spellCheck={false}
-                />
-                {renderMinimap}
-              </>
+              <Editor
+                height="100%"
+                language={activeFile.language}
+                value={activeFile.content}
+                onChange={handleContentChange}
+                onMount={handleEditorMount}
+                theme="alqvimia-theme"
+                options={{
+                  fontSize: fontSize,
+                  fontFamily: "'Fira Code', 'Cascadia Code', 'Consolas', 'Monaco', monospace",
+                  fontLigatures: true,
+                  wordWrap: wordWrap ? 'on' : 'off',
+                  lineNumbers: lineNumbers ? 'on' : 'off',
+                  minimap: {
+                    enabled: showMinimap,
+                    scale: 1,
+                    showSlider: 'mouseover',
+                    maxColumn: 100
+                  },
+                  scrollBeyondLastLine: false,
+                  automaticLayout: true,
+                  tabSize: 2,
+                  insertSpaces: true,
+                  detectIndentation: true,
+                  renderWhitespace: 'selection',
+                  scrollbar: {
+                    vertical: 'auto',
+                    horizontal: 'auto',
+                    verticalScrollbarSize: 8,
+                    horizontalScrollbarSize: 8,
+                    useShadows: true
+                  },
+                  contextmenu: true,
+                  quickSuggestions: true,
+                  suggestOnTriggerCharacters: true,
+                  acceptSuggestionOnEnter: 'on',
+                  folding: true,
+                  foldingStrategy: 'auto',
+                  showFoldingControls: 'mouseover',
+                  matchBrackets: 'always',
+                  autoClosingBrackets: 'always',
+                  autoClosingQuotes: 'always',
+                  formatOnPaste: true,
+                  formatOnType: true,
+                  smoothScrolling: true,
+                  cursorBlinking: 'smooth',
+                  cursorSmoothCaretAnimation: 'on',
+                  bracketPairColorization: { enabled: true },
+                  guides: { bracketPairs: true, indentation: true },
+                  padding: { top: 8, bottom: 8 },
+                }}
+              />
             ) : (
               <div className="no-file-open">
                 <i className="fas fa-file-code"></i>
                 <h3>No hay archivo abierto</h3>
                 <p>Crea un nuevo archivo o selecciona uno existente</p>
-                <button className="btn btn-primary" onClick={() => setShowNewFileModal(true)}>
-                  <i className="fas fa-plus"></i>
-                  Nuevo Archivo
+                <button className="btn btn-primary" onClick={() => setShowNewProjectModal(true)}>
+                  <i className="fas fa-folder-plus"></i>
+                  Nuevo Proyecto
                 </button>
               </div>
             )}
@@ -1108,6 +1370,43 @@ function CodeEditorView() {
               <button className="btn btn-primary" onClick={handleCreateFile} disabled={!newFileName.trim()}>
                 <i className="fas fa-plus"></i>
                 Crear Archivo
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Nuevo Proyecto */}
+      {showNewProjectModal && (
+        <div className="modal-overlay" onClick={() => setShowNewProjectModal(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3><i className="fas fa-folder-plus"></i> Nuevo Proyecto</h3>
+              <button className="modal-close" onClick={() => setShowNewProjectModal(false)}>
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="form-group">
+                <label><i className="fas fa-folder"></i> Nombre del proyecto</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  value={newProjectName}
+                  onChange={(e) => setNewProjectName(e.target.value)}
+                  placeholder="Mi Proyecto"
+                  autoFocus
+                  onKeyDown={(e) => { if (e.key === 'Enter' && newProjectName.trim()) handleCreateProject() }}
+                />
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-secondary" onClick={() => setShowNewProjectModal(false)}>
+                Cancelar
+              </button>
+              <button className="btn btn-primary" onClick={handleCreateProject} disabled={!newProjectName.trim()}>
+                <i className="fas fa-plus"></i>
+                Crear Proyecto
               </button>
             </div>
           </div>

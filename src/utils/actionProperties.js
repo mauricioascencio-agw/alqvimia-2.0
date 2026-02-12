@@ -1009,6 +1009,377 @@ const BASE_ACTION_PROPERTIES = {
     ]
   },
 
+  ai_image_analysis: {
+    title: 'Análisis de Imagen',
+    icon: 'fa-image',
+    description: 'Analiza imágenes usando inteligencia artificial para detectar objetos, texto, rostros y más',
+    fields: [
+      {
+        key: 'source',
+        label: 'Origen de la imagen',
+        type: 'select',
+        required: true,
+        default: 'file',
+        options: [
+          { value: 'file', label: 'Archivo local' },
+          { value: 'url', label: 'URL de imagen' },
+          { value: 'screenshot', label: 'Captura de pantalla' },
+          { value: 'variable', label: 'Variable (Base64)' },
+          { value: 'clipboard', label: 'Portapapeles' }
+        ]
+      },
+      {
+        key: 'imagePath',
+        label: 'Ruta de imagen',
+        type: 'fileWithVariable',
+        required: true,
+        fileType: 'open',
+        accept: '.png,.jpg,.jpeg,.bmp,.gif,.tiff,.webp',
+        condition: { field: 'source', value: 'file' }
+      },
+      {
+        key: 'imageUrl',
+        label: 'URL de la imagen',
+        type: 'url',
+        required: true,
+        placeholder: 'https://ejemplo.com/imagen.jpg',
+        condition: { field: 'source', value: 'url' }
+      },
+      {
+        key: 'imageVariable',
+        label: 'Variable con imagen',
+        type: 'variableSelect',
+        condition: { field: 'source', value: 'variable' }
+      },
+      {
+        key: 'analysisType',
+        label: 'Tipo de análisis',
+        type: 'multiSelect',
+        default: ['objects'],
+        options: [
+          { value: 'objects', label: 'Detectar objetos' },
+          { value: 'text', label: 'Extraer texto (OCR)' },
+          { value: 'faces', label: 'Detectar rostros' },
+          { value: 'colors', label: 'Análisis de colores' },
+          { value: 'labels', label: 'Etiquetas/Tags' },
+          { value: 'description', label: 'Descripción general' },
+          { value: 'nsfw', label: 'Detección de contenido' },
+          { value: 'barcode', label: 'Códigos de barras/QR' }
+        ]
+      },
+      {
+        key: 'aiProvider',
+        label: 'Proveedor de IA',
+        type: 'select',
+        default: 'openai',
+        options: [
+          { value: 'openai', label: 'OpenAI (GPT-4 Vision)' },
+          { value: 'google', label: 'Google Vision AI' },
+          { value: 'azure', label: 'Azure Computer Vision' },
+          { value: 'aws', label: 'AWS Rekognition' },
+          { value: 'claude', label: 'Claude (Anthropic)' },
+          { value: 'local', label: 'Modelo local (Ollama)' }
+        ]
+      },
+      {
+        key: 'apiKey',
+        label: 'API Key',
+        type: 'password',
+        helpText: 'Clave de API del proveedor seleccionado'
+      },
+      {
+        key: 'prompt',
+        label: 'Instrucciones adicionales',
+        type: 'textarea',
+        rows: 3,
+        placeholder: 'Ej: Describe qué productos aparecen en la imagen y sus precios',
+        helpText: 'Instrucción específica para el análisis (opcional)'
+      },
+      {
+        key: 'language',
+        label: 'Idioma de respuesta',
+        type: 'select',
+        default: 'es',
+        options: [
+          { value: 'es', label: 'Español' },
+          { value: 'en', label: 'Inglés' },
+          { value: 'pt', label: 'Portugués' },
+          { value: 'auto', label: 'Automático' }
+        ]
+      },
+      {
+        key: 'confidence',
+        label: 'Confianza mínima',
+        type: 'slider',
+        default: 0.7,
+        min: 0.1,
+        max: 1,
+        step: 0.05,
+        helpText: 'Solo incluir resultados con esta confianza o superior',
+        advanced: true
+      },
+      {
+        key: 'maxResults',
+        label: 'Máximo de resultados',
+        type: 'number',
+        default: 10,
+        min: 1,
+        max: 100,
+        advanced: true
+      },
+      {
+        key: 'variable',
+        label: 'Guardar resultado en',
+        type: 'variable',
+        required: true,
+        helpText: 'Objeto con: labels[], text, faces[], objects[], description'
+      }
+    ]
+  },
+
+  ai_document_understanding: {
+    title: 'Comprensión de Documentos',
+    icon: 'fa-file-contract',
+    description: 'Analiza documentos complejos (facturas, contratos, formularios) con IA',
+    fields: [
+      {
+        key: 'documentPath',
+        label: 'Documento',
+        type: 'fileWithVariable',
+        required: true,
+        fileType: 'open',
+        accept: '.pdf,.docx,.xlsx,.jpg,.png,.tiff'
+      },
+      {
+        key: 'documentType',
+        label: 'Tipo de documento',
+        type: 'select',
+        default: 'auto',
+        options: [
+          { value: 'auto', label: 'Detectar automáticamente' },
+          { value: 'invoice', label: 'Factura' },
+          { value: 'receipt', label: 'Recibo/Ticket' },
+          { value: 'contract', label: 'Contrato' },
+          { value: 'id_card', label: 'Documento de identidad' },
+          { value: 'form', label: 'Formulario' },
+          { value: 'table', label: 'Tabla/Planilla' },
+          { value: 'letter', label: 'Carta/Correspondencia' }
+        ]
+      },
+      {
+        key: 'extractFields',
+        label: 'Campos a extraer',
+        type: 'tags',
+        placeholder: 'Ej: total, fecha, proveedor, items',
+        helpText: 'Nombres de campos específicos a extraer del documento'
+      },
+      {
+        key: 'aiProvider',
+        label: 'Proveedor',
+        type: 'select',
+        default: 'openai',
+        options: [
+          { value: 'openai', label: 'OpenAI' },
+          { value: 'azure', label: 'Azure Form Recognizer' },
+          { value: 'google', label: 'Google Document AI' },
+          { value: 'aws', label: 'AWS Textract' }
+        ]
+      },
+      {
+        key: 'language',
+        label: 'Idioma del documento',
+        type: 'select',
+        default: 'es',
+        options: [
+          { value: 'es', label: 'Español' },
+          { value: 'en', label: 'Inglés' },
+          { value: 'pt', label: 'Portugués' },
+          { value: 'auto', label: 'Detectar' }
+        ]
+      },
+      {
+        key: 'outputFormat',
+        label: 'Formato de salida',
+        type: 'select',
+        default: 'json',
+        options: [
+          { value: 'json', label: 'JSON estructurado' },
+          { value: 'text', label: 'Texto plano' },
+          { value: 'table', label: 'Tabla (filas/columnas)' },
+          { value: 'keyvalue', label: 'Pares clave-valor' }
+        ]
+      },
+      {
+        key: 'variable',
+        label: 'Guardar resultado en',
+        type: 'variable',
+        required: true
+      }
+    ]
+  },
+
+  ai_extract_entities: {
+    title: 'Extraer Entidades',
+    icon: 'fa-project-diagram',
+    description: 'Extrae entidades nombradas (personas, lugares, fechas, montos) de texto',
+    fields: [
+      {
+        key: 'inputType',
+        label: 'Origen del texto',
+        type: 'select',
+        default: 'text',
+        options: [
+          { value: 'text', label: 'Texto directo' },
+          { value: 'variable', label: 'Variable' },
+          { value: 'file', label: 'Archivo' }
+        ]
+      },
+      {
+        key: 'text',
+        label: 'Texto a analizar',
+        type: 'textarea',
+        rows: 4,
+        condition: { field: 'inputType', value: 'text' }
+      },
+      {
+        key: 'inputVariable',
+        label: 'Variable con texto',
+        type: 'variableSelect',
+        condition: { field: 'inputType', value: 'variable' }
+      },
+      {
+        key: 'filePath',
+        label: 'Archivo',
+        type: 'file',
+        fileType: 'open',
+        accept: '.txt,.pdf,.docx',
+        condition: { field: 'inputType', value: 'file' }
+      },
+      {
+        key: 'entityTypes',
+        label: 'Tipos de entidad a extraer',
+        type: 'multiSelect',
+        default: ['person', 'organization', 'date', 'money'],
+        options: [
+          { value: 'person', label: 'Personas' },
+          { value: 'organization', label: 'Organizaciones' },
+          { value: 'location', label: 'Ubicaciones' },
+          { value: 'date', label: 'Fechas' },
+          { value: 'money', label: 'Montos/Precios' },
+          { value: 'email', label: 'Emails' },
+          { value: 'phone', label: 'Teléfonos' },
+          { value: 'url', label: 'URLs' },
+          { value: 'product', label: 'Productos' },
+          { value: 'custom', label: 'Personalizado' }
+        ]
+      },
+      {
+        key: 'customEntities',
+        label: 'Entidades personalizadas',
+        type: 'tags',
+        placeholder: 'Ej: número de factura, SKU, código postal',
+        condition: { field: 'entityTypes', value: 'custom' },
+        helpText: 'Define tipos de entidad específicos para tu caso'
+      },
+      {
+        key: 'language',
+        label: 'Idioma',
+        type: 'select',
+        default: 'es',
+        options: [
+          { value: 'es', label: 'Español' },
+          { value: 'en', label: 'Inglés' },
+          { value: 'pt', label: 'Portugués' },
+          { value: 'auto', label: 'Detectar' }
+        ]
+      },
+      {
+        key: 'variable',
+        label: 'Guardar entidades en',
+        type: 'variable',
+        required: true,
+        helpText: 'Array de {type, value, position, confidence}'
+      }
+    ]
+  },
+
+  ai_summarize: {
+    title: 'Resumir Texto',
+    icon: 'fa-compress-alt',
+    description: 'Genera un resumen de texto largo usando IA',
+    fields: [
+      {
+        key: 'inputType',
+        label: 'Origen',
+        type: 'select',
+        default: 'text',
+        options: [
+          { value: 'text', label: 'Texto directo' },
+          { value: 'variable', label: 'Variable' },
+          { value: 'file', label: 'Archivo' },
+          { value: 'url', label: 'Página web' }
+        ]
+      },
+      {
+        key: 'text',
+        label: 'Texto a resumir',
+        type: 'textarea',
+        rows: 5,
+        condition: { field: 'inputType', value: 'text' }
+      },
+      {
+        key: 'inputVariable',
+        label: 'Variable con texto',
+        type: 'variableSelect',
+        condition: { field: 'inputType', value: 'variable' }
+      },
+      {
+        key: 'filePath',
+        label: 'Archivo',
+        type: 'file',
+        fileType: 'open',
+        accept: '.txt,.pdf,.docx,.html',
+        condition: { field: 'inputType', value: 'file' }
+      },
+      {
+        key: 'pageUrl',
+        label: 'URL',
+        type: 'url',
+        placeholder: 'https://...',
+        condition: { field: 'inputType', value: 'url' }
+      },
+      {
+        key: 'summaryLength',
+        label: 'Longitud del resumen',
+        type: 'select',
+        default: 'medium',
+        options: [
+          { value: 'brief', label: 'Breve (1-2 oraciones)' },
+          { value: 'medium', label: 'Medio (1 párrafo)' },
+          { value: 'detailed', label: 'Detallado (varios párrafos)' },
+          { value: 'bullets', label: 'Puntos clave (lista)' }
+        ]
+      },
+      {
+        key: 'language',
+        label: 'Idioma del resumen',
+        type: 'select',
+        default: 'es',
+        options: [
+          { value: 'es', label: 'Español' },
+          { value: 'en', label: 'Inglés' },
+          { value: 'same', label: 'Mismo que el original' }
+        ]
+      },
+      {
+        key: 'variable',
+        label: 'Guardar resumen en',
+        type: 'variable',
+        required: true
+      }
+    ]
+  },
+
   ai_analyze: {
     title: 'Analizar Documento',
     icon: 'fa-search-plus',
@@ -3722,6 +4093,170 @@ const BASE_ACTION_PROPERTIES = {
           { value: 'landscape', label: 'Horizontal' }
         ]
       }
+    ]
+  },
+
+  pdf_merge: {
+    title: 'Unir PDFs',
+    icon: 'fa-object-group',
+    description: 'Combina múltiples archivos PDF en uno solo',
+    fields: [
+      { key: 'files', label: 'Archivos PDF', type: 'tags', required: true, placeholder: 'Rutas de archivos PDF a unir' },
+      { key: 'outputPath', label: 'Archivo de salida', type: 'file', required: true, fileType: 'save', accept: '.pdf' },
+      { key: 'variable', label: 'Guardar ruta en', type: 'variable' }
+    ]
+  },
+  pdf_split: {
+    title: 'Dividir PDF',
+    icon: 'fa-cut',
+    description: 'Divide un PDF en múltiples archivos',
+    fields: [
+      { key: 'filePath', label: 'Archivo PDF', type: 'file', required: true, fileType: 'open', accept: '.pdf' },
+      { key: 'splitMode', label: 'Modo', type: 'select', default: 'pages', options: [
+        { value: 'pages', label: 'Por páginas específicas' },
+        { value: 'range', label: 'Por rango' },
+        { value: 'every', label: 'Cada N páginas' }
+      ]},
+      { key: 'pages', label: 'Páginas', type: 'text', placeholder: '1,3,5-8', condition: { field: 'splitMode', value: 'pages' } },
+      { key: 'everyN', label: 'Cada N páginas', type: 'number', default: 1, condition: { field: 'splitMode', value: 'every' } },
+      { key: 'outputFolder', label: 'Carpeta de salida', type: 'folderWithVariable', required: true },
+      { key: 'variable', label: 'Guardar rutas en', type: 'variable' }
+    ]
+  },
+  pdf_extract_text: {
+    title: 'Extraer Texto de PDF',
+    icon: 'fa-file-alt',
+    description: 'Extrae todo el texto de un archivo PDF',
+    fields: [
+      { key: 'filePath', label: 'Archivo PDF', type: 'file', required: true, fileType: 'open', accept: '.pdf' },
+      { key: 'pages', label: 'Páginas', type: 'text', placeholder: 'Todas (o especificar: 1,3,5-8)', helpText: 'Dejar vacío para todas las páginas' },
+      { key: 'variable', label: 'Guardar texto en', type: 'variable', required: true }
+    ]
+  },
+  pdf_extract_tables: {
+    title: 'Extraer Tablas de PDF',
+    icon: 'fa-table',
+    description: 'Extrae tablas estructuradas de un PDF',
+    fields: [
+      { key: 'filePath', label: 'Archivo PDF', type: 'file', required: true, fileType: 'open', accept: '.pdf' },
+      { key: 'pages', label: 'Páginas', type: 'text', placeholder: 'Todas' },
+      { key: 'outputFormat', label: 'Formato', type: 'select', default: 'json', options: [
+        { value: 'json', label: 'JSON' }, { value: 'csv', label: 'CSV' }, { value: 'excel', label: 'Excel' }
+      ]},
+      { key: 'variable', label: 'Guardar tablas en', type: 'variable', required: true }
+    ]
+  },
+  pdf_extract_pages: {
+    title: 'Extraer Páginas de PDF',
+    icon: 'fa-file-export',
+    description: 'Extrae páginas específicas de un PDF',
+    fields: [
+      { key: 'filePath', label: 'Archivo PDF', type: 'file', required: true, fileType: 'open', accept: '.pdf' },
+      { key: 'pages', label: 'Páginas a extraer', type: 'text', required: true, placeholder: '1,3,5-8' },
+      { key: 'outputPath', label: 'Archivo de salida', type: 'file', required: true, fileType: 'save', accept: '.pdf' },
+      { key: 'variable', label: 'Guardar ruta en', type: 'variable' }
+    ]
+  },
+  pdf_add_watermark: {
+    title: 'Marca de Agua en PDF',
+    icon: 'fa-tint',
+    description: 'Agrega marca de agua a un PDF',
+    fields: [
+      { key: 'filePath', label: 'Archivo PDF', type: 'file', required: true, fileType: 'open', accept: '.pdf' },
+      { key: 'watermarkType', label: 'Tipo', type: 'select', default: 'text', options: [
+        { value: 'text', label: 'Texto' }, { value: 'image', label: 'Imagen' }
+      ]},
+      { key: 'text', label: 'Texto', type: 'text', placeholder: 'CONFIDENCIAL', condition: { field: 'watermarkType', value: 'text' } },
+      { key: 'imagePath', label: 'Imagen', type: 'file', fileType: 'open', accept: '.png,.jpg', condition: { field: 'watermarkType', value: 'image' } },
+      { key: 'opacity', label: 'Opacidad', type: 'slider', default: 0.3, min: 0.1, max: 1, step: 0.1 },
+      { key: 'outputPath', label: 'Archivo de salida', type: 'file', required: true, fileType: 'save', accept: '.pdf' }
+    ]
+  },
+  pdf_add_password: {
+    title: 'Proteger PDF con Contraseña',
+    icon: 'fa-lock',
+    description: 'Agrega protección con contraseña a un PDF',
+    fields: [
+      { key: 'filePath', label: 'Archivo PDF', type: 'file', required: true, fileType: 'open', accept: '.pdf' },
+      { key: 'userPassword', label: 'Contraseña de usuario', type: 'password', required: true },
+      { key: 'ownerPassword', label: 'Contraseña de propietario', type: 'password', helpText: 'Opcional - para permisos avanzados', advanced: true },
+      { key: 'allowPrint', label: 'Permitir imprimir', type: 'checkbox', default: true, advanced: true },
+      { key: 'allowCopy', label: 'Permitir copiar', type: 'checkbox', default: false, advanced: true },
+      { key: 'outputPath', label: 'Archivo de salida', type: 'file', required: true, fileType: 'save', accept: '.pdf' }
+    ]
+  },
+  pdf_remove_password: {
+    title: 'Quitar Contraseña de PDF',
+    icon: 'fa-unlock',
+    description: 'Remueve la protección de contraseña de un PDF',
+    fields: [
+      { key: 'filePath', label: 'Archivo PDF', type: 'file', required: true, fileType: 'open', accept: '.pdf' },
+      { key: 'password', label: 'Contraseña actual', type: 'password', required: true },
+      { key: 'outputPath', label: 'Archivo de salida', type: 'file', required: true, fileType: 'save', accept: '.pdf' }
+    ]
+  },
+  pdf_to_image: {
+    title: 'PDF a Imagen',
+    icon: 'fa-image',
+    description: 'Convierte páginas de PDF a imágenes',
+    fields: [
+      { key: 'filePath', label: 'Archivo PDF', type: 'file', required: true, fileType: 'open', accept: '.pdf' },
+      { key: 'pages', label: 'Páginas', type: 'text', placeholder: 'Todas (o 1,3,5-8)' },
+      { key: 'format', label: 'Formato', type: 'select', default: 'png', options: [
+        { value: 'png', label: 'PNG' }, { value: 'jpg', label: 'JPG' }, { value: 'bmp', label: 'BMP' }
+      ]},
+      { key: 'dpi', label: 'Resolución (DPI)', type: 'number', default: 300, min: 72, max: 600 },
+      { key: 'outputFolder', label: 'Carpeta de salida', type: 'folderWithVariable', required: true },
+      { key: 'variable', label: 'Guardar rutas en', type: 'variable' }
+    ]
+  },
+  pdf_rotate: {
+    title: 'Rotar PDF',
+    icon: 'fa-sync-alt',
+    description: 'Rota páginas de un PDF',
+    fields: [
+      { key: 'filePath', label: 'Archivo PDF', type: 'file', required: true, fileType: 'open', accept: '.pdf' },
+      { key: 'angle', label: 'Ángulo', type: 'select', default: '90', options: [
+        { value: '90', label: '90° (derecha)' }, { value: '180', label: '180°' }, { value: '270', label: '270° (izquierda)' }
+      ]},
+      { key: 'pages', label: 'Páginas', type: 'text', placeholder: 'Todas' },
+      { key: 'outputPath', label: 'Archivo de salida', type: 'file', required: true, fileType: 'save', accept: '.pdf' }
+    ]
+  },
+  pdf_fill_form: {
+    title: 'Llenar Formulario PDF',
+    icon: 'fa-edit',
+    description: 'Completa campos de formulario en un PDF',
+    fields: [
+      { key: 'filePath', label: 'Archivo PDF', type: 'file', required: true, fileType: 'open', accept: '.pdf' },
+      { key: 'fields', label: 'Campos del formulario', type: 'keyValue', required: true, helpText: 'Nombre del campo → Valor' },
+      { key: 'flatten', label: 'Aplanar formulario', type: 'checkbox', default: false, helpText: 'Convierte campos editables en texto fijo' },
+      { key: 'outputPath', label: 'Archivo de salida', type: 'file', required: true, fileType: 'save', accept: '.pdf' }
+    ]
+  },
+  pdf_get_metadata: {
+    title: 'Obtener Metadatos de PDF',
+    icon: 'fa-info-circle',
+    description: 'Obtiene información del PDF (páginas, autor, fecha)',
+    fields: [
+      { key: 'filePath', label: 'Archivo PDF', type: 'file', required: true, fileType: 'open', accept: '.pdf' },
+      { key: 'variable', label: 'Guardar metadatos en', type: 'variable', required: true, helpText: '{pages, author, title, created, modified}' }
+    ]
+  },
+  pdf_add_signature: {
+    title: 'Firmar PDF',
+    icon: 'fa-signature',
+    description: 'Agrega una firma digital o imagen de firma al PDF',
+    fields: [
+      { key: 'filePath', label: 'Archivo PDF', type: 'file', required: true, fileType: 'open', accept: '.pdf' },
+      { key: 'signatureType', label: 'Tipo de firma', type: 'select', default: 'image', options: [
+        { value: 'image', label: 'Imagen de firma' }, { value: 'digital', label: 'Certificado digital' }, { value: 'text', label: 'Texto' }
+      ]},
+      { key: 'signatureImage', label: 'Imagen de firma', type: 'file', fileType: 'open', accept: '.png,.jpg', condition: { field: 'signatureType', value: 'image' } },
+      { key: 'page', label: 'Página', type: 'number', default: -1, helpText: '-1 = última página' },
+      { key: 'x', label: 'Posición X', type: 'number', default: 100 },
+      { key: 'y', label: 'Posición Y', type: 'number', default: 100 },
+      { key: 'outputPath', label: 'Archivo de salida', type: 'file', required: true, fileType: 'save', accept: '.pdf' }
     ]
   },
 
@@ -13226,6 +13761,4422 @@ Object.assign(BASE_ACTION_PROPERTIES, {
         label: 'Guardar ID del mensaje en',
         type: 'variable'
       }
+    ]
+  },
+
+  // ==========================================
+  // JIRA
+  // ==========================================
+  jira_connect: {
+    title: 'Conectar Jira',
+    icon: 'fa-plug',
+    description: 'Configura conexión con Jira Cloud',
+    fields: [
+      { key: 'domain', label: 'Dominio de Jira', type: 'textWithVariable', required: true, helpText: 'tu-empresa.atlassian.net' },
+      { key: 'email', label: 'Email', type: 'textWithVariable', required: true },
+      { key: 'apiToken', label: 'API Token', type: 'password', required: true },
+      { key: 'connectionVariable', label: 'Guardar conexión en', type: 'variable', required: true }
+    ]
+  },
+  jira_create_issue: {
+    title: 'Crear Issue en Jira',
+    icon: 'fa-plus',
+    description: 'Crea una nueva issue en un proyecto',
+    fields: [
+      { key: 'projectKey', label: 'Clave del Proyecto', type: 'textWithVariable', required: true },
+      { key: 'issueType', label: 'Tipo de Issue', type: 'select', default: 'Task', options: [{ value: 'Bug', label: 'Bug' }, { value: 'Task', label: 'Task' }, { value: 'Story', label: 'Story' }, { value: 'Epic', label: 'Epic' }, { value: 'Subtask', label: 'Subtask' }] },
+      { key: 'summary', label: 'Resumen', type: 'textWithVariable', required: true },
+      { key: 'description', label: 'Descripción', type: 'textareaWithVariable' },
+      { key: 'priority', label: 'Prioridad', type: 'select', default: 'Medium', options: [{ value: 'Highest', label: 'Highest' }, { value: 'High', label: 'High' }, { value: 'Medium', label: 'Medium' }, { value: 'Low', label: 'Low' }, { value: 'Lowest', label: 'Lowest' }] },
+      { key: 'assignee', label: 'Asignado a', type: 'textWithVariable' },
+      { key: 'labels', label: 'Etiquetas', type: 'tags' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  jira_update_issue: {
+    title: 'Actualizar Issue de Jira',
+    icon: 'fa-edit',
+    description: 'Actualiza campos de una issue existente',
+    fields: [
+      { key: 'issueKey', label: 'Clave de Issue', type: 'textWithVariable', required: true, helpText: 'Ej: PROJ-123' },
+      { key: 'fields', label: 'Campos a actualizar (JSON)', type: 'textareaWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  jira_get_issue: {
+    title: 'Obtener Issue de Jira',
+    icon: 'fa-file-alt',
+    description: 'Obtiene información de una issue',
+    fields: [
+      { key: 'issueKey', label: 'Clave de Issue', type: 'textWithVariable', required: true },
+      { key: 'fields', label: 'Campos a obtener', type: 'tags' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  jira_search: {
+    title: 'Buscar Issues (JQL)',
+    icon: 'fa-search',
+    description: 'Busca issues usando consultas JQL',
+    fields: [
+      { key: 'jql', label: 'Consulta JQL', type: 'textareaWithVariable', required: true, helpText: 'Ej: project=PROJ AND status="In Progress"' },
+      { key: 'maxResults', label: 'Máximo de resultados', type: 'number', default: 50 },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  jira_transition: {
+    title: 'Transicionar Estado',
+    icon: 'fa-exchange-alt',
+    description: 'Cambia el estado de una issue',
+    fields: [
+      { key: 'issueKey', label: 'Clave de Issue', type: 'textWithVariable', required: true },
+      { key: 'transitionName', label: 'Nombre de Transición', type: 'textWithVariable', required: true, helpText: 'Ej: Done, In Progress' },
+      { key: 'comment', label: 'Comentario', type: 'textareaWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  jira_add_comment: {
+    title: 'Agregar Comentario',
+    icon: 'fa-comment',
+    description: 'Añade un comentario a una issue',
+    fields: [
+      { key: 'issueKey', label: 'Clave de Issue', type: 'textWithVariable', required: true },
+      { key: 'comment', label: 'Comentario', type: 'textareaWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  jira_assign: {
+    title: 'Asignar Issue',
+    icon: 'fa-user-check',
+    description: 'Asigna una issue a un usuario',
+    fields: [
+      { key: 'issueKey', label: 'Clave de Issue', type: 'textWithVariable', required: true },
+      { key: 'accountId', label: 'Account ID del usuario', type: 'textWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  jira_add_attachment: {
+    title: 'Adjuntar Archivo',
+    icon: 'fa-paperclip',
+    description: 'Adjunta un archivo a una issue',
+    fields: [
+      { key: 'issueKey', label: 'Clave de Issue', type: 'textWithVariable', required: true },
+      { key: 'filePath', label: 'Ruta del archivo', type: 'textWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  jira_get_projects: {
+    title: 'Listar Proyectos',
+    icon: 'fa-list',
+    description: 'Lista todos los proyectos de Jira',
+    fields: [
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  jira_create_sprint: {
+    title: 'Crear Sprint',
+    icon: 'fa-running',
+    description: 'Crea un nuevo sprint en un board',
+    fields: [
+      { key: 'boardId', label: 'ID del Board', type: 'textWithVariable', required: true },
+      { key: 'name', label: 'Nombre del Sprint', type: 'textWithVariable', required: true },
+      { key: 'startDate', label: 'Fecha de inicio', type: 'textWithVariable', helpText: 'YYYY-MM-DD' },
+      { key: 'endDate', label: 'Fecha de fin', type: 'textWithVariable', helpText: 'YYYY-MM-DD' },
+      { key: 'goal', label: 'Objetivo del Sprint', type: 'textareaWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  jira_log_work: {
+    title: 'Registrar Trabajo',
+    icon: 'fa-clock',
+    description: 'Registra tiempo trabajado en una issue',
+    fields: [
+      { key: 'issueKey', label: 'Clave de Issue', type: 'textWithVariable', required: true },
+      { key: 'timeSpent', label: 'Tiempo trabajado', type: 'textWithVariable', required: true, helpText: 'Ej: 2h 30m' },
+      { key: 'comment', label: 'Comentario', type: 'textareaWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+
+  // ==========================================
+  // TRELLO
+  // ==========================================
+  trello_connect: {
+    title: 'Conectar Trello',
+    icon: 'fa-plug',
+    description: 'Configura conexión con Trello',
+    fields: [
+      { key: 'apiKey', label: 'API Key', type: 'password', required: true },
+      { key: 'apiToken', label: 'API Token', type: 'password', required: true },
+      { key: 'connectionVariable', label: 'Guardar conexión en', type: 'variable', required: true }
+    ]
+  },
+  trello_create_card: {
+    title: 'Crear Tarjeta',
+    icon: 'fa-plus',
+    description: 'Crea una nueva tarjeta en una lista',
+    fields: [
+      { key: 'boardId', label: 'ID del Board', type: 'textWithVariable', required: true },
+      { key: 'listId', label: 'ID de la Lista', type: 'textWithVariable', required: true },
+      { key: 'name', label: 'Nombre', type: 'textWithVariable', required: true },
+      { key: 'description', label: 'Descripción', type: 'textareaWithVariable' },
+      { key: 'position', label: 'Posición', type: 'select', default: 'top', options: [{ value: 'top', label: 'Arriba' }, { value: 'bottom', label: 'Abajo' }] },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  trello_move_card: {
+    title: 'Mover Tarjeta',
+    icon: 'fa-arrows-alt',
+    description: 'Mueve una tarjeta a otra lista',
+    fields: [
+      { key: 'cardId', label: 'ID de la Tarjeta', type: 'textWithVariable', required: true },
+      { key: 'listId', label: 'ID de la Lista destino', type: 'textWithVariable', required: true },
+      { key: 'position', label: 'Posición', type: 'select', default: 'top', options: [{ value: 'top', label: 'Arriba' }, { value: 'bottom', label: 'Abajo' }] },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  trello_update_card: {
+    title: 'Actualizar Tarjeta',
+    icon: 'fa-edit',
+    description: 'Actualiza información de una tarjeta',
+    fields: [
+      { key: 'cardId', label: 'ID de la Tarjeta', type: 'textWithVariable', required: true },
+      { key: 'name', label: 'Nombre', type: 'textWithVariable' },
+      { key: 'description', label: 'Descripción', type: 'textareaWithVariable' },
+      { key: 'dueDate', label: 'Fecha de vencimiento', type: 'textWithVariable', helpText: 'YYYY-MM-DD' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  trello_add_label: {
+    title: 'Agregar Etiqueta',
+    icon: 'fa-tag',
+    description: 'Agrega una etiqueta de color a tarjeta',
+    fields: [
+      { key: 'cardId', label: 'ID de la Tarjeta', type: 'textWithVariable', required: true },
+      { key: 'color', label: 'Color', type: 'select', default: 'blue', options: [{ value: 'green', label: 'Verde' }, { value: 'yellow', label: 'Amarillo' }, { value: 'orange', label: 'Naranja' }, { value: 'red', label: 'Rojo' }, { value: 'purple', label: 'Morado' }, { value: 'blue', label: 'Azul' }] },
+      { key: 'name', label: 'Nombre de etiqueta', type: 'textWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  trello_add_checklist: {
+    title: 'Agregar Checklist',
+    icon: 'fa-check-square',
+    description: 'Crea un checklist en una tarjeta',
+    fields: [
+      { key: 'cardId', label: 'ID de la Tarjeta', type: 'textWithVariable', required: true },
+      { key: 'name', label: 'Nombre del Checklist', type: 'textWithVariable', required: true },
+      { key: 'items', label: 'Items del checklist', type: 'tags', helpText: 'Lista de tareas' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  trello_add_comment: {
+    title: 'Agregar Comentario',
+    icon: 'fa-comment',
+    description: 'Añade un comentario a una tarjeta',
+    fields: [
+      { key: 'cardId', label: 'ID de la Tarjeta', type: 'textWithVariable', required: true },
+      { key: 'text', label: 'Comentario', type: 'textareaWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  trello_add_member: {
+    title: 'Agregar Miembro',
+    icon: 'fa-user-plus',
+    description: 'Asigna un miembro a una tarjeta',
+    fields: [
+      { key: 'cardId', label: 'ID de la Tarjeta', type: 'textWithVariable', required: true },
+      { key: 'memberId', label: 'ID del Miembro', type: 'textWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  trello_create_list: {
+    title: 'Crear Lista',
+    icon: 'fa-list',
+    description: 'Crea una nueva lista en un board',
+    fields: [
+      { key: 'boardId', label: 'ID del Board', type: 'textWithVariable', required: true },
+      { key: 'name', label: 'Nombre', type: 'textWithVariable', required: true },
+      { key: 'position', label: 'Posición', type: 'select', default: 'top', options: [{ value: 'top', label: 'Arriba' }, { value: 'bottom', label: 'Abajo' }] },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  trello_get_boards: {
+    title: 'Obtener Tableros',
+    icon: 'fa-th-large',
+    description: 'Lista todos los boards disponibles',
+    fields: [
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  trello_archive_card: {
+    title: 'Archivar Tarjeta',
+    icon: 'fa-archive',
+    description: 'Archiva una tarjeta',
+    fields: [
+      { key: 'cardId', label: 'ID de la Tarjeta', type: 'textWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  trello_attach_file: {
+    title: 'Adjuntar Archivo',
+    icon: 'fa-paperclip',
+    description: 'Adjunta un archivo o URL a una tarjeta',
+    fields: [
+      { key: 'cardId', label: 'ID de la Tarjeta', type: 'textWithVariable', required: true },
+      { key: 'url', label: 'URL del archivo', type: 'textWithVariable', required: true },
+      { key: 'name', label: 'Nombre del adjunto', type: 'textWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+
+  // ==========================================
+  // ASANA
+  // ==========================================
+  asana_connect: {
+    title: 'Conectar Asana',
+    icon: 'fa-plug',
+    description: 'Configura conexión con Asana',
+    fields: [
+      { key: 'accessToken', label: 'Access Token', type: 'password', required: true },
+      { key: 'workspaceId', label: 'ID del Workspace', type: 'textWithVariable' },
+      { key: 'connectionVariable', label: 'Guardar conexión en', type: 'variable', required: true }
+    ]
+  },
+  asana_create_task: {
+    title: 'Crear Tarea',
+    icon: 'fa-plus',
+    description: 'Crea una nueva tarea en un proyecto',
+    fields: [
+      { key: 'projectId', label: 'ID del Proyecto', type: 'textWithVariable', required: true },
+      { key: 'name', label: 'Nombre', type: 'textWithVariable', required: true },
+      { key: 'notes', label: 'Notas', type: 'textareaWithVariable' },
+      { key: 'dueDate', label: 'Fecha de vencimiento', type: 'textWithVariable', helpText: 'YYYY-MM-DD' },
+      { key: 'assignee', label: 'Asignado a (ID)', type: 'textWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  asana_update_task: {
+    title: 'Actualizar Tarea',
+    icon: 'fa-edit',
+    description: 'Actualiza información de una tarea',
+    fields: [
+      { key: 'taskId', label: 'ID de la Tarea', type: 'textWithVariable', required: true },
+      { key: 'name', label: 'Nombre', type: 'textWithVariable' },
+      { key: 'notes', label: 'Notas', type: 'textareaWithVariable' },
+      { key: 'completed', label: 'Marcar completada', type: 'checkbox' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  asana_assign_task: {
+    title: 'Asignar Tarea',
+    icon: 'fa-user-check',
+    description: 'Asigna una tarea a un usuario',
+    fields: [
+      { key: 'taskId', label: 'ID de la Tarea', type: 'textWithVariable', required: true },
+      { key: 'assignee', label: 'ID del usuario', type: 'textWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  asana_add_subtask: {
+    title: 'Agregar Subtarea',
+    icon: 'fa-level-down-alt',
+    description: 'Crea una subtarea',
+    fields: [
+      { key: 'parentId', label: 'ID de la Tarea padre', type: 'textWithVariable', required: true },
+      { key: 'name', label: 'Nombre', type: 'textWithVariable', required: true },
+      { key: 'notes', label: 'Notas', type: 'textareaWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  asana_add_comment: {
+    title: 'Agregar Comentario',
+    icon: 'fa-comment',
+    description: 'Añade un comentario a una tarea',
+    fields: [
+      { key: 'taskId', label: 'ID de la Tarea', type: 'textWithVariable', required: true },
+      { key: 'text', label: 'Comentario', type: 'textareaWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  asana_move_section: {
+    title: 'Mover a Sección',
+    icon: 'fa-arrows-alt',
+    description: 'Mueve una tarea a otra sección',
+    fields: [
+      { key: 'taskId', label: 'ID de la Tarea', type: 'textWithVariable', required: true },
+      { key: 'sectionId', label: 'ID de la Sección', type: 'textWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  asana_create_project: {
+    title: 'Crear Proyecto',
+    icon: 'fa-folder-plus',
+    description: 'Crea un nuevo proyecto',
+    fields: [
+      { key: 'workspaceId', label: 'ID del Workspace', type: 'textWithVariable' },
+      { key: 'name', label: 'Nombre', type: 'textWithVariable', required: true },
+      { key: 'layout', label: 'Diseño', type: 'select', default: 'list', options: [{ value: 'list', label: 'Lista' }, { value: 'board', label: 'Tablero' }] },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  asana_search_tasks: {
+    title: 'Buscar Tareas',
+    icon: 'fa-search',
+    description: 'Busca tareas usando filtros',
+    fields: [
+      { key: 'workspaceId', label: 'ID del Workspace', type: 'textWithVariable' },
+      { key: 'query', label: 'Consulta', type: 'textWithVariable' },
+      { key: 'projectId', label: 'ID del Proyecto', type: 'textWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  asana_set_due_date: {
+    title: 'Establecer Fecha',
+    icon: 'fa-calendar',
+    description: 'Asigna fecha de vencimiento a tarea',
+    fields: [
+      { key: 'taskId', label: 'ID de la Tarea', type: 'textWithVariable', required: true },
+      { key: 'dueDate', label: 'Fecha', type: 'textWithVariable', required: true, helpText: 'YYYY-MM-DD' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+
+  // ==========================================
+  // MONDAY.COM
+  // ==========================================
+  monday_connect: {
+    title: 'Conectar Monday.com',
+    icon: 'fa-plug',
+    description: 'Configura conexión con Monday.com',
+    fields: [
+      { key: 'apiToken', label: 'API Token', type: 'password', required: true },
+      { key: 'connectionVariable', label: 'Guardar conexión en', type: 'variable', required: true }
+    ]
+  },
+  monday_create_item: {
+    title: 'Crear Item',
+    icon: 'fa-plus',
+    description: 'Crea un nuevo item en un board',
+    fields: [
+      { key: 'boardId', label: 'ID del Board', type: 'textWithVariable', required: true },
+      { key: 'groupId', label: 'ID del Grupo', type: 'textWithVariable' },
+      { key: 'itemName', label: 'Nombre del item', type: 'textWithVariable', required: true },
+      { key: 'columnValues', label: 'Valores de columnas (JSON)', type: 'textareaWithVariable', helpText: 'JSON de valores' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  monday_update_item: {
+    title: 'Actualizar Item',
+    icon: 'fa-edit',
+    description: 'Actualiza valores de un item',
+    fields: [
+      { key: 'boardId', label: 'ID del Board', type: 'textWithVariable', required: true },
+      { key: 'itemId', label: 'ID del Item', type: 'textWithVariable', required: true },
+      { key: 'columnValues', label: 'Valores (JSON)', type: 'textareaWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  monday_update_column: {
+    title: 'Actualizar Columna',
+    icon: 'fa-columns',
+    description: 'Actualiza valor de una columna específica',
+    fields: [
+      { key: 'boardId', label: 'ID del Board', type: 'textWithVariable', required: true },
+      { key: 'itemId', label: 'ID del Item', type: 'textWithVariable', required: true },
+      { key: 'columnId', label: 'ID de la Columna', type: 'textWithVariable', required: true },
+      { key: 'value', label: 'Valor', type: 'textWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  monday_move_item: {
+    title: 'Mover Item',
+    icon: 'fa-arrows-alt',
+    description: 'Mueve un item a otro grupo',
+    fields: [
+      { key: 'itemId', label: 'ID del Item', type: 'textWithVariable', required: true },
+      { key: 'groupId', label: 'ID del Grupo destino', type: 'textWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  monday_create_subitem: {
+    title: 'Crear Subitem',
+    icon: 'fa-level-down-alt',
+    description: 'Crea un subitem dentro de un item',
+    fields: [
+      { key: 'parentId', label: 'ID del Item padre', type: 'textWithVariable', required: true },
+      { key: 'name', label: 'Nombre', type: 'textWithVariable', required: true },
+      { key: 'columnValues', label: 'Valores (JSON)', type: 'textareaWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  monday_add_update: {
+    title: 'Agregar Update',
+    icon: 'fa-comment',
+    description: 'Añade actualización a un item',
+    fields: [
+      { key: 'itemId', label: 'ID del Item', type: 'textWithVariable', required: true },
+      { key: 'body', label: 'Texto', type: 'textareaWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  monday_create_board: {
+    title: 'Crear Tablero',
+    icon: 'fa-th-large',
+    description: 'Crea un nuevo board',
+    fields: [
+      { key: 'name', label: 'Nombre', type: 'textWithVariable', required: true },
+      { key: 'boardKind', label: 'Tipo', type: 'select', default: 'public', options: [{ value: 'public', label: 'Público' }, { value: 'private', label: 'Privado' }, { value: 'share', label: 'Compartido' }] },
+      { key: 'templateId', label: 'ID de plantilla', type: 'textWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  monday_get_items: {
+    title: 'Obtener Items',
+    icon: 'fa-list',
+    description: 'Lista items de un board',
+    fields: [
+      { key: 'boardId', label: 'ID del Board', type: 'textWithVariable', required: true },
+      { key: 'limit', label: 'Límite', type: 'number', default: 50 },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  monday_archive_item: {
+    title: 'Archivar Item',
+    icon: 'fa-archive',
+    description: 'Archiva un item',
+    fields: [
+      { key: 'itemId', label: 'ID del Item', type: 'textWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+
+  // ==========================================
+  // ZOHO CRM
+  // ==========================================
+  zoho_crm_connect: {
+    title: 'Conectar Zoho CRM',
+    icon: 'fa-plug',
+    description: 'Configura conexión con Zoho CRM',
+    fields: [
+      { key: 'clientId', label: 'Client ID', type: 'password', required: true },
+      { key: 'clientSecret', label: 'Client Secret', type: 'password', required: true },
+      { key: 'refreshToken', label: 'Refresh Token', type: 'password', required: true },
+      { key: 'domain', label: 'Dominio', type: 'select', default: 'com', options: [{ value: 'com', label: '.com (US)' }, { value: 'eu', label: '.eu (Europa)' }, { value: 'in', label: '.in (India)' }, { value: 'com.cn', label: '.com.cn (China)' }, { value: 'com.au', label: '.com.au (Australia)' }] },
+      { key: 'connectionVariable', label: 'Guardar conexión en', type: 'variable', required: true }
+    ]
+  },
+  zoho_crm_create_record: {
+    title: 'Crear Registro',
+    icon: 'fa-plus',
+    description: 'Crea un registro en Zoho CRM',
+    fields: [
+      { key: 'module', label: 'Módulo', type: 'select', default: 'Leads', options: [{ value: 'Leads', label: 'Leads' }, { value: 'Contacts', label: 'Contacts' }, { value: 'Accounts', label: 'Accounts' }, { value: 'Deals', label: 'Deals' }, { value: 'Tasks', label: 'Tasks' }, { value: 'Events', label: 'Events' }] },
+      { key: 'data', label: 'Datos del registro (JSON)', type: 'textareaWithVariable', helpText: 'JSON del registro' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  zoho_crm_update_record: {
+    title: 'Actualizar Registro',
+    icon: 'fa-edit',
+    description: 'Actualiza un registro existente',
+    fields: [
+      { key: 'module', label: 'Módulo', type: 'select', default: 'Leads', options: [{ value: 'Leads', label: 'Leads' }, { value: 'Contacts', label: 'Contacts' }, { value: 'Accounts', label: 'Accounts' }, { value: 'Deals', label: 'Deals' }] },
+      { key: 'recordId', label: 'ID del Registro', type: 'textWithVariable', required: true },
+      { key: 'data', label: 'Datos (JSON)', type: 'textareaWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  zoho_crm_get_record: {
+    title: 'Obtener Registro',
+    icon: 'fa-file-alt',
+    description: 'Obtiene un registro por ID',
+    fields: [
+      { key: 'module', label: 'Módulo', type: 'select', default: 'Leads', options: [{ value: 'Leads', label: 'Leads' }, { value: 'Contacts', label: 'Contacts' }, { value: 'Accounts', label: 'Accounts' }, { value: 'Deals', label: 'Deals' }] },
+      { key: 'recordId', label: 'ID del Registro', type: 'textWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  zoho_crm_search: {
+    title: 'Buscar Registros',
+    icon: 'fa-search',
+    description: 'Busca registros con criterios',
+    fields: [
+      { key: 'module', label: 'Módulo', type: 'select', default: 'Leads', options: [{ value: 'Leads', label: 'Leads' }, { value: 'Contacts', label: 'Contacts' }, { value: 'Accounts', label: 'Accounts' }, { value: 'Deals', label: 'Deals' }] },
+      { key: 'criteria', label: 'Criterios', type: 'textareaWithVariable', helpText: 'Ej: (Email:equals:test@mail.com)' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  zoho_crm_delete_record: {
+    title: 'Eliminar Registro',
+    icon: 'fa-trash',
+    description: 'Elimina un registro',
+    fields: [
+      { key: 'module', label: 'Módulo', type: 'select', default: 'Leads', options: [{ value: 'Leads', label: 'Leads' }, { value: 'Contacts', label: 'Contacts' }, { value: 'Accounts', label: 'Accounts' }, { value: 'Deals', label: 'Deals' }] },
+      { key: 'recordId', label: 'ID del Registro', type: 'textWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  zoho_crm_create_lead: {
+    title: 'Crear Lead',
+    icon: 'fa-user-plus',
+    description: 'Crea un nuevo lead',
+    fields: [
+      { key: 'firstName', label: 'Nombre', type: 'textWithVariable' },
+      { key: 'lastName', label: 'Apellido', type: 'textWithVariable', required: true },
+      { key: 'email', label: 'Email', type: 'textWithVariable' },
+      { key: 'phone', label: 'Teléfono', type: 'textWithVariable' },
+      { key: 'company', label: 'Empresa', type: 'textWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  zoho_crm_convert_lead: {
+    title: 'Convertir Lead',
+    icon: 'fa-exchange-alt',
+    description: 'Convierte un lead a contacto/negocio',
+    fields: [
+      { key: 'leadId', label: 'ID del Lead', type: 'textWithVariable', required: true },
+      { key: 'createDeal', label: 'Crear negocio', type: 'checkbox', default: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  zoho_crm_create_deal: {
+    title: 'Crear Negocio',
+    icon: 'fa-handshake',
+    description: 'Crea un nuevo negocio/deal',
+    fields: [
+      { key: 'dealName', label: 'Nombre del negocio', type: 'textWithVariable', required: true },
+      { key: 'stage', label: 'Etapa', type: 'textWithVariable' },
+      { key: 'amount', label: 'Monto', type: 'textWithVariable' },
+      { key: 'closingDate', label: 'Fecha de cierre', type: 'textWithVariable', helpText: 'YYYY-MM-DD' },
+      { key: 'accountId', label: 'ID de Cuenta', type: 'textWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  zoho_crm_add_note: {
+    title: 'Agregar Nota',
+    icon: 'fa-sticky-note',
+    description: 'Agrega una nota a un registro',
+    fields: [
+      { key: 'module', label: 'Módulo', type: 'select', default: 'Leads', options: [{ value: 'Leads', label: 'Leads' }, { value: 'Contacts', label: 'Contacts' }, { value: 'Accounts', label: 'Accounts' }, { value: 'Deals', label: 'Deals' }] },
+      { key: 'recordId', label: 'ID del Registro', type: 'textWithVariable', required: true },
+      { key: 'noteTitle', label: 'Título', type: 'textWithVariable' },
+      { key: 'noteContent', label: 'Contenido', type: 'textareaWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  zoho_crm_create_task: {
+    title: 'Crear Tarea',
+    icon: 'fa-tasks',
+    description: 'Crea una tarea en Zoho CRM',
+    fields: [
+      { key: 'subject', label: 'Asunto', type: 'textWithVariable', required: true },
+      { key: 'dueDate', label: 'Fecha límite', type: 'textWithVariable' },
+      { key: 'priority', label: 'Prioridad', type: 'select', default: 'Normal', options: [{ value: 'High', label: 'Alta' }, { value: 'Normal', label: 'Normal' }, { value: 'Low', label: 'Baja' }] },
+      { key: 'status', label: 'Estado', type: 'select', default: 'Not Started', options: [{ value: 'Not Started', label: 'Sin iniciar' }, { value: 'In Progress', label: 'En progreso' }, { value: 'Completed', label: 'Completada' }] },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  zoho_crm_send_email: {
+    title: 'Enviar Email',
+    icon: 'fa-envelope',
+    description: 'Envía email desde Zoho CRM',
+    fields: [
+      { key: 'module', label: 'Módulo', type: 'select', default: 'Leads', options: [{ value: 'Leads', label: 'Leads' }, { value: 'Contacts', label: 'Contacts' }] },
+      { key: 'recordId', label: 'ID del Registro', type: 'textWithVariable', required: true },
+      { key: 'subject', label: 'Asunto', type: 'textWithVariable', required: true },
+      { key: 'content', label: 'Contenido', type: 'textareaWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+
+  // ==========================================
+  // ZOHO DESK
+  // ==========================================
+  zoho_desk_connect: {
+    title: 'Conectar Zoho Desk',
+    icon: 'fa-plug',
+    description: 'Configura conexión con Zoho Desk',
+    fields: [
+      { key: 'orgId', label: 'Organization ID', type: 'textWithVariable', required: true },
+      { key: 'clientId', label: 'Client ID', type: 'password', required: true },
+      { key: 'clientSecret', label: 'Client Secret', type: 'password', required: true },
+      { key: 'refreshToken', label: 'Refresh Token', type: 'password', required: true },
+      { key: 'connectionVariable', label: 'Guardar conexión en', type: 'variable', required: true }
+    ]
+  },
+  zoho_desk_create_ticket: {
+    title: 'Crear Ticket',
+    icon: 'fa-ticket-alt',
+    description: 'Crea un nuevo ticket de soporte',
+    fields: [
+      { key: 'subject', label: 'Asunto', type: 'textWithVariable', required: true },
+      { key: 'description', label: 'Descripción', type: 'textareaWithVariable' },
+      { key: 'departmentId', label: 'ID Departamento', type: 'textWithVariable' },
+      { key: 'contactId', label: 'ID Contacto', type: 'textWithVariable' },
+      { key: 'priority', label: 'Prioridad', type: 'select', default: 'Medium', options: [{ value: 'High', label: 'Alta' }, { value: 'Medium', label: 'Media' }, { value: 'Low', label: 'Baja' }] },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  zoho_desk_update_ticket: {
+    title: 'Actualizar Ticket',
+    icon: 'fa-edit',
+    description: 'Actualiza un ticket existente',
+    fields: [
+      { key: 'ticketId', label: 'ID del Ticket', type: 'textWithVariable', required: true },
+      { key: 'subject', label: 'Asunto', type: 'textWithVariable' },
+      { key: 'status', label: 'Estado', type: 'select', options: [{ value: 'Open', label: 'Abierto' }, { value: 'On Hold', label: 'En espera' }, { value: 'Escalated', label: 'Escalado' }, { value: 'Closed', label: 'Cerrado' }] },
+      { key: 'priority', label: 'Prioridad', type: 'select', options: [{ value: 'High', label: 'Alta' }, { value: 'Medium', label: 'Media' }, { value: 'Low', label: 'Baja' }] },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  zoho_desk_get_ticket: {
+    title: 'Obtener Ticket',
+    icon: 'fa-file-alt',
+    description: 'Obtiene información de un ticket',
+    fields: [
+      { key: 'ticketId', label: 'ID del Ticket', type: 'textWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  zoho_desk_search: {
+    title: 'Buscar Tickets',
+    icon: 'fa-search',
+    description: 'Busca tickets con filtros',
+    fields: [
+      { key: 'query', label: 'Consulta', type: 'textWithVariable', required: true },
+      { key: 'departmentId', label: 'ID Departamento', type: 'textWithVariable' },
+      { key: 'limit', label: 'Límite', type: 'number', default: 20 },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  zoho_desk_assign: {
+    title: 'Asignar Agente',
+    icon: 'fa-user-check',
+    description: 'Asigna un agente a un ticket',
+    fields: [
+      { key: 'ticketId', label: 'ID del Ticket', type: 'textWithVariable', required: true },
+      { key: 'agentId', label: 'ID del Agente', type: 'textWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  zoho_desk_add_comment: {
+    title: 'Agregar Comentario',
+    icon: 'fa-comment',
+    description: 'Añade comentario a un ticket',
+    fields: [
+      { key: 'ticketId', label: 'ID del Ticket', type: 'textWithVariable', required: true },
+      { key: 'content', label: 'Contenido', type: 'textareaWithVariable', required: true },
+      { key: 'isPublic', label: 'Público', type: 'checkbox', default: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  zoho_desk_change_status: {
+    title: 'Cambiar Estado',
+    icon: 'fa-exchange-alt',
+    description: 'Cambia el estado de un ticket',
+    fields: [
+      { key: 'ticketId', label: 'ID del Ticket', type: 'textWithVariable', required: true },
+      { key: 'status', label: 'Estado', type: 'select', required: true, options: [{ value: 'Open', label: 'Abierto' }, { value: 'On Hold', label: 'En espera' }, { value: 'Escalated', label: 'Escalado' }, { value: 'Closed', label: 'Cerrado' }] },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  zoho_desk_add_attachment: {
+    title: 'Adjuntar Archivo',
+    icon: 'fa-paperclip',
+    description: 'Adjunta archivo a un ticket',
+    fields: [
+      { key: 'ticketId', label: 'ID del Ticket', type: 'textWithVariable', required: true },
+      { key: 'filePath', label: 'Ruta del archivo', type: 'textWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+
+  // ==========================================
+  // ZOHO BOOKS
+  // ==========================================
+  zoho_books_connect: {
+    title: 'Conectar Zoho Books',
+    icon: 'fa-plug',
+    description: 'Configura conexión con Zoho Books',
+    fields: [
+      { key: 'orgId', label: 'Organization ID', type: 'textWithVariable', required: true },
+      { key: 'clientId', label: 'Client ID', type: 'password', required: true },
+      { key: 'clientSecret', label: 'Client Secret', type: 'password', required: true },
+      { key: 'refreshToken', label: 'Refresh Token', type: 'password', required: true },
+      { key: 'connectionVariable', label: 'Guardar conexión en', type: 'variable', required: true }
+    ]
+  },
+  zoho_books_create_invoice: {
+    title: 'Crear Factura',
+    icon: 'fa-file-invoice',
+    description: 'Crea una nueva factura',
+    fields: [
+      { key: 'customerId', label: 'ID del Cliente', type: 'textWithVariable', required: true },
+      { key: 'items', label: 'Items (JSON)', type: 'textareaWithVariable', helpText: '[{name, rate, quantity}]' },
+      { key: 'date', label: 'Fecha', type: 'textWithVariable' },
+      { key: 'dueDate', label: 'Fecha de vencimiento', type: 'textWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  zoho_books_create_estimate: {
+    title: 'Crear Presupuesto',
+    icon: 'fa-file-alt',
+    description: 'Crea un presupuesto',
+    fields: [
+      { key: 'customerId', label: 'ID del Cliente', type: 'textWithVariable', required: true },
+      { key: 'items', label: 'Items (JSON)', type: 'textareaWithVariable' },
+      { key: 'date', label: 'Fecha', type: 'textWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  zoho_books_create_contact: {
+    title: 'Crear Contacto',
+    icon: 'fa-user-plus',
+    description: 'Crea un contacto',
+    fields: [
+      { key: 'contactName', label: 'Nombre', type: 'textWithVariable', required: true },
+      { key: 'email', label: 'Email', type: 'textWithVariable' },
+      { key: 'phone', label: 'Teléfono', type: 'textWithVariable' },
+      { key: 'contactType', label: 'Tipo', type: 'select', default: 'customer', options: [{ value: 'customer', label: 'Cliente' }, { value: 'vendor', label: 'Proveedor' }] },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  zoho_books_record_payment: {
+    title: 'Registrar Pago',
+    icon: 'fa-money-bill',
+    description: 'Registra un pago',
+    fields: [
+      { key: 'invoiceId', label: 'ID Factura', type: 'textWithVariable', required: true },
+      { key: 'amount', label: 'Monto', type: 'textWithVariable', required: true },
+      { key: 'date', label: 'Fecha', type: 'textWithVariable' },
+      { key: 'paymentMode', label: 'Medio de pago', type: 'select', default: 'banktransfer', options: [{ value: 'cash', label: 'Efectivo' }, { value: 'check', label: 'Cheque' }, { value: 'creditcard', label: 'Tarjeta' }, { value: 'banktransfer', label: 'Transferencia' }, { value: 'other', label: 'Otro' }] },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  zoho_books_create_expense: {
+    title: 'Registrar Gasto',
+    icon: 'fa-receipt',
+    description: 'Registra un gasto',
+    fields: [
+      { key: 'accountId', label: 'ID de Cuenta', type: 'textWithVariable' },
+      { key: 'amount', label: 'Monto', type: 'textWithVariable', required: true },
+      { key: 'date', label: 'Fecha', type: 'textWithVariable' },
+      { key: 'description', label: 'Descripción', type: 'textWithVariable' },
+      { key: 'vendor', label: 'Proveedor', type: 'textWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  zoho_books_create_bill: {
+    title: 'Crear Factura Proveedor',
+    icon: 'fa-file-invoice-dollar',
+    description: 'Crea factura de proveedor',
+    fields: [
+      { key: 'vendorId', label: 'ID Proveedor', type: 'textWithVariable', required: true },
+      { key: 'items', label: 'Items (JSON)', type: 'textareaWithVariable' },
+      { key: 'dueDate', label: 'Fecha de vencimiento', type: 'textWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  zoho_books_get_reports: {
+    title: 'Obtener Reportes',
+    icon: 'fa-chart-bar',
+    description: 'Obtiene reportes contables',
+    fields: [
+      { key: 'reportType', label: 'Tipo de reporte', type: 'select', default: 'profit_loss', options: [{ value: 'profit_loss', label: 'Pérdidas y Ganancias' }, { value: 'balance_sheet', label: 'Balance General' }, { value: 'cash_flow', label: 'Flujo de Caja' }, { value: 'sales_by_customer', label: 'Ventas por Cliente' }] },
+      { key: 'startDate', label: 'Fecha inicio', type: 'textWithVariable' },
+      { key: 'endDate', label: 'Fecha fin', type: 'textWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+
+  // ==========================================
+  // PIPEDRIVE
+  // ==========================================
+  pipedrive_connect: {
+    title: 'Conectar Pipedrive',
+    icon: 'fa-plug',
+    description: 'Configura conexión con Pipedrive',
+    fields: [
+      { key: 'apiToken', label: 'API Token', type: 'password', required: true },
+      { key: 'companyDomain', label: 'Dominio', type: 'textWithVariable', helpText: 'tu-empresa.pipedrive.com' },
+      { key: 'connectionVariable', label: 'Guardar conexión en', type: 'variable', required: true }
+    ]
+  },
+  pipedrive_create_deal: {
+    title: 'Crear Deal',
+    icon: 'fa-plus',
+    description: 'Crea un nuevo deal/negocio',
+    fields: [
+      { key: 'title', label: 'Título', type: 'textWithVariable', required: true },
+      { key: 'value', label: 'Valor', type: 'textWithVariable' },
+      { key: 'currency', label: 'Moneda', type: 'textWithVariable', default: 'USD' },
+      { key: 'personId', label: 'ID Persona', type: 'textWithVariable' },
+      { key: 'orgId', label: 'ID Organización', type: 'textWithVariable' },
+      { key: 'stageId', label: 'ID Etapa', type: 'textWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  pipedrive_update_deal: {
+    title: 'Actualizar Deal',
+    icon: 'fa-edit',
+    description: 'Actualiza un deal existente',
+    fields: [
+      { key: 'dealId', label: 'ID del Deal', type: 'textWithVariable', required: true },
+      { key: 'title', label: 'Título', type: 'textWithVariable' },
+      { key: 'value', label: 'Valor', type: 'textWithVariable' },
+      { key: 'status', label: 'Estado', type: 'select', options: [{ value: 'open', label: 'Abierto' }, { value: 'won', label: 'Ganado' }, { value: 'lost', label: 'Perdido' }, { value: 'deleted', label: 'Eliminado' }] },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  pipedrive_move_stage: {
+    title: 'Mover Etapa',
+    icon: 'fa-exchange-alt',
+    description: 'Mueve un deal a otra etapa',
+    fields: [
+      { key: 'dealId', label: 'ID del Deal', type: 'textWithVariable', required: true },
+      { key: 'stageId', label: 'ID de Etapa destino', type: 'textWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  pipedrive_create_person: {
+    title: 'Crear Persona',
+    icon: 'fa-user-plus',
+    description: 'Crea un contacto/persona',
+    fields: [
+      { key: 'name', label: 'Nombre', type: 'textWithVariable', required: true },
+      { key: 'email', label: 'Email', type: 'textWithVariable' },
+      { key: 'phone', label: 'Teléfono', type: 'textWithVariable' },
+      { key: 'orgId', label: 'ID Organización', type: 'textWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  pipedrive_create_org: {
+    title: 'Crear Organización',
+    icon: 'fa-building',
+    description: 'Crea una organización',
+    fields: [
+      { key: 'name', label: 'Nombre', type: 'textWithVariable', required: true },
+      { key: 'address', label: 'Dirección', type: 'textWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  pipedrive_add_activity: {
+    title: 'Agregar Actividad',
+    icon: 'fa-calendar-plus',
+    description: 'Crea una actividad',
+    fields: [
+      { key: 'dealId', label: 'ID del Deal', type: 'textWithVariable' },
+      { key: 'type', label: 'Tipo', type: 'select', default: 'call', options: [{ value: 'call', label: 'Llamada' }, { value: 'meeting', label: 'Reunión' }, { value: 'task', label: 'Tarea' }, { value: 'deadline', label: 'Fecha límite' }, { value: 'email', label: 'Email' }, { value: 'lunch', label: 'Almuerzo' }] },
+      { key: 'subject', label: 'Asunto', type: 'textWithVariable', required: true },
+      { key: 'dueDate', label: 'Fecha', type: 'textWithVariable' },
+      { key: 'duration', label: 'Duración', type: 'textWithVariable', helpText: 'HH:MM' },
+      { key: 'note', label: 'Nota', type: 'textareaWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  pipedrive_add_note: {
+    title: 'Agregar Nota',
+    icon: 'fa-sticky-note',
+    description: 'Agrega una nota a un deal/persona',
+    fields: [
+      { key: 'dealId', label: 'ID del Deal', type: 'textWithVariable' },
+      { key: 'personId', label: 'ID de Persona', type: 'textWithVariable' },
+      { key: 'orgId', label: 'ID Organización', type: 'textWithVariable' },
+      { key: 'content', label: 'Contenido', type: 'textareaWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  pipedrive_search: {
+    title: 'Buscar Deals',
+    icon: 'fa-search',
+    description: 'Busca deals, personas u organizaciones',
+    fields: [
+      { key: 'term', label: 'Término de búsqueda', type: 'textWithVariable', required: true },
+      { key: 'itemType', label: 'Tipo', type: 'select', default: 'deal', options: [{ value: 'deal', label: 'Deals' }, { value: 'person', label: 'Personas' }, { value: 'organization', label: 'Organizaciones' }] },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  pipedrive_get_pipeline: {
+    title: 'Obtener Pipeline',
+    icon: 'fa-stream',
+    description: 'Obtiene info de un pipeline',
+    fields: [
+      { key: 'pipelineId', label: 'ID del Pipeline', type: 'textWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+
+  // ==========================================
+  // ANTI-CAPTCHA
+  // ==========================================
+  captcha_connect: {
+    title: 'Conectar Servicio Anti-Captcha',
+    icon: 'fa-plug',
+    description: 'Configura servicio de resolución de captchas',
+    fields: [
+      { key: 'service', label: 'Servicio', type: 'select', default: '2captcha', options: [{ value: '2captcha', label: '2Captcha' }, { value: 'anticaptcha', label: 'Anti-Captcha' }, { value: 'capmonster', label: 'CapMonster' }, { value: 'capsolver', label: 'Capsolver' }] },
+      { key: 'apiKey', label: 'API Key', type: 'password', required: true },
+      { key: 'connectionVariable', label: 'Guardar conexión en', type: 'variable', required: true }
+    ]
+  },
+  captcha_solve_recaptcha_v2: {
+    title: 'Resolver reCAPTCHA v2',
+    icon: 'fa-puzzle-piece',
+    description: 'Resuelve reCAPTCHA v2 checkbox/invisible',
+    fields: [
+      { key: 'siteKey', label: 'Site Key', type: 'textWithVariable', required: true, helpText: 'data-sitekey del elemento' },
+      { key: 'pageUrl', label: 'URL de la página', type: 'textWithVariable', required: true },
+      { key: 'invisible', label: 'Invisible', type: 'checkbox', default: false },
+      { key: 'resultVariable', label: 'Guardar token en', type: 'variable' }
+    ]
+  },
+  captcha_solve_recaptcha_v3: {
+    title: 'Resolver reCAPTCHA v3',
+    icon: 'fa-puzzle-piece',
+    description: 'Resuelve reCAPTCHA v3 con score',
+    fields: [
+      { key: 'siteKey', label: 'Site Key', type: 'textWithVariable', required: true },
+      { key: 'pageUrl', label: 'URL de la página', type: 'textWithVariable', required: true },
+      { key: 'action', label: 'Acción', type: 'textWithVariable', helpText: 'Nombre de la acción' },
+      { key: 'minScore', label: 'Score mínimo', type: 'number', default: 0.3, helpText: '0.1 a 0.9' },
+      { key: 'resultVariable', label: 'Guardar token en', type: 'variable' }
+    ]
+  },
+  captcha_solve_hcaptcha: {
+    title: 'Resolver hCaptcha',
+    icon: 'fa-shield-alt',
+    description: 'Resuelve hCaptcha',
+    fields: [
+      { key: 'siteKey', label: 'Site Key', type: 'textWithVariable', required: true },
+      { key: 'pageUrl', label: 'URL de la página', type: 'textWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar token en', type: 'variable' }
+    ]
+  },
+  captcha_solve_image: {
+    title: 'Resolver Captcha Imagen',
+    icon: 'fa-image',
+    description: 'Resuelve captcha de imagen/texto',
+    fields: [
+      { key: 'imageSource', label: 'Fuente de imagen', type: 'select', default: 'file', options: [{ value: 'file', label: 'Archivo' }, { value: 'base64', label: 'Base64' }, { value: 'url', label: 'URL' }] },
+      { key: 'imagePath', label: 'Ruta del archivo', type: 'textWithVariable', condition: { field: 'imageSource', value: 'file' } },
+      { key: 'imageBase64', label: 'Imagen Base64', type: 'textareaWithVariable', condition: { field: 'imageSource', value: 'base64' } },
+      { key: 'imageUrl', label: 'URL de imagen', type: 'textWithVariable', condition: { field: 'imageSource', value: 'url' } },
+      { key: 'caseSensitive', label: 'Sensible a mayúsculas', type: 'checkbox', default: false },
+      { key: 'resultVariable', label: 'Guardar texto en', type: 'variable' }
+    ]
+  },
+  captcha_solve_funcaptcha: {
+    title: 'Resolver FunCaptcha',
+    icon: 'fa-gamepad',
+    description: 'Resuelve FunCaptcha/Arkose Labs',
+    fields: [
+      { key: 'publicKey', label: 'Public Key', type: 'textWithVariable', required: true },
+      { key: 'pageUrl', label: 'URL de la página', type: 'textWithVariable', required: true },
+      { key: 'serviceUrl', label: 'Service URL', type: 'textWithVariable' },
+      { key: 'resultVariable', label: 'Guardar token en', type: 'variable' }
+    ]
+  },
+  captcha_solve_turnstile: {
+    title: 'Resolver Turnstile',
+    icon: 'fa-cloud',
+    description: 'Resuelve Cloudflare Turnstile',
+    fields: [
+      { key: 'siteKey', label: 'Site Key', type: 'textWithVariable', required: true },
+      { key: 'pageUrl', label: 'URL de la página', type: 'textWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar token en', type: 'variable' }
+    ]
+  },
+  captcha_solve_geetest: {
+    title: 'Resolver GeeTest',
+    icon: 'fa-cog',
+    description: 'Resuelve GeeTest captcha',
+    fields: [
+      { key: 'gt', label: 'GT', type: 'textWithVariable', required: true },
+      { key: 'challenge', label: 'Challenge', type: 'textWithVariable', required: true },
+      { key: 'pageUrl', label: 'URL de la página', type: 'textWithVariable', required: true },
+      { key: 'apiServer', label: 'API Server', type: 'textWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  captcha_solve_aws_waf: {
+    title: 'Resolver AWS WAF',
+    icon: 'fa-lock',
+    description: 'Resuelve AWS WAF captcha',
+    fields: [
+      { key: 'siteKey', label: 'Site Key', type: 'textWithVariable', required: true },
+      { key: 'pageUrl', label: 'URL de la página', type: 'textWithVariable', required: true },
+      { key: 'iv', label: 'IV', type: 'textWithVariable' },
+      { key: 'context', label: 'Context', type: 'textWithVariable' },
+      { key: 'resultVariable', label: 'Guardar token en', type: 'variable' }
+    ]
+  },
+  captcha_get_balance: {
+    title: 'Consultar Saldo',
+    icon: 'fa-wallet',
+    description: 'Consulta saldo de la cuenta',
+    fields: [
+      { key: 'resultVariable', label: 'Guardar saldo en', type: 'variable' }
+    ]
+  },
+  captcha_get_result: {
+    title: 'Obtener Resultado',
+    icon: 'fa-check-circle',
+    description: 'Obtiene resultado de una tarea',
+    fields: [
+      { key: 'taskId', label: 'ID de la Tarea', type: 'textWithVariable', required: true },
+      { key: 'timeout', label: 'Timeout (seg)', type: 'number', default: 120 },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  captcha_report: {
+    title: 'Reportar Solución',
+    icon: 'fa-flag',
+    description: 'Reporta si la solución fue correcta',
+    fields: [
+      { key: 'taskId', label: 'ID de la Tarea', type: 'textWithVariable', required: true },
+      { key: 'correct', label: 'Solución correcta', type: 'checkbox', default: false },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+
+  // ==========================================
+  // STRIPE
+  // ==========================================
+  stripe_connect: {
+    title: 'Conectar Stripe',
+    icon: 'fa-plug',
+    description: 'Configura conexión con Stripe',
+    fields: [
+      { key: 'secretKey', label: 'Secret Key', type: 'password', required: true, helpText: 'sk_live_... o sk_test_...' },
+      { key: 'connectionVariable', label: 'Guardar conexión en', type: 'variable', required: true }
+    ]
+  },
+  stripe_create_payment: {
+    title: 'Crear Payment Intent',
+    icon: 'fa-credit-card',
+    description: 'Crea un intento de pago',
+    fields: [
+      { key: 'amount', label: 'Monto (centavos)', type: 'textWithVariable', required: true, helpText: '1000 = $10.00' },
+      { key: 'currency', label: 'Moneda', type: 'textWithVariable', default: 'usd' },
+      { key: 'customerId', label: 'ID Cliente', type: 'textWithVariable' },
+      { key: 'description', label: 'Descripción', type: 'textWithVariable' },
+      { key: 'paymentMethod', label: 'Método de pago', type: 'textWithVariable' },
+      { key: 'autoConfirm', label: 'Auto-confirmar', type: 'checkbox', default: false },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  stripe_create_customer: {
+    title: 'Crear Cliente',
+    icon: 'fa-user-plus',
+    description: 'Crea un cliente en Stripe',
+    fields: [
+      { key: 'email', label: 'Email', type: 'textWithVariable', required: true },
+      { key: 'name', label: 'Nombre', type: 'textWithVariable' },
+      { key: 'phone', label: 'Teléfono', type: 'textWithVariable' },
+      { key: 'description', label: 'Descripción', type: 'textWithVariable' },
+      { key: 'metadata', label: 'Metadata (JSON)', type: 'textareaWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  stripe_get_customer: {
+    title: 'Obtener Cliente',
+    icon: 'fa-user',
+    description: 'Obtiene información de un cliente',
+    fields: [
+      { key: 'customerId', label: 'ID del Cliente', type: 'textWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  stripe_create_subscription: {
+    title: 'Crear Suscripción',
+    icon: 'fa-sync',
+    description: 'Crea una suscripción recurrente',
+    fields: [
+      { key: 'customerId', label: 'ID del Cliente', type: 'textWithVariable', required: true },
+      { key: 'priceId', label: 'ID del Precio', type: 'textWithVariable', required: true },
+      { key: 'trialDays', label: 'Días de prueba', type: 'number' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  stripe_cancel_subscription: {
+    title: 'Cancelar Suscripción',
+    icon: 'fa-times-circle',
+    description: 'Cancela una suscripción',
+    fields: [
+      { key: 'subscriptionId', label: 'ID Suscripción', type: 'textWithVariable', required: true },
+      { key: 'immediately', label: 'Cancelar inmediatamente', type: 'checkbox', default: false, helpText: 'Si no, cancela al fin del periodo' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  stripe_create_invoice: {
+    title: 'Crear Factura',
+    icon: 'fa-file-invoice',
+    description: 'Crea una factura en Stripe',
+    fields: [
+      { key: 'customerId', label: 'ID del Cliente', type: 'textWithVariable', required: true },
+      { key: 'description', label: 'Descripción', type: 'textWithVariable' },
+      { key: 'autoAdvance', label: 'Auto-avanzar', type: 'checkbox', default: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  stripe_refund: {
+    title: 'Reembolsar',
+    icon: 'fa-undo',
+    description: 'Reembolsa un pago',
+    fields: [
+      { key: 'paymentIntentId', label: 'ID Payment Intent', type: 'textWithVariable', required: true },
+      { key: 'amount', label: 'Monto (centavos)', type: 'textWithVariable', helpText: 'Vacío = reembolso total' },
+      { key: 'reason', label: 'Razón', type: 'select', options: [{ value: 'duplicate', label: 'Duplicado' }, { value: 'fraudulent', label: 'Fraude' }, { value: 'requested_by_customer', label: 'Solicitado por cliente' }] },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  stripe_list_charges: {
+    title: 'Listar Cobros',
+    icon: 'fa-list',
+    description: 'Lista cobros realizados',
+    fields: [
+      { key: 'customerId', label: 'ID Cliente', type: 'textWithVariable' },
+      { key: 'limit', label: 'Límite', type: 'number', default: 10 },
+      { key: 'startDate', label: 'Desde', type: 'textWithVariable' },
+      { key: 'endDate', label: 'Hasta', type: 'textWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  stripe_create_product: {
+    title: 'Crear Producto',
+    icon: 'fa-box',
+    description: 'Crea un producto con precio',
+    fields: [
+      { key: 'name', label: 'Nombre', type: 'textWithVariable', required: true },
+      { key: 'description', label: 'Descripción', type: 'textWithVariable' },
+      { key: 'price', label: 'Precio (centavos)', type: 'textWithVariable' },
+      { key: 'currency', label: 'Moneda', type: 'textWithVariable', default: 'usd' },
+      { key: 'recurring', label: 'Recurrencia', type: 'select', default: 'none', options: [{ value: 'none', label: 'Único' }, { value: 'month', label: 'Mensual' }, { value: 'year', label: 'Anual' }] },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  stripe_create_checkout: {
+    title: 'Crear Checkout Session',
+    icon: 'fa-shopping-cart',
+    description: 'Crea una sesión de checkout',
+    fields: [
+      { key: 'mode', label: 'Modo', type: 'select', default: 'payment', options: [{ value: 'payment', label: 'Pago único' }, { value: 'subscription', label: 'Suscripción' }, { value: 'setup', label: 'Setup' }] },
+      { key: 'lineItems', label: 'Items (JSON)', type: 'textareaWithVariable', helpText: '[{price, quantity}]' },
+      { key: 'successUrl', label: 'URL de éxito', type: 'textWithVariable', required: true },
+      { key: 'cancelUrl', label: 'URL de cancelación', type: 'textWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  stripe_get_balance: {
+    title: 'Obtener Balance',
+    icon: 'fa-wallet',
+    description: 'Obtiene el balance de la cuenta',
+    fields: [
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+
+  // ==========================================
+  // PAYPAL
+  // ==========================================
+  paypal_connect: {
+    title: 'Conectar PayPal',
+    icon: 'fa-plug',
+    description: 'Configura conexión con PayPal',
+    fields: [
+      { key: 'clientId', label: 'Client ID', type: 'password', required: true },
+      { key: 'clientSecret', label: 'Client Secret', type: 'password', required: true },
+      { key: 'sandbox', label: 'Usar Sandbox', type: 'checkbox', default: false, helpText: 'Activar para pruebas' },
+      { key: 'connectionVariable', label: 'Guardar conexión en', type: 'variable', required: true }
+    ]
+  },
+  paypal_create_order: {
+    title: 'Crear Orden',
+    icon: 'fa-plus',
+    description: 'Crea una orden de pago',
+    fields: [
+      { key: 'amount', label: 'Monto', type: 'textWithVariable', required: true },
+      { key: 'currency', label: 'Moneda', type: 'textWithVariable', default: 'USD' },
+      { key: 'description', label: 'Descripción', type: 'textWithVariable' },
+      { key: 'intent', label: 'Intención', type: 'select', default: 'CAPTURE', options: [{ value: 'CAPTURE', label: 'Capturar' }, { value: 'AUTHORIZE', label: 'Autorizar' }] },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  paypal_capture_payment: {
+    title: 'Capturar Pago',
+    icon: 'fa-check',
+    description: 'Captura un pago autorizado',
+    fields: [
+      { key: 'orderId', label: 'ID de la Orden', type: 'textWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  paypal_refund: {
+    title: 'Reembolsar',
+    icon: 'fa-undo',
+    description: 'Reembolsa un pago capturado',
+    fields: [
+      { key: 'captureId', label: 'ID de Captura', type: 'textWithVariable', required: true },
+      { key: 'amount', label: 'Monto', type: 'textWithVariable', helpText: 'Vacío = total' },
+      { key: 'currency', label: 'Moneda', type: 'textWithVariable' },
+      { key: 'note', label: 'Nota', type: 'textWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  paypal_create_payout: {
+    title: 'Crear Payout',
+    icon: 'fa-money-bill-wave',
+    description: 'Envía dinero a un recipiente',
+    fields: [
+      { key: 'recipientEmail', label: 'Email del recipiente', type: 'textWithVariable', required: true },
+      { key: 'amount', label: 'Monto', type: 'textWithVariable', required: true },
+      { key: 'currency', label: 'Moneda', type: 'textWithVariable', default: 'USD' },
+      { key: 'note', label: 'Nota', type: 'textWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  paypal_create_subscription: {
+    title: 'Crear Suscripción',
+    icon: 'fa-sync',
+    description: 'Crea una suscripción recurrente',
+    fields: [
+      { key: 'planId', label: 'ID del Plan', type: 'textWithVariable', required: true },
+      { key: 'subscriberEmail', label: 'Email del suscriptor', type: 'textWithVariable' },
+      { key: 'startDate', label: 'Fecha de inicio', type: 'textWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  paypal_create_invoice: {
+    title: 'Crear Factura',
+    icon: 'fa-file-invoice',
+    description: 'Crea una factura PayPal',
+    fields: [
+      { key: 'recipientEmail', label: 'Email recipiente', type: 'textWithVariable', required: true },
+      { key: 'items', label: 'Items (JSON)', type: 'textareaWithVariable', helpText: '[{name, quantity, unit_amount}]' },
+      { key: 'note', label: 'Nota', type: 'textWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  paypal_get_transactions: {
+    title: 'Obtener Transacciones',
+    icon: 'fa-list',
+    description: 'Lista transacciones',
+    fields: [
+      { key: 'startDate', label: 'Desde', type: 'textWithVariable', required: true },
+      { key: 'endDate', label: 'Hasta', type: 'textWithVariable', required: true },
+      { key: 'transactionStatus', label: 'Estado', type: 'select', default: 'all', options: [{ value: 'all', label: 'Todos' }, { value: 'D', label: 'Denegado' }, { value: 'P', label: 'Pendiente' }, { value: 'S', label: 'Exitoso' }, { value: 'V', label: 'Revertido' }] },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+
+  // ==========================================
+  // SHOPIFY
+  // ==========================================
+  shopify_connect: {
+    title: 'Conectar Shopify',
+    icon: 'fa-plug',
+    description: 'Configura conexión con Shopify',
+    fields: [
+      { key: 'storeDomain', label: 'Dominio', type: 'textWithVariable', required: true, helpText: 'tu-tienda.myshopify.com' },
+      { key: 'accessToken', label: 'Access Token', type: 'password', required: true },
+      { key: 'connectionVariable', label: 'Guardar conexión en', type: 'variable', required: true }
+    ]
+  },
+  shopify_create_product: {
+    title: 'Crear Producto',
+    icon: 'fa-plus',
+    description: 'Crea un producto en Shopify',
+    fields: [
+      { key: 'title', label: 'Título', type: 'textWithVariable', required: true },
+      { key: 'description', label: 'Descripción', type: 'textareaWithVariable' },
+      { key: 'productType', label: 'Tipo', type: 'textWithVariable' },
+      { key: 'vendor', label: 'Proveedor', type: 'textWithVariable' },
+      { key: 'tags', label: 'Tags', type: 'tags' },
+      { key: 'price', label: 'Precio', type: 'textWithVariable' },
+      { key: 'sku', label: 'SKU', type: 'textWithVariable' },
+      { key: 'inventoryQty', label: 'Stock', type: 'number' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  shopify_update_product: {
+    title: 'Actualizar Producto',
+    icon: 'fa-edit',
+    description: 'Actualiza un producto existente',
+    fields: [
+      { key: 'productId', label: 'ID Producto', type: 'textWithVariable', required: true },
+      { key: 'title', label: 'Título', type: 'textWithVariable' },
+      { key: 'description', label: 'Descripción', type: 'textareaWithVariable' },
+      { key: 'tags', label: 'Tags', type: 'tags' },
+      { key: 'status', label: 'Estado', type: 'select', options: [{ value: 'active', label: 'Activo' }, { value: 'draft', label: 'Borrador' }, { value: 'archived', label: 'Archivado' }] },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  shopify_get_products: {
+    title: 'Obtener Productos',
+    icon: 'fa-list',
+    description: 'Lista productos de la tienda',
+    fields: [
+      { key: 'limit', label: 'Límite', type: 'number', default: 50 },
+      { key: 'status', label: 'Estado', type: 'select', default: 'any', options: [{ value: 'any', label: 'Todos' }, { value: 'active', label: 'Activos' }, { value: 'draft', label: 'Borradores' }, { value: 'archived', label: 'Archivados' }] },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  shopify_get_orders: {
+    title: 'Obtener Órdenes',
+    icon: 'fa-shopping-cart',
+    description: 'Lista órdenes de la tienda',
+    fields: [
+      { key: 'status', label: 'Estado', type: 'select', default: 'any', options: [{ value: 'any', label: 'Todas' }, { value: 'open', label: 'Abiertas' }, { value: 'closed', label: 'Cerradas' }, { value: 'cancelled', label: 'Canceladas' }] },
+      { key: 'limit', label: 'Límite', type: 'number', default: 50 },
+      { key: 'sinceDate', label: 'Desde', type: 'textWithVariable' },
+      { key: 'financialStatus', label: 'Estado financiero', type: 'select', default: 'any', options: [{ value: 'any', label: 'Todos' }, { value: 'paid', label: 'Pagado' }, { value: 'unpaid', label: 'Sin pagar' }, { value: 'refunded', label: 'Reembolsado' }] },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  shopify_fulfill_order: {
+    title: 'Cumplir Orden',
+    icon: 'fa-truck',
+    description: 'Marca una orden como enviada',
+    fields: [
+      { key: 'orderId', label: 'ID de Orden', type: 'textWithVariable', required: true },
+      { key: 'trackingNumber', label: 'Número de tracking', type: 'textWithVariable' },
+      { key: 'trackingCompany', label: 'Empresa de envío', type: 'textWithVariable' },
+      { key: 'trackingUrl', label: 'URL de tracking', type: 'textWithVariable' },
+      { key: 'notifyCustomer', label: 'Notificar cliente', type: 'checkbox', default: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  shopify_update_inventory: {
+    title: 'Actualizar Inventario',
+    icon: 'fa-boxes',
+    description: 'Ajusta inventario de un producto',
+    fields: [
+      { key: 'inventoryItemId', label: 'ID Item Inventario', type: 'textWithVariable', required: true },
+      { key: 'locationId', label: 'ID Ubicación', type: 'textWithVariable', required: true },
+      { key: 'adjustment', label: 'Ajuste (+/-)', type: 'number' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  shopify_create_customer: {
+    title: 'Crear Cliente',
+    icon: 'fa-user-plus',
+    description: 'Crea un cliente en Shopify',
+    fields: [
+      { key: 'firstName', label: 'Nombre', type: 'textWithVariable' },
+      { key: 'lastName', label: 'Apellido', type: 'textWithVariable' },
+      { key: 'email', label: 'Email', type: 'textWithVariable', required: true },
+      { key: 'phone', label: 'Teléfono', type: 'textWithVariable' },
+      { key: 'tags', label: 'Tags', type: 'tags' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  shopify_create_discount: {
+    title: 'Crear Descuento',
+    icon: 'fa-percentage',
+    description: 'Crea un código de descuento',
+    fields: [
+      { key: 'code', label: 'Código', type: 'textWithVariable', required: true },
+      { key: 'discountType', label: 'Tipo', type: 'select', default: 'percentage', options: [{ value: 'percentage', label: 'Porcentaje' }, { value: 'fixed_amount', label: 'Monto fijo' }, { value: 'free_shipping', label: 'Envío gratis' }] },
+      { key: 'value', label: 'Valor', type: 'textWithVariable', required: true },
+      { key: 'usageLimit', label: 'Límite de uso', type: 'number' },
+      { key: 'startsAt', label: 'Fecha inicio', type: 'textWithVariable' },
+      { key: 'endsAt', label: 'Fecha fin', type: 'textWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  shopify_refund_order: {
+    title: 'Reembolsar Orden',
+    icon: 'fa-undo',
+    description: 'Reembolsa una orden',
+    fields: [
+      { key: 'orderId', label: 'ID de Orden', type: 'textWithVariable', required: true },
+      { key: 'amount', label: 'Monto', type: 'textWithVariable', helpText: 'Vacío = total' },
+      { key: 'note', label: 'Nota', type: 'textWithVariable' },
+      { key: 'notify', label: 'Notificar cliente', type: 'checkbox', default: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  shopify_get_analytics: {
+    title: 'Obtener Analíticas',
+    icon: 'fa-chart-line',
+    description: 'Obtiene analíticas de la tienda',
+    fields: [
+      { key: 'reportType', label: 'Tipo', type: 'select', default: 'sales', options: [{ value: 'sales', label: 'Ventas' }, { value: 'orders', label: 'Órdenes' }, { value: 'customers', label: 'Clientes' }, { value: 'inventory', label: 'Inventario' }] },
+      { key: 'sinceDate', label: 'Desde', type: 'textWithVariable' },
+      { key: 'untilDate', label: 'Hasta', type: 'textWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+
+  // ==========================================
+  // WOOCOMMERCE
+  // ==========================================
+  woo_connect: {
+    title: 'Conectar WooCommerce',
+    icon: 'fa-plug',
+    description: 'Configura conexión con WooCommerce',
+    fields: [
+      { key: 'siteUrl', label: 'URL del sitio', type: 'textWithVariable', required: true, helpText: 'https://tu-sitio.com' },
+      { key: 'consumerKey', label: 'Consumer Key', type: 'password', required: true },
+      { key: 'consumerSecret', label: 'Consumer Secret', type: 'password', required: true },
+      { key: 'connectionVariable', label: 'Guardar conexión en', type: 'variable', required: true }
+    ]
+  },
+  woo_create_product: {
+    title: 'Crear Producto',
+    icon: 'fa-plus',
+    description: 'Crea un producto en WooCommerce',
+    fields: [
+      { key: 'name', label: 'Nombre', type: 'textWithVariable', required: true },
+      { key: 'type', label: 'Tipo', type: 'select', default: 'simple', options: [{ value: 'simple', label: 'Simple' }, { value: 'variable', label: 'Variable' }, { value: 'grouped', label: 'Agrupado' }, { value: 'external', label: 'Externo' }] },
+      { key: 'regularPrice', label: 'Precio regular', type: 'textWithVariable' },
+      { key: 'salePrice', label: 'Precio oferta', type: 'textWithVariable' },
+      { key: 'description', label: 'Descripción', type: 'textareaWithVariable' },
+      { key: 'sku', label: 'SKU', type: 'textWithVariable' },
+      { key: 'stockQuantity', label: 'Stock', type: 'number' },
+      { key: 'categories', label: 'Categorías', type: 'tags' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  woo_update_product: {
+    title: 'Actualizar Producto',
+    icon: 'fa-edit',
+    description: 'Actualiza un producto existente',
+    fields: [
+      { key: 'productId', label: 'ID Producto', type: 'textWithVariable', required: true },
+      { key: 'name', label: 'Nombre', type: 'textWithVariable' },
+      { key: 'regularPrice', label: 'Precio', type: 'textWithVariable' },
+      { key: 'stockQuantity', label: 'Stock', type: 'number' },
+      { key: 'status', label: 'Estado', type: 'select', options: [{ value: 'publish', label: 'Publicado' }, { value: 'draft', label: 'Borrador' }, { value: 'pending', label: 'Pendiente' }, { value: 'private', label: 'Privado' }] },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  woo_get_products: {
+    title: 'Obtener Productos',
+    icon: 'fa-list',
+    description: 'Lista productos',
+    fields: [
+      { key: 'perPage', label: 'Por página', type: 'number', default: 20 },
+      { key: 'status', label: 'Estado', type: 'select', default: 'any', options: [{ value: 'any', label: 'Todos' }, { value: 'publish', label: 'Publicados' }, { value: 'draft', label: 'Borradores' }] },
+      { key: 'search', label: 'Buscar', type: 'textWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  woo_get_orders: {
+    title: 'Obtener Órdenes',
+    icon: 'fa-shopping-cart',
+    description: 'Lista órdenes',
+    fields: [
+      { key: 'perPage', label: 'Por página', type: 'number', default: 20 },
+      { key: 'status', label: 'Estado', type: 'select', default: 'any', options: [{ value: 'any', label: 'Todas' }, { value: 'pending', label: 'Pendiente' }, { value: 'processing', label: 'Procesando' }, { value: 'completed', label: 'Completada' }, { value: 'cancelled', label: 'Cancelada' }, { value: 'refunded', label: 'Reembolsada' }] },
+      { key: 'after', label: 'Después de', type: 'textWithVariable', helpText: 'Fecha ISO 8601' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  woo_update_order: {
+    title: 'Actualizar Orden',
+    icon: 'fa-edit',
+    description: 'Actualiza estado de una orden',
+    fields: [
+      { key: 'orderId', label: 'ID de Orden', type: 'textWithVariable', required: true },
+      { key: 'status', label: 'Estado', type: 'select', required: true, options: [{ value: 'pending', label: 'Pendiente' }, { value: 'processing', label: 'Procesando' }, { value: 'on-hold', label: 'En espera' }, { value: 'completed', label: 'Completada' }, { value: 'cancelled', label: 'Cancelada' }, { value: 'refunded', label: 'Reembolsada' }] },
+      { key: 'note', label: 'Nota', type: 'textWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  woo_create_coupon: {
+    title: 'Crear Cupón',
+    icon: 'fa-ticket-alt',
+    description: 'Crea un cupón de descuento',
+    fields: [
+      { key: 'code', label: 'Código', type: 'textWithVariable', required: true },
+      { key: 'discountType', label: 'Tipo', type: 'select', default: 'percent', options: [{ value: 'percent', label: 'Porcentaje' }, { value: 'fixed_cart', label: 'Monto fijo carrito' }, { value: 'fixed_product', label: 'Monto fijo producto' }] },
+      { key: 'amount', label: 'Valor', type: 'textWithVariable', required: true },
+      { key: 'usageLimit', label: 'Límite de uso', type: 'number' },
+      { key: 'expiryDate', label: 'Fecha expiración', type: 'textWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  woo_update_inventory: {
+    title: 'Actualizar Inventario',
+    icon: 'fa-boxes',
+    description: 'Actualiza stock de un producto',
+    fields: [
+      { key: 'productId', label: 'ID Producto', type: 'textWithVariable', required: true },
+      { key: 'stockQuantity', label: 'Cantidad', type: 'number', required: true },
+      { key: 'manageStock', label: 'Gestionar stock', type: 'checkbox', default: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  woo_create_customer: {
+    title: 'Crear Cliente',
+    icon: 'fa-user-plus',
+    description: 'Crea un cliente',
+    fields: [
+      { key: 'email', label: 'Email', type: 'textWithVariable', required: true },
+      { key: 'firstName', label: 'Nombre', type: 'textWithVariable' },
+      { key: 'lastName', label: 'Apellido', type: 'textWithVariable' },
+      { key: 'username', label: 'Usuario', type: 'textWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  woo_get_reports: {
+    title: 'Obtener Reportes',
+    icon: 'fa-chart-bar',
+    description: 'Obtiene reportes de ventas',
+    fields: [
+      { key: 'report', label: 'Reporte', type: 'select', default: 'sales', options: [{ value: 'sales', label: 'Ventas' }, { value: 'top_sellers', label: 'Más vendidos' }, { value: 'coupons', label: 'Cupones' }, { value: 'customers', label: 'Clientes' }] },
+      { key: 'period', label: 'Periodo', type: 'select', default: 'month', options: [{ value: 'week', label: 'Semana' }, { value: 'month', label: 'Mes' }, { value: 'year', label: 'Año' }] },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+
+  // ==========================================
+  // AMAZON SP-API
+  // ==========================================
+  amz_connect: {
+    title: 'Conectar Amazon',
+    icon: 'fa-plug',
+    description: 'Configura conexión con Amazon SP-API',
+    fields: [
+      { key: 'clientId', label: 'Client ID', type: 'password', required: true },
+      { key: 'clientSecret', label: 'Client Secret', type: 'password', required: true },
+      { key: 'refreshToken', label: 'Refresh Token', type: 'password', required: true },
+      { key: 'marketplace', label: 'Marketplace', type: 'select', default: 'US', options: [{ value: 'US', label: 'Estados Unidos' }, { value: 'CA', label: 'Canadá' }, { value: 'MX', label: 'México' }, { value: 'BR', label: 'Brasil' }, { value: 'UK', label: 'Reino Unido' }, { value: 'DE', label: 'Alemania' }, { value: 'FR', label: 'Francia' }, { value: 'ES', label: 'España' }] },
+      { key: 'connectionVariable', label: 'Guardar conexión en', type: 'variable', required: true }
+    ]
+  },
+  amz_get_orders: {
+    title: 'Obtener Órdenes',
+    icon: 'fa-shopping-cart',
+    description: 'Lista órdenes de Amazon',
+    fields: [
+      { key: 'createdAfter', label: 'Creadas después de', type: 'textWithVariable' },
+      { key: 'createdBefore', label: 'Creadas antes de', type: 'textWithVariable' },
+      { key: 'orderStatuses', label: 'Estados', type: 'tags', helpText: 'Pending, Shipped, Canceled...' },
+      { key: 'maxResults', label: 'Máximo', type: 'number', default: 50 },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  amz_get_order_items: {
+    title: 'Items de Orden',
+    icon: 'fa-list',
+    description: 'Obtiene items de una orden',
+    fields: [
+      { key: 'orderId', label: 'ID de Orden', type: 'textWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  amz_create_listing: {
+    title: 'Crear Listado',
+    icon: 'fa-plus',
+    description: 'Crea un listado de producto',
+    fields: [
+      { key: 'sku', label: 'SKU', type: 'textWithVariable', required: true },
+      { key: 'asin', label: 'ASIN', type: 'textWithVariable' },
+      { key: 'price', label: 'Precio', type: 'textWithVariable', required: true },
+      { key: 'condition', label: 'Condición', type: 'select', default: 'New', options: [{ value: 'New', label: 'Nuevo' }, { value: 'UsedLikeNew', label: 'Usado - Como nuevo' }, { value: 'UsedVeryGood', label: 'Usado - Muy bueno' }, { value: 'UsedGood', label: 'Usado - Bueno' }] },
+      { key: 'quantity', label: 'Cantidad', type: 'number' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  amz_update_inventory: {
+    title: 'Actualizar Inventario FBA',
+    icon: 'fa-boxes',
+    description: 'Actualiza inventario en Amazon',
+    fields: [
+      { key: 'sku', label: 'SKU', type: 'textWithVariable', required: true },
+      { key: 'quantity', label: 'Cantidad', type: 'number', required: true },
+      { key: 'fulfillmentChannel', label: 'Canal', type: 'select', default: 'DEFAULT', options: [{ value: 'DEFAULT', label: 'Vendedor' }, { value: 'AMAZON_NA', label: 'FBA' }] },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  amz_get_pricing: {
+    title: 'Obtener Precios',
+    icon: 'fa-dollar-sign',
+    description: 'Obtiene precios de productos',
+    fields: [
+      { key: 'asin', label: 'ASIN', type: 'textWithVariable' },
+      { key: 'sku', label: 'SKU', type: 'textWithVariable' },
+      { key: 'itemType', label: 'Tipo', type: 'select', default: 'Asin', options: [{ value: 'Asin', label: 'ASIN' }, { value: 'Sku', label: 'SKU' }] },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  amz_request_report: {
+    title: 'Solicitar Reporte',
+    icon: 'fa-file-alt',
+    description: 'Solicita un reporte de Amazon',
+    fields: [
+      { key: 'reportType', label: 'Tipo', type: 'select', options: [{ value: 'GET_FLAT_FILE_OPEN_LISTINGS_DATA', label: 'Listados abiertos' }, { value: 'GET_MERCHANT_LISTINGS_ALL_DATA', label: 'Todos los listados' }, { value: 'GET_AFN_INVENTORY_DATA', label: 'Inventario FBA' }, { value: 'GET_FLAT_FILE_ALL_ORDERS_DATA_BY_ORDER_DATE', label: 'Órdenes por fecha' }] },
+      { key: 'startDate', label: 'Desde', type: 'textWithVariable' },
+      { key: 'endDate', label: 'Hasta', type: 'textWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  amz_get_catalog: {
+    title: 'Buscar Catálogo',
+    icon: 'fa-th',
+    description: 'Busca en el catálogo de Amazon',
+    fields: [
+      { key: 'keywords', label: 'Palabras clave', type: 'textWithVariable' },
+      { key: 'asin', label: 'ASIN', type: 'textWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  amz_get_financials: {
+    title: 'Eventos Financieros',
+    icon: 'fa-chart-line',
+    description: 'Obtiene eventos financieros',
+    fields: [
+      { key: 'orderId', label: 'ID de Orden', type: 'textWithVariable' },
+      { key: 'postedAfter', label: 'Después de', type: 'textWithVariable' },
+      { key: 'postedBefore', label: 'Antes de', type: 'textWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+
+  // ==========================================
+  // MERCADO LIBRE
+  // ==========================================
+  meli_connect: {
+    title: 'Conectar Mercado Libre',
+    icon: 'fa-plug',
+    description: 'Configura conexión con Mercado Libre',
+    fields: [
+      { key: 'clientId', label: 'Client ID', type: 'password', required: true },
+      { key: 'clientSecret', label: 'Client Secret', type: 'password', required: true },
+      { key: 'refreshToken', label: 'Refresh Token', type: 'password' },
+      { key: 'site', label: 'País', type: 'select', default: 'MLA', options: [{ value: 'MLA', label: 'Argentina' }, { value: 'MLB', label: 'Brasil' }, { value: 'MLM', label: 'México' }, { value: 'MLC', label: 'Chile' }, { value: 'MCO', label: 'Colombia' }, { value: 'MLU', label: 'Uruguay' }, { value: 'MPE', label: 'Perú' }] },
+      { key: 'connectionVariable', label: 'Guardar conexión en', type: 'variable', required: true }
+    ]
+  },
+  meli_create_listing: {
+    title: 'Crear Publicación',
+    icon: 'fa-plus',
+    description: 'Crea una publicación en ML',
+    fields: [
+      { key: 'title', label: 'Título', type: 'textWithVariable', required: true },
+      { key: 'categoryId', label: 'ID Categoría', type: 'textWithVariable', required: true },
+      { key: 'price', label: 'Precio', type: 'textWithVariable', required: true },
+      { key: 'currency', label: 'Moneda', type: 'select', default: 'ARS', options: [{ value: 'ARS', label: 'ARS' }, { value: 'BRL', label: 'BRL' }, { value: 'MXN', label: 'MXN' }, { value: 'CLP', label: 'CLP' }, { value: 'COP', label: 'COP' }, { value: 'USD', label: 'USD' }] },
+      { key: 'condition', label: 'Condición', type: 'select', default: 'new', options: [{ value: 'new', label: 'Nuevo' }, { value: 'used', label: 'Usado' }] },
+      { key: 'availableQuantity', label: 'Cantidad', type: 'number', required: true },
+      { key: 'description', label: 'Descripción', type: 'textareaWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  meli_update_listing: {
+    title: 'Actualizar Publicación',
+    icon: 'fa-edit',
+    description: 'Actualiza una publicación',
+    fields: [
+      { key: 'itemId', label: 'ID del Item', type: 'textWithVariable', required: true },
+      { key: 'price', label: 'Precio', type: 'textWithVariable' },
+      { key: 'availableQuantity', label: 'Cantidad', type: 'number' },
+      { key: 'status', label: 'Estado', type: 'select', options: [{ value: 'active', label: 'Activo' }, { value: 'paused', label: 'Pausado' }, { value: 'closed', label: 'Cerrado' }] },
+      { key: 'title', label: 'Título', type: 'textWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  meli_get_orders: {
+    title: 'Obtener Ventas',
+    icon: 'fa-shopping-cart',
+    description: 'Lista ventas/órdenes',
+    fields: [
+      { key: 'status', label: 'Estado', type: 'select', default: 'all', options: [{ value: 'all', label: 'Todas' }, { value: 'confirmed', label: 'Confirmada' }, { value: 'paid', label: 'Pagada' }, { value: 'shipped', label: 'Enviada' }, { value: 'delivered', label: 'Entregada' }, { value: 'cancelled', label: 'Cancelada' }] },
+      { key: 'sort', label: 'Orden', type: 'select', default: 'date_desc', options: [{ value: 'date_asc', label: 'Más antiguas' }, { value: 'date_desc', label: 'Más recientes' }] },
+      { key: 'limit', label: 'Límite', type: 'number', default: 50 },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  meli_update_order: {
+    title: 'Actualizar Estado Orden',
+    icon: 'fa-truck',
+    description: 'Actualiza estado de envío',
+    fields: [
+      { key: 'orderId', label: 'ID de Orden', type: 'textWithVariable', required: true },
+      { key: 'shipmentStatus', label: 'Estado envío', type: 'select', options: [{ value: 'ready_to_ship', label: 'Listo para enviar' }, { value: 'shipped', label: 'Enviado' }, { value: 'delivered', label: 'Entregado' }] },
+      { key: 'trackingNumber', label: 'Nro seguimiento', type: 'textWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  meli_get_questions: {
+    title: 'Obtener Preguntas',
+    icon: 'fa-question-circle',
+    description: 'Lista preguntas de compradores',
+    fields: [
+      { key: 'itemId', label: 'ID del Item', type: 'textWithVariable' },
+      { key: 'status', label: 'Estado', type: 'select', default: 'all', options: [{ value: 'all', label: 'Todas' }, { value: 'unanswered', label: 'Sin responder' }, { value: 'answered', label: 'Respondidas' }] },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  meli_answer_question: {
+    title: 'Responder Pregunta',
+    icon: 'fa-reply',
+    description: 'Responde una pregunta',
+    fields: [
+      { key: 'questionId', label: 'ID Pregunta', type: 'textWithVariable', required: true },
+      { key: 'answer', label: 'Respuesta', type: 'textareaWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  meli_update_stock: {
+    title: 'Actualizar Stock',
+    icon: 'fa-boxes',
+    description: 'Actualiza stock de un item',
+    fields: [
+      { key: 'itemId', label: 'ID del Item', type: 'textWithVariable', required: true },
+      { key: 'availableQuantity', label: 'Cantidad', type: 'number', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  meli_get_categories: {
+    title: 'Obtener Categorías',
+    icon: 'fa-sitemap',
+    description: 'Lista categorías de ML',
+    fields: [
+      { key: 'siteId', label: 'País', type: 'select', default: 'MLA', options: [{ value: 'MLA', label: 'Argentina' }, { value: 'MLB', label: 'Brasil' }, { value: 'MLM', label: 'México' }, { value: 'MLC', label: 'Chile' }, { value: 'MCO', label: 'Colombia' }] },
+      { key: 'categoryId', label: 'ID categoría padre', type: 'textWithVariable', helpText: 'Vacío = raíz' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+
+  // ==========================================
+  // GITHUB
+  // ==========================================
+  gh_connect: {
+    title: 'Conectar GitHub',
+    icon: 'fa-plug',
+    description: 'Configura conexión con GitHub',
+    fields: [
+      { key: 'token', label: 'Personal Access Token', type: 'password', required: true },
+      { key: 'baseUrl', label: 'Base URL', type: 'textWithVariable', helpText: 'Para Enterprise. Vacío = github.com' },
+      { key: 'connectionVariable', label: 'Guardar conexión en', type: 'variable', required: true }
+    ]
+  },
+  gh_create_issue: {
+    title: 'Crear Issue',
+    icon: 'fa-plus',
+    description: 'Crea una issue en un repositorio',
+    fields: [
+      { key: 'owner', label: 'Owner', type: 'textWithVariable', required: true },
+      { key: 'repo', label: 'Repositorio', type: 'textWithVariable', required: true },
+      { key: 'title', label: 'Título', type: 'textWithVariable', required: true },
+      { key: 'body', label: 'Descripción', type: 'textareaWithVariable' },
+      { key: 'labels', label: 'Labels', type: 'tags' },
+      { key: 'assignees', label: 'Asignados', type: 'tags' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  gh_update_issue: {
+    title: 'Actualizar Issue',
+    icon: 'fa-edit',
+    description: 'Actualiza una issue existente',
+    fields: [
+      { key: 'owner', label: 'Owner', type: 'textWithVariable', required: true },
+      { key: 'repo', label: 'Repositorio', type: 'textWithVariable', required: true },
+      { key: 'issueNumber', label: 'Número de Issue', type: 'textWithVariable', required: true },
+      { key: 'title', label: 'Título', type: 'textWithVariable' },
+      { key: 'body', label: 'Descripción', type: 'textareaWithVariable' },
+      { key: 'state', label: 'Estado', type: 'select', options: [{ value: 'open', label: 'Abierta' }, { value: 'closed', label: 'Cerrada' }] },
+      { key: 'labels', label: 'Labels', type: 'tags' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  gh_create_pr: {
+    title: 'Crear Pull Request',
+    icon: 'fa-code-branch',
+    description: 'Crea un pull request',
+    fields: [
+      { key: 'owner', label: 'Owner', type: 'textWithVariable', required: true },
+      { key: 'repo', label: 'Repositorio', type: 'textWithVariable', required: true },
+      { key: 'title', label: 'Título', type: 'textWithVariable', required: true },
+      { key: 'body', label: 'Descripción', type: 'textareaWithVariable' },
+      { key: 'head', label: 'Branch origen', type: 'textWithVariable', required: true },
+      { key: 'base', label: 'Branch destino', type: 'textWithVariable', required: true },
+      { key: 'draft', label: 'Draft', type: 'checkbox', default: false },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  gh_merge_pr: {
+    title: 'Merge Pull Request',
+    icon: 'fa-check-circle',
+    description: 'Hace merge de un PR',
+    fields: [
+      { key: 'owner', label: 'Owner', type: 'textWithVariable', required: true },
+      { key: 'repo', label: 'Repositorio', type: 'textWithVariable', required: true },
+      { key: 'pullNumber', label: 'Número de PR', type: 'textWithVariable', required: true },
+      { key: 'mergeMethod', label: 'Método', type: 'select', default: 'merge', options: [{ value: 'merge', label: 'Merge' }, { value: 'squash', label: 'Squash' }, { value: 'rebase', label: 'Rebase' }] },
+      { key: 'commitTitle', label: 'Título del commit', type: 'textWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  gh_create_branch: {
+    title: 'Crear Branch',
+    icon: 'fa-code-branch',
+    description: 'Crea un nuevo branch',
+    fields: [
+      { key: 'owner', label: 'Owner', type: 'textWithVariable', required: true },
+      { key: 'repo', label: 'Repositorio', type: 'textWithVariable', required: true },
+      { key: 'branchName', label: 'Nombre del branch', type: 'textWithVariable', required: true },
+      { key: 'fromBranch', label: 'Desde branch', type: 'textWithVariable', default: 'main' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  gh_commit_file: {
+    title: 'Commit Archivo',
+    icon: 'fa-file-upload',
+    description: 'Hace commit de un archivo',
+    fields: [
+      { key: 'owner', label: 'Owner', type: 'textWithVariable', required: true },
+      { key: 'repo', label: 'Repositorio', type: 'textWithVariable', required: true },
+      { key: 'path', label: 'Ruta del archivo', type: 'textWithVariable', required: true },
+      { key: 'content', label: 'Contenido', type: 'textareaWithVariable', required: true },
+      { key: 'message', label: 'Mensaje de commit', type: 'textWithVariable', required: true },
+      { key: 'branch', label: 'Branch', type: 'textWithVariable', default: 'main' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  gh_get_file: {
+    title: 'Obtener Archivo',
+    icon: 'fa-file-code',
+    description: 'Obtiene contenido de un archivo',
+    fields: [
+      { key: 'owner', label: 'Owner', type: 'textWithVariable', required: true },
+      { key: 'repo', label: 'Repositorio', type: 'textWithVariable', required: true },
+      { key: 'path', label: 'Ruta', type: 'textWithVariable', required: true },
+      { key: 'branch', label: 'Branch', type: 'textWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  gh_create_release: {
+    title: 'Crear Release',
+    icon: 'fa-tag',
+    description: 'Crea un release en GitHub',
+    fields: [
+      { key: 'owner', label: 'Owner', type: 'textWithVariable', required: true },
+      { key: 'repo', label: 'Repositorio', type: 'textWithVariable', required: true },
+      { key: 'tagName', label: 'Tag', type: 'textWithVariable', required: true },
+      { key: 'name', label: 'Nombre', type: 'textWithVariable' },
+      { key: 'body', label: 'Notas de release', type: 'textareaWithVariable' },
+      { key: 'prerelease', label: 'Pre-release', type: 'checkbox', default: false },
+      { key: 'draft', label: 'Borrador', type: 'checkbox', default: false },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  gh_trigger_workflow: {
+    title: 'Trigger Actions',
+    icon: 'fa-play',
+    description: 'Dispara un workflow de GitHub Actions',
+    fields: [
+      { key: 'owner', label: 'Owner', type: 'textWithVariable', required: true },
+      { key: 'repo', label: 'Repositorio', type: 'textWithVariable', required: true },
+      { key: 'workflowId', label: 'ID del Workflow', type: 'textWithVariable', required: true },
+      { key: 'ref', label: 'Ref (branch/tag)', type: 'textWithVariable', default: 'main' },
+      { key: 'inputs', label: 'Inputs (JSON)', type: 'textareaWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  gh_add_comment: {
+    title: 'Agregar Comentario',
+    icon: 'fa-comment',
+    description: 'Comenta en una issue o PR',
+    fields: [
+      { key: 'owner', label: 'Owner', type: 'textWithVariable', required: true },
+      { key: 'repo', label: 'Repositorio', type: 'textWithVariable', required: true },
+      { key: 'issueNumber', label: 'Número de Issue/PR', type: 'textWithVariable', required: true },
+      { key: 'body', label: 'Comentario', type: 'textareaWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  gh_list_repos: {
+    title: 'Listar Repositorios',
+    icon: 'fa-list',
+    description: 'Lista repositorios',
+    fields: [
+      { key: 'org', label: 'Organización', type: 'textWithVariable', helpText: 'Vacío = usuario propio' },
+      { key: 'type', label: 'Tipo', type: 'select', default: 'all', options: [{ value: 'all', label: 'Todos' }, { value: 'public', label: 'Públicos' }, { value: 'private', label: 'Privados' }, { value: 'forks', label: 'Forks' }] },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  gh_create_gist: {
+    title: 'Crear Gist',
+    icon: 'fa-file-alt',
+    description: 'Crea un Gist',
+    fields: [
+      { key: 'description', label: 'Descripción', type: 'textWithVariable' },
+      { key: 'files', label: 'Archivos (JSON)', type: 'textareaWithVariable', required: true, helpText: '{"file.txt":{"content":"..."}}' },
+      { key: 'public', label: 'Público', type: 'checkbox', default: false },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+
+  // ==========================================
+  // GITLAB
+  // ==========================================
+  gl_connect: {
+    title: 'Conectar GitLab',
+    icon: 'fa-plug',
+    description: 'Configura conexión con GitLab',
+    fields: [
+      { key: 'token', label: 'Personal Access Token', type: 'password', required: true },
+      { key: 'baseUrl', label: 'URL de GitLab', type: 'textWithVariable', default: 'https://gitlab.com' },
+      { key: 'connectionVariable', label: 'Guardar conexión en', type: 'variable', required: true }
+    ]
+  },
+  gl_create_issue: {
+    title: 'Crear Issue',
+    icon: 'fa-plus',
+    description: 'Crea una issue en GitLab',
+    fields: [
+      { key: 'projectId', label: 'ID del Proyecto', type: 'textWithVariable', required: true },
+      { key: 'title', label: 'Título', type: 'textWithVariable', required: true },
+      { key: 'description', label: 'Descripción', type: 'textareaWithVariable' },
+      { key: 'labels', label: 'Labels', type: 'tags' },
+      { key: 'assigneeId', label: 'ID del Asignado', type: 'textWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  gl_create_mr: {
+    title: 'Crear Merge Request',
+    icon: 'fa-code-branch',
+    description: 'Crea un merge request',
+    fields: [
+      { key: 'projectId', label: 'ID del Proyecto', type: 'textWithVariable', required: true },
+      { key: 'title', label: 'Título', type: 'textWithVariable', required: true },
+      { key: 'sourceBranch', label: 'Branch origen', type: 'textWithVariable', required: true },
+      { key: 'targetBranch', label: 'Branch destino', type: 'textWithVariable', required: true },
+      { key: 'description', label: 'Descripción', type: 'textareaWithVariable' },
+      { key: 'removeSourceBranch', label: 'Eliminar branch origen', type: 'checkbox', default: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  gl_merge_mr: {
+    title: 'Merge MR',
+    icon: 'fa-check-circle',
+    description: 'Hace merge de un MR',
+    fields: [
+      { key: 'projectId', label: 'ID del Proyecto', type: 'textWithVariable', required: true },
+      { key: 'mrIid', label: 'IID del MR', type: 'textWithVariable', required: true },
+      { key: 'squash', label: 'Squash', type: 'checkbox', default: false },
+      { key: 'removeSourceBranch', label: 'Eliminar branch', type: 'checkbox', default: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  gl_create_branch: {
+    title: 'Crear Branch',
+    icon: 'fa-code-branch',
+    description: 'Crea un nuevo branch',
+    fields: [
+      { key: 'projectId', label: 'ID del Proyecto', type: 'textWithVariable', required: true },
+      { key: 'branchName', label: 'Nombre', type: 'textWithVariable', required: true },
+      { key: 'ref', label: 'Ref origen', type: 'textWithVariable', default: 'main' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  gl_trigger_pipeline: {
+    title: 'Trigger Pipeline',
+    icon: 'fa-play',
+    description: 'Dispara un pipeline CI/CD',
+    fields: [
+      { key: 'projectId', label: 'ID del Proyecto', type: 'textWithVariable', required: true },
+      { key: 'ref', label: 'Ref (branch/tag)', type: 'textWithVariable', default: 'main' },
+      { key: 'variables', label: 'Variables (JSON)', type: 'textareaWithVariable', helpText: '[{key, value}]' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  gl_get_pipeline: {
+    title: 'Estado Pipeline',
+    icon: 'fa-stream',
+    description: 'Obtiene estado de un pipeline',
+    fields: [
+      { key: 'projectId', label: 'ID del Proyecto', type: 'textWithVariable', required: true },
+      { key: 'pipelineId', label: 'ID del Pipeline', type: 'textWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  gl_list_projects: {
+    title: 'Listar Proyectos',
+    icon: 'fa-list',
+    description: 'Lista proyectos de GitLab',
+    fields: [
+      { key: 'search', label: 'Buscar', type: 'textWithVariable' },
+      { key: 'owned', label: 'Solo propios', type: 'checkbox', default: true },
+      { key: 'visibility', label: 'Visibilidad', type: 'select', default: 'private', options: [{ value: 'public', label: 'Público' }, { value: 'internal', label: 'Interno' }, { value: 'private', label: 'Privado' }] },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  gl_create_tag: {
+    title: 'Crear Tag',
+    icon: 'fa-tag',
+    description: 'Crea un tag en el repositorio',
+    fields: [
+      { key: 'projectId', label: 'ID del Proyecto', type: 'textWithVariable', required: true },
+      { key: 'tagName', label: 'Nombre del tag', type: 'textWithVariable', required: true },
+      { key: 'ref', label: 'Ref', type: 'textWithVariable', required: true },
+      { key: 'message', label: 'Mensaje', type: 'textWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  gl_set_variable: {
+    title: 'Variable CI/CD',
+    icon: 'fa-key',
+    description: 'Configura variable CI/CD',
+    fields: [
+      { key: 'projectId', label: 'ID del Proyecto', type: 'textWithVariable', required: true },
+      { key: 'key', label: 'Nombre', type: 'textWithVariable', required: true },
+      { key: 'value', label: 'Valor', type: 'textWithVariable', required: true },
+      { key: 'protected', label: 'Protegida', type: 'checkbox', default: false },
+      { key: 'masked', label: 'Enmascarada', type: 'checkbox', default: false },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+
+  // ==========================================
+  // JENKINS
+  // ==========================================
+  jenkins_connect: {
+    title: 'Conectar Jenkins',
+    icon: 'fa-plug',
+    description: 'Configura conexión con Jenkins',
+    fields: [
+      { key: 'url', label: 'URL de Jenkins', type: 'textWithVariable', required: true, helpText: 'http://jenkins:8080' },
+      { key: 'username', label: 'Usuario', type: 'textWithVariable', required: true },
+      { key: 'apiToken', label: 'API Token', type: 'password', required: true },
+      { key: 'connectionVariable', label: 'Guardar conexión en', type: 'variable', required: true }
+    ]
+  },
+  jenkins_trigger_build: {
+    title: 'Trigger Build',
+    icon: 'fa-play',
+    description: 'Dispara un build',
+    fields: [
+      { key: 'jobName', label: 'Nombre del Job', type: 'textWithVariable', required: true },
+      { key: 'parameters', label: 'Parámetros (JSON)', type: 'textareaWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  jenkins_get_status: {
+    title: 'Estado del Build',
+    icon: 'fa-info-circle',
+    description: 'Obtiene estado de un build',
+    fields: [
+      { key: 'jobName', label: 'Nombre del Job', type: 'textWithVariable', required: true },
+      { key: 'buildNumber', label: 'Número de build', type: 'textWithVariable', helpText: 'Vacío = último' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  jenkins_get_log: {
+    title: 'Obtener Log',
+    icon: 'fa-terminal',
+    description: 'Obtiene log de un build',
+    fields: [
+      { key: 'jobName', label: 'Nombre del Job', type: 'textWithVariable', required: true },
+      { key: 'buildNumber', label: 'Número de build', type: 'textWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  jenkins_list_jobs: {
+    title: 'Listar Jobs',
+    icon: 'fa-list',
+    description: 'Lista jobs de Jenkins',
+    fields: [
+      { key: 'folder', label: 'Carpeta', type: 'textWithVariable', helpText: 'Vacío = raíz' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  jenkins_create_job: {
+    title: 'Crear Job',
+    icon: 'fa-plus',
+    description: 'Crea un nuevo job',
+    fields: [
+      { key: 'jobName', label: 'Nombre', type: 'textWithVariable', required: true },
+      { key: 'configXml', label: 'Config XML', type: 'textareaWithVariable' },
+      { key: 'folder', label: 'Carpeta', type: 'textWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  jenkins_cancel_build: {
+    title: 'Cancelar Build',
+    icon: 'fa-stop',
+    description: 'Cancela un build en ejecución',
+    fields: [
+      { key: 'jobName', label: 'Nombre del Job', type: 'textWithVariable', required: true },
+      { key: 'buildNumber', label: 'Número de build', type: 'textWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  jenkins_get_queue: {
+    title: 'Ver Cola',
+    icon: 'fa-clock',
+    description: 'Obtiene la cola de builds',
+    fields: [
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+
+  // ==========================================
+  // DOCKER
+  // ==========================================
+  docker_connect: {
+    title: 'Conectar Docker',
+    icon: 'fa-plug',
+    description: 'Configura conexión con Docker',
+    fields: [
+      { key: 'host', label: 'Host', type: 'textWithVariable', default: 'unix:///var/run/docker.sock', helpText: 'Socket o tcp://host:2376' },
+      { key: 'tlsCert', label: 'TLS Cert', type: 'textareaWithVariable' },
+      { key: 'tlsKey', label: 'TLS Key', type: 'password' },
+      { key: 'connectionVariable', label: 'Guardar conexión en', type: 'variable', required: true }
+    ]
+  },
+  docker_list_containers: {
+    title: 'Listar Contenedores',
+    icon: 'fa-list',
+    description: 'Lista contenedores Docker',
+    fields: [
+      { key: 'all', label: 'Incluir detenidos', type: 'checkbox', default: false },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  docker_start_container: {
+    title: 'Iniciar Contenedor',
+    icon: 'fa-play',
+    description: 'Inicia un contenedor',
+    fields: [
+      { key: 'containerId', label: 'ID/Nombre', type: 'textWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  docker_stop_container: {
+    title: 'Detener Contenedor',
+    icon: 'fa-stop',
+    description: 'Detiene un contenedor',
+    fields: [
+      { key: 'containerId', label: 'ID/Nombre', type: 'textWithVariable', required: true },
+      { key: 'timeout', label: 'Timeout (seg)', type: 'number', default: 10 },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  docker_run: {
+    title: 'Docker Run',
+    icon: 'fa-terminal',
+    description: 'Ejecuta un contenedor',
+    fields: [
+      { key: 'image', label: 'Imagen', type: 'textWithVariable', required: true },
+      { key: 'name', label: 'Nombre', type: 'textWithVariable' },
+      { key: 'ports', label: 'Puertos', type: 'tags', helpText: 'host:container ej: 8080:80' },
+      { key: 'envVars', label: 'Variables de entorno', type: 'tags', helpText: 'KEY=value' },
+      { key: 'volumes', label: 'Volúmenes', type: 'tags', helpText: '/host:/container' },
+      { key: 'detach', label: 'Detach', type: 'checkbox', default: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  docker_build: {
+    title: 'Docker Build',
+    icon: 'fa-hammer',
+    description: 'Construye una imagen',
+    fields: [
+      { key: 'dockerfilePath', label: 'Ruta Dockerfile', type: 'textWithVariable', default: '.' },
+      { key: 'tag', label: 'Tag', type: 'textWithVariable', required: true },
+      { key: 'buildArgs', label: 'Build Args', type: 'tags', helpText: 'KEY=value' },
+      { key: 'noCache', label: 'Sin cache', type: 'checkbox', default: false },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  docker_pull: {
+    title: 'Docker Pull',
+    icon: 'fa-download',
+    description: 'Descarga una imagen',
+    fields: [
+      { key: 'image', label: 'Imagen', type: 'textWithVariable', required: true },
+      { key: 'tag', label: 'Tag', type: 'textWithVariable', default: 'latest' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  docker_push: {
+    title: 'Docker Push',
+    icon: 'fa-upload',
+    description: 'Sube una imagen a un registry',
+    fields: [
+      { key: 'image', label: 'Imagen', type: 'textWithVariable', required: true },
+      { key: 'tag', label: 'Tag', type: 'textWithVariable' },
+      { key: 'registry', label: 'Registry', type: 'textWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  docker_logs: {
+    title: 'Obtener Logs',
+    icon: 'fa-file-alt',
+    description: 'Obtiene logs de un contenedor',
+    fields: [
+      { key: 'containerId', label: 'ID/Nombre', type: 'textWithVariable', required: true },
+      { key: 'tail', label: 'Últimas líneas', type: 'number', default: 100 },
+      { key: 'timestamps', label: 'Timestamps', type: 'checkbox', default: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  docker_exec: {
+    title: 'Ejecutar Comando',
+    icon: 'fa-terminal',
+    description: 'Ejecuta comando en un contenedor',
+    fields: [
+      { key: 'containerId', label: 'ID/Nombre', type: 'textWithVariable', required: true },
+      { key: 'command', label: 'Comando', type: 'textWithVariable', required: true },
+      { key: 'workdir', label: 'Directorio', type: 'textWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+
+  // ==========================================
+  // YOUTUBE
+  // ==========================================
+  yt_connect: {
+    title: 'Conectar YouTube',
+    icon: 'fa-plug',
+    description: 'Configura conexión con YouTube API',
+    fields: [
+      { key: 'apiKey', label: 'API Key', type: 'password', required: true },
+      { key: 'oauthToken', label: 'OAuth Token', type: 'password', helpText: 'Para subir videos' },
+      { key: 'connectionVariable', label: 'Guardar conexión en', type: 'variable', required: true }
+    ]
+  },
+  yt_upload_video: {
+    title: 'Subir Video',
+    icon: 'fa-upload',
+    description: 'Sube un video a YouTube',
+    fields: [
+      { key: 'filePath', label: 'Ruta del archivo', type: 'textWithVariable', required: true },
+      { key: 'title', label: 'Título', type: 'textWithVariable', required: true },
+      { key: 'description', label: 'Descripción', type: 'textareaWithVariable' },
+      { key: 'tags', label: 'Tags', type: 'tags' },
+      { key: 'privacy', label: 'Privacidad', type: 'select', default: 'private', options: [{ value: 'public', label: 'Público' }, { value: 'unlisted', label: 'No listado' }, { value: 'private', label: 'Privado' }] },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  yt_search: {
+    title: 'Buscar Videos',
+    icon: 'fa-search',
+    description: 'Busca videos en YouTube',
+    fields: [
+      { key: 'query', label: 'Consulta', type: 'textWithVariable', required: true },
+      { key: 'type', label: 'Tipo', type: 'select', default: 'video', options: [{ value: 'video', label: 'Video' }, { value: 'channel', label: 'Canal' }, { value: 'playlist', label: 'Playlist' }] },
+      { key: 'maxResults', label: 'Máximo', type: 'number', default: 10 },
+      { key: 'order', label: 'Orden', type: 'select', default: 'relevance', options: [{ value: 'relevance', label: 'Relevancia' }, { value: 'date', label: 'Fecha' }, { value: 'viewCount', label: 'Vistas' }, { value: 'rating', label: 'Rating' }] },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  yt_get_video: {
+    title: 'Obtener Video',
+    icon: 'fa-film',
+    description: 'Obtiene info de un video',
+    fields: [
+      { key: 'videoId', label: 'ID del Video', type: 'textWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  yt_get_channel: {
+    title: 'Info del Canal',
+    icon: 'fa-tv',
+    description: 'Obtiene info de un canal',
+    fields: [
+      { key: 'channelId', label: 'ID del Canal', type: 'textWithVariable' },
+      { key: 'forUsername', label: 'Nombre de usuario', type: 'textWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  yt_get_comments: {
+    title: 'Obtener Comentarios',
+    icon: 'fa-comments',
+    description: 'Lista comentarios de un video',
+    fields: [
+      { key: 'videoId', label: 'ID del Video', type: 'textWithVariable', required: true },
+      { key: 'maxResults', label: 'Máximo', type: 'number', default: 20 },
+      { key: 'order', label: 'Orden', type: 'select', default: 'time', options: [{ value: 'time', label: 'Recientes' }, { value: 'relevance', label: 'Relevantes' }] },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  yt_create_playlist: {
+    title: 'Crear Playlist',
+    icon: 'fa-list',
+    description: 'Crea una playlist',
+    fields: [
+      { key: 'title', label: 'Título', type: 'textWithVariable', required: true },
+      { key: 'description', label: 'Descripción', type: 'textareaWithVariable' },
+      { key: 'privacy', label: 'Privacidad', type: 'select', default: 'private', options: [{ value: 'public', label: 'Público' }, { value: 'unlisted', label: 'No listado' }, { value: 'private', label: 'Privado' }] },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  yt_get_analytics: {
+    title: 'Obtener Analíticas',
+    icon: 'fa-chart-line',
+    description: 'Obtiene analíticas del canal',
+    fields: [
+      { key: 'startDate', label: 'Desde', type: 'textWithVariable', required: true, helpText: 'YYYY-MM-DD' },
+      { key: 'endDate', label: 'Hasta', type: 'textWithVariable', required: true },
+      { key: 'metrics', label: 'Métricas', type: 'tags', helpText: 'views, likes, comments...' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  yt_update_video: {
+    title: 'Actualizar Metadata',
+    icon: 'fa-edit',
+    description: 'Actualiza info de un video',
+    fields: [
+      { key: 'videoId', label: 'ID del Video', type: 'textWithVariable', required: true },
+      { key: 'title', label: 'Título', type: 'textWithVariable' },
+      { key: 'description', label: 'Descripción', type: 'textareaWithVariable' },
+      { key: 'tags', label: 'Tags', type: 'tags' },
+      { key: 'privacy', label: 'Privacidad', type: 'select', options: [{ value: 'public', label: 'Público' }, { value: 'unlisted', label: 'No listado' }, { value: 'private', label: 'Privado' }] },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+
+  // ==========================================
+  // TIKTOK
+  // ==========================================
+  tt_connect: {
+    title: 'Conectar TikTok',
+    icon: 'fa-plug',
+    description: 'Configura conexión con TikTok API',
+    fields: [
+      { key: 'clientKey', label: 'Client Key', type: 'password', required: true },
+      { key: 'clientSecret', label: 'Client Secret', type: 'password', required: true },
+      { key: 'accessToken', label: 'Access Token', type: 'password' },
+      { key: 'connectionVariable', label: 'Guardar conexión en', type: 'variable', required: true }
+    ]
+  },
+  tt_upload_video: {
+    title: 'Subir Video',
+    icon: 'fa-upload',
+    description: 'Sube un video a TikTok',
+    fields: [
+      { key: 'filePath', label: 'Ruta del archivo', type: 'textWithVariable', required: true },
+      { key: 'title', label: 'Título', type: 'textWithVariable', required: true, helpText: 'Máx 150 caracteres' },
+      { key: 'privacyLevel', label: 'Privacidad', type: 'select', default: 'PUBLIC_TO_EVERYONE', options: [{ value: 'PUBLIC_TO_EVERYONE', label: 'Público' }, { value: 'MUTUAL_FOLLOW_FRIENDS', label: 'Amigos' }, { value: 'SELF_ONLY', label: 'Solo yo' }] },
+      { key: 'disableComment', label: 'Deshabilitar comentarios', type: 'checkbox', default: false },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  tt_get_videos: {
+    title: 'Obtener Videos',
+    icon: 'fa-film',
+    description: 'Lista videos propios',
+    fields: [
+      { key: 'maxCount', label: 'Máximo', type: 'number', default: 20 },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  tt_get_user: {
+    title: 'Info de Usuario',
+    icon: 'fa-user',
+    description: 'Obtiene info de un usuario',
+    fields: [
+      { key: 'openId', label: 'Open ID', type: 'textWithVariable', helpText: 'Vacío = propio' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  tt_get_insights: {
+    title: 'Obtener Insights',
+    icon: 'fa-chart-bar',
+    description: 'Obtiene insights de un video',
+    fields: [
+      { key: 'videoId', label: 'ID del Video', type: 'textWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  tt_search: {
+    title: 'Buscar Videos',
+    icon: 'fa-search',
+    description: 'Busca videos en TikTok',
+    fields: [
+      { key: 'keyword', label: 'Palabra clave', type: 'textWithVariable', required: true },
+      { key: 'count', label: 'Cantidad', type: 'number', default: 20 },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  tt_create_ad: {
+    title: 'Crear Anuncio',
+    icon: 'fa-bullhorn',
+    description: 'Crea un anuncio en TikTok Ads',
+    fields: [
+      { key: 'campaignName', label: 'Nombre campaña', type: 'textWithVariable', required: true },
+      { key: 'objective', label: 'Objetivo', type: 'select', default: 'REACH', options: [{ value: 'REACH', label: 'Alcance' }, { value: 'TRAFFIC', label: 'Tráfico' }, { value: 'VIDEO_VIEWS', label: 'Vistas' }, { value: 'CONVERSIONS', label: 'Conversiones' }] },
+      { key: 'budget', label: 'Presupuesto', type: 'textWithVariable', required: true },
+      { key: 'adGroupName', label: 'Nombre grupo anuncios', type: 'textWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+
+  // ==========================================
+  // WEB SCRAPING
+  // ==========================================
+  scraper_connect: {
+    title: 'Conectar Servicio Scraping',
+    icon: 'fa-plug',
+    description: 'Configura servicio de web scraping',
+    fields: [
+      { key: 'service', label: 'Servicio', type: 'select', default: 'scraperapi', options: [{ value: 'brightdata', label: 'Bright Data' }, { value: 'scraperapi', label: 'ScraperAPI' }, { value: 'apify', label: 'Apify' }, { value: 'custom', label: 'Personalizado' }] },
+      { key: 'apiKey', label: 'API Key', type: 'password', required: true },
+      { key: 'connectionVariable', label: 'Guardar conexión en', type: 'variable', required: true }
+    ]
+  },
+  scraper_fetch_url: {
+    title: 'Scrape URL',
+    icon: 'fa-globe',
+    description: 'Obtiene contenido de una URL',
+    fields: [
+      { key: 'url', label: 'URL', type: 'textWithVariable', required: true },
+      { key: 'renderJs', label: 'Renderizar JavaScript', type: 'checkbox', default: false },
+      { key: 'headers', label: 'Headers (JSON)', type: 'textareaWithVariable' },
+      { key: 'country', label: 'País', type: 'textWithVariable', helpText: 'Código ISO: US, MX...' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  scraper_render_js: {
+    title: 'Render con JavaScript',
+    icon: 'fa-code',
+    description: 'Renderiza página con JS completo',
+    fields: [
+      { key: 'url', label: 'URL', type: 'textWithVariable', required: true },
+      { key: 'waitSelector', label: 'Esperar selector', type: 'textWithVariable', helpText: 'CSS selector' },
+      { key: 'waitMs', label: 'Esperar (ms)', type: 'number', default: 2000 },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  scraper_extract_data: {
+    title: 'Extraer Datos',
+    icon: 'fa-table',
+    description: 'Extrae datos estructurados de URL',
+    fields: [
+      { key: 'url', label: 'URL', type: 'textWithVariable', required: true },
+      { key: 'selectors', label: 'Selectores (JSON)', type: 'textareaWithVariable', required: true, helpText: '[{name, selector, attribute?}]' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  scraper_screenshot: {
+    title: 'Screenshot de URL',
+    icon: 'fa-camera',
+    description: 'Captura screenshot de una página',
+    fields: [
+      { key: 'url', label: 'URL', type: 'textWithVariable', required: true },
+      { key: 'fullPage', label: 'Página completa', type: 'checkbox', default: false },
+      { key: 'width', label: 'Ancho', type: 'number', default: 1920 },
+      { key: 'height', label: 'Alto', type: 'number', default: 1080 },
+      { key: 'format', label: 'Formato', type: 'select', default: 'png', options: [{ value: 'png', label: 'PNG' }, { value: 'jpeg', label: 'JPEG' }, { value: 'webp', label: 'WebP' }] },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  scraper_batch: {
+    title: 'Scrape en Lote',
+    icon: 'fa-layer-group',
+    description: 'Scrapea múltiples URLs',
+    fields: [
+      { key: 'urls', label: 'URLs', type: 'tags', required: true },
+      { key: 'renderJs', label: 'Renderizar JS', type: 'checkbox', default: false },
+      { key: 'concurrency', label: 'Concurrencia', type: 'number', default: 5 },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  scraper_set_proxy: {
+    title: 'Configurar Proxy',
+    icon: 'fa-shield-alt',
+    description: 'Configura tipo de proxy',
+    fields: [
+      { key: 'proxyType', label: 'Tipo', type: 'select', default: 'datacenter', options: [{ value: 'residential', label: 'Residencial' }, { value: 'datacenter', label: 'Datacenter' }, { value: 'mobile', label: 'Móvil' }] },
+      { key: 'country', label: 'País', type: 'textWithVariable' },
+      { key: 'city', label: 'Ciudad', type: 'textWithVariable' },
+      { key: 'sticky', label: 'IP fija', type: 'checkbox', default: false },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  scraper_set_geo: {
+    title: 'Geolocalización',
+    icon: 'fa-map-marker-alt',
+    description: 'Configura geolocalización',
+    fields: [
+      { key: 'country', label: 'País', type: 'textWithVariable', required: true, helpText: 'Código ISO' },
+      { key: 'city', label: 'Ciudad', type: 'textWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  scraper_run_actor: {
+    title: 'Ejecutar Actor (Apify)',
+    icon: 'fa-play',
+    description: 'Ejecuta un actor de Apify',
+    fields: [
+      { key: 'actorId', label: 'ID del Actor', type: 'textWithVariable', required: true },
+      { key: 'input', label: 'Input (JSON)', type: 'textareaWithVariable' },
+      { key: 'memory', label: 'Memoria (MB)', type: 'number', default: 256 },
+      { key: 'timeout', label: 'Timeout (seg)', type: 'number', default: 300 },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  scraper_get_dataset: {
+    title: 'Obtener Dataset',
+    icon: 'fa-database',
+    description: 'Descarga dataset de Apify',
+    fields: [
+      { key: 'datasetId', label: 'ID del Dataset', type: 'textWithVariable', required: true },
+      { key: 'format', label: 'Formato', type: 'select', default: 'json', options: [{ value: 'json', label: 'JSON' }, { value: 'csv', label: 'CSV' }, { value: 'xlsx', label: 'Excel' }] },
+      { key: 'limit', label: 'Límite', type: 'number', default: 1000 },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+
+  // ==========================================
+  // DOCUSIGN
+  // ==========================================
+  docusign_connect: {
+    title: 'Conectar DocuSign',
+    icon: 'fa-plug',
+    description: 'Configura conexión con DocuSign',
+    fields: [
+      { key: 'integrationKey', label: 'Integration Key', type: 'password', required: true },
+      { key: 'secretKey', label: 'Secret Key', type: 'password', required: true },
+      { key: 'accountId', label: 'Account ID', type: 'textWithVariable', required: true },
+      { key: 'useSandbox', label: 'Usar Sandbox', type: 'checkbox', default: false },
+      { key: 'connectionVariable', label: 'Guardar conexión en', type: 'variable', required: true }
+    ]
+  },
+  docusign_send_envelope: {
+    title: 'Enviar Sobre',
+    icon: 'fa-paper-plane',
+    description: 'Envía documento para firma',
+    fields: [
+      { key: 'templateId', label: 'ID de Plantilla', type: 'textWithVariable' },
+      { key: 'recipients', label: 'Destinatarios (JSON)', type: 'textareaWithVariable', required: true, helpText: '[{email, name, role}]' },
+      { key: 'subject', label: 'Asunto', type: 'textWithVariable' },
+      { key: 'emailBody', label: 'Cuerpo del email', type: 'textareaWithVariable' },
+      { key: 'documentPath', label: 'Ruta del PDF', type: 'textWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  docusign_get_status: {
+    title: 'Estado del Sobre',
+    icon: 'fa-info-circle',
+    description: 'Obtiene estado de un sobre',
+    fields: [
+      { key: 'envelopeId', label: 'ID del Sobre', type: 'textWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  docusign_download: {
+    title: 'Descargar Firmado',
+    icon: 'fa-download',
+    description: 'Descarga documento firmado',
+    fields: [
+      { key: 'envelopeId', label: 'ID del Sobre', type: 'textWithVariable', required: true },
+      { key: 'documentId', label: 'ID Documento', type: 'textWithVariable', default: 'combined' },
+      { key: 'outputPath', label: 'Ruta de destino', type: 'textWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  docusign_create_template: {
+    title: 'Crear Plantilla',
+    icon: 'fa-file-alt',
+    description: 'Crea una plantilla de firma',
+    fields: [
+      { key: 'name', label: 'Nombre', type: 'textWithVariable', required: true },
+      { key: 'description', label: 'Descripción', type: 'textWithVariable' },
+      { key: 'documentPath', label: 'Ruta del documento', type: 'textWithVariable', required: true },
+      { key: 'roles', label: 'Roles (JSON)', type: 'textareaWithVariable', helpText: '[{roleName, routingOrder}]' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  docusign_void: {
+    title: 'Anular Sobre',
+    icon: 'fa-times-circle',
+    description: 'Anula un sobre enviado',
+    fields: [
+      { key: 'envelopeId', label: 'ID del Sobre', type: 'textWithVariable', required: true },
+      { key: 'reason', label: 'Razón', type: 'textWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  docusign_remind: {
+    title: 'Enviar Recordatorio',
+    icon: 'fa-bell',
+    description: 'Envía recordatorio de firma',
+    fields: [
+      { key: 'envelopeId', label: 'ID del Sobre', type: 'textWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  docusign_embedded: {
+    title: 'Firma Embebida',
+    icon: 'fa-window-restore',
+    description: 'Genera URL de firma embebida',
+    fields: [
+      { key: 'envelopeId', label: 'ID del Sobre', type: 'textWithVariable', required: true },
+      { key: 'recipientEmail', label: 'Email del firmante', type: 'textWithVariable', required: true },
+      { key: 'returnUrl', label: 'URL de retorno', type: 'textWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+
+  // ==========================================
+  // NOTION
+  // ==========================================
+  notion_connect: {
+    title: 'Conectar Notion',
+    icon: 'fa-plug',
+    description: 'Configura conexión con Notion',
+    fields: [
+      { key: 'apiKey', label: 'Integration Token', type: 'password', required: true },
+      { key: 'connectionVariable', label: 'Guardar conexión en', type: 'variable', required: true }
+    ]
+  },
+  notion_create_page: {
+    title: 'Crear Página',
+    icon: 'fa-plus',
+    description: 'Crea una página en Notion',
+    fields: [
+      { key: 'parentId', label: 'ID padre', type: 'textWithVariable', required: true, helpText: 'ID de página o database' },
+      { key: 'title', label: 'Título', type: 'textWithVariable', required: true },
+      { key: 'content', label: 'Contenido', type: 'textareaWithVariable', helpText: 'Markdown' },
+      { key: 'icon', label: 'Icono', type: 'textWithVariable', helpText: 'Emoji' },
+      { key: 'properties', label: 'Propiedades (JSON)', type: 'textareaWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  notion_update_page: {
+    title: 'Actualizar Página',
+    icon: 'fa-edit',
+    description: 'Actualiza propiedades de una página',
+    fields: [
+      { key: 'pageId', label: 'ID de Página', type: 'textWithVariable', required: true },
+      { key: 'properties', label: 'Propiedades (JSON)', type: 'textareaWithVariable' },
+      { key: 'archived', label: 'Archivar', type: 'checkbox', default: false },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  notion_query_db: {
+    title: 'Query Database',
+    icon: 'fa-search',
+    description: 'Consulta una database de Notion',
+    fields: [
+      { key: 'databaseId', label: 'ID de Database', type: 'textWithVariable', required: true },
+      { key: 'filter', label: 'Filtro (JSON)', type: 'textareaWithVariable' },
+      { key: 'sorts', label: 'Orden (JSON)', type: 'textareaWithVariable', helpText: '[{property, direction}]' },
+      { key: 'pageSize', label: 'Tamaño de página', type: 'number', default: 100 },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  notion_create_db: {
+    title: 'Crear Database',
+    icon: 'fa-database',
+    description: 'Crea una database en Notion',
+    fields: [
+      { key: 'parentId', label: 'ID padre', type: 'textWithVariable', required: true },
+      { key: 'title', label: 'Título', type: 'textWithVariable', required: true },
+      { key: 'properties', label: 'Schema (JSON)', type: 'textareaWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  notion_add_block: {
+    title: 'Agregar Bloque',
+    icon: 'fa-cube',
+    description: 'Agrega un bloque a una página',
+    fields: [
+      { key: 'pageId', label: 'ID de Página', type: 'textWithVariable', required: true },
+      { key: 'blockType', label: 'Tipo', type: 'select', default: 'paragraph', options: [{ value: 'paragraph', label: 'Párrafo' }, { value: 'heading_1', label: 'Título 1' }, { value: 'heading_2', label: 'Título 2' }, { value: 'bulleted_list', label: 'Lista' }, { value: 'numbered_list', label: 'Lista numerada' }, { value: 'to_do', label: 'To-do' }, { value: 'code', label: 'Código' }, { value: 'quote', label: 'Cita' }, { value: 'divider', label: 'Divisor' }] },
+      { key: 'content', label: 'Contenido', type: 'textareaWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  notion_search: {
+    title: 'Buscar Páginas',
+    icon: 'fa-search',
+    description: 'Busca páginas y databases',
+    fields: [
+      { key: 'query', label: 'Consulta', type: 'textWithVariable' },
+      { key: 'filterType', label: 'Tipo', type: 'select', options: [{ value: 'page', label: 'Páginas' }, { value: 'database', label: 'Databases' }] },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  notion_get_page: {
+    title: 'Obtener Página',
+    icon: 'fa-file-alt',
+    description: 'Obtiene info de una página',
+    fields: [
+      { key: 'pageId', label: 'ID de Página', type: 'textWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  notion_archive: {
+    title: 'Archivar Página',
+    icon: 'fa-archive',
+    description: 'Archiva una página',
+    fields: [
+      { key: 'pageId', label: 'ID de Página', type: 'textWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+
+  // ==========================================
+  // AIRTABLE
+  // ==========================================
+  airtable_connect: {
+    title: 'Conectar Airtable',
+    icon: 'fa-plug',
+    description: 'Configura conexión con Airtable',
+    fields: [
+      { key: 'apiKey', label: 'Personal Access Token', type: 'password', required: true },
+      { key: 'baseId', label: 'ID de Base', type: 'textWithVariable', required: true, helpText: 'appXXXXXX' },
+      { key: 'connectionVariable', label: 'Guardar conexión en', type: 'variable', required: true }
+    ]
+  },
+  airtable_list_records: {
+    title: 'Listar Registros',
+    icon: 'fa-list',
+    description: 'Lista registros de una tabla',
+    fields: [
+      { key: 'tableId', label: 'ID/Nombre de Tabla', type: 'textWithVariable', required: true },
+      { key: 'view', label: 'Vista', type: 'textWithVariable' },
+      { key: 'maxRecords', label: 'Máximo', type: 'number', default: 100 },
+      { key: 'filterFormula', label: 'Filtro', type: 'textWithVariable', helpText: '{Status}="Active"' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  airtable_create_record: {
+    title: 'Crear Registro',
+    icon: 'fa-plus',
+    description: 'Crea un registro',
+    fields: [
+      { key: 'tableId', label: 'ID/Nombre de Tabla', type: 'textWithVariable', required: true },
+      { key: 'fields', label: 'Campos (JSON)', type: 'textareaWithVariable', required: true, helpText: '{Name: "valor", ...}' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  airtable_update_record: {
+    title: 'Actualizar Registro',
+    icon: 'fa-edit',
+    description: 'Actualiza un registro',
+    fields: [
+      { key: 'tableId', label: 'ID/Nombre de Tabla', type: 'textWithVariable', required: true },
+      { key: 'recordId', label: 'ID Registro', type: 'textWithVariable', required: true },
+      { key: 'fields', label: 'Campos (JSON)', type: 'textareaWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  airtable_delete_record: {
+    title: 'Eliminar Registro',
+    icon: 'fa-trash',
+    description: 'Elimina un registro',
+    fields: [
+      { key: 'tableId', label: 'ID/Nombre de Tabla', type: 'textWithVariable', required: true },
+      { key: 'recordId', label: 'ID Registro', type: 'textWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  airtable_search: {
+    title: 'Buscar Registros',
+    icon: 'fa-search',
+    description: 'Busca registros con fórmula',
+    fields: [
+      { key: 'tableId', label: 'ID/Nombre de Tabla', type: 'textWithVariable', required: true },
+      { key: 'filterFormula', label: 'Fórmula', type: 'textWithVariable', required: true },
+      { key: 'maxRecords', label: 'Máximo', type: 'number', default: 100 },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  airtable_upload: {
+    title: 'Subir Adjunto',
+    icon: 'fa-paperclip',
+    description: 'Sube un archivo adjunto',
+    fields: [
+      { key: 'tableId', label: 'ID/Nombre de Tabla', type: 'textWithVariable', required: true },
+      { key: 'recordId', label: 'ID Registro', type: 'textWithVariable', required: true },
+      { key: 'fieldName', label: 'Nombre del campo', type: 'textWithVariable', required: true },
+      { key: 'filePath', label: 'Ruta del archivo', type: 'textWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  airtable_batch: {
+    title: 'Operación en Lote',
+    icon: 'fa-layer-group',
+    description: 'Operación batch en registros',
+    fields: [
+      { key: 'tableId', label: 'ID/Nombre de Tabla', type: 'textWithVariable', required: true },
+      { key: 'operation', label: 'Operación', type: 'select', default: 'create', options: [{ value: 'create', label: 'Crear' }, { value: 'update', label: 'Actualizar' }, { value: 'delete', label: 'Eliminar' }] },
+      { key: 'records', label: 'Registros (JSON)', type: 'textareaWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+
+  // ==========================================
+  // FIREBASE
+  // ==========================================
+  firebase_connect: {
+    title: 'Conectar Firebase',
+    icon: 'fa-plug',
+    description: 'Configura conexión con Firebase',
+    fields: [
+      { key: 'projectId', label: 'Project ID', type: 'textWithVariable', required: true },
+      { key: 'serviceAccountKey', label: 'Service Account (JSON)', type: 'textareaWithVariable', required: true },
+      { key: 'connectionVariable', label: 'Guardar conexión en', type: 'variable', required: true }
+    ]
+  },
+  firebase_set_doc: {
+    title: 'Crear/Actualizar Doc',
+    icon: 'fa-plus',
+    description: 'Crea o actualiza documento Firestore',
+    fields: [
+      { key: 'collection', label: 'Colección', type: 'textWithVariable', required: true },
+      { key: 'documentId', label: 'ID Documento', type: 'textWithVariable', helpText: 'Vacío = auto' },
+      { key: 'data', label: 'Datos (JSON)', type: 'textareaWithVariable', required: true },
+      { key: 'merge', label: 'Merge', type: 'checkbox', default: false },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  firebase_get_doc: {
+    title: 'Obtener Documento',
+    icon: 'fa-file-alt',
+    description: 'Obtiene un documento de Firestore',
+    fields: [
+      { key: 'collection', label: 'Colección', type: 'textWithVariable', required: true },
+      { key: 'documentId', label: 'ID Documento', type: 'textWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  firebase_query: {
+    title: 'Query Firestore',
+    icon: 'fa-search',
+    description: 'Consulta documentos con filtros',
+    fields: [
+      { key: 'collection', label: 'Colección', type: 'textWithVariable', required: true },
+      { key: 'where', label: 'Filtros (JSON)', type: 'textareaWithVariable', helpText: '[{field, op, value}]' },
+      { key: 'orderBy', label: 'Ordenar por', type: 'textWithVariable' },
+      { key: 'limit', label: 'Límite', type: 'number', default: 100 },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  firebase_delete_doc: {
+    title: 'Eliminar Documento',
+    icon: 'fa-trash',
+    description: 'Elimina un documento de Firestore',
+    fields: [
+      { key: 'collection', label: 'Colección', type: 'textWithVariable', required: true },
+      { key: 'documentId', label: 'ID Documento', type: 'textWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  firebase_push_rtdb: {
+    title: 'Push Realtime DB',
+    icon: 'fa-database',
+    description: 'Push a Realtime Database',
+    fields: [
+      { key: 'path', label: 'Ruta', type: 'textWithVariable', required: true },
+      { key: 'data', label: 'Datos (JSON)', type: 'textareaWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  firebase_read_rtdb: {
+    title: 'Leer Realtime DB',
+    icon: 'fa-eye',
+    description: 'Lee datos de Realtime Database',
+    fields: [
+      { key: 'path', label: 'Ruta', type: 'textWithVariable', required: true },
+      { key: 'orderByChild', label: 'Ordenar por hijo', type: 'textWithVariable' },
+      { key: 'limitToLast', label: 'Últimos N', type: 'number' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  firebase_upload: {
+    title: 'Subir a Storage',
+    icon: 'fa-upload',
+    description: 'Sube archivo a Firebase Storage',
+    fields: [
+      { key: 'filePath', label: 'Archivo local', type: 'textWithVariable', required: true },
+      { key: 'destination', label: 'Ruta destino', type: 'textWithVariable', required: true },
+      { key: 'makePublic', label: 'Hacer público', type: 'checkbox', default: false },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  firebase_send_push: {
+    title: 'Enviar Push (FCM)',
+    icon: 'fa-bell',
+    description: 'Envía notificación push',
+    fields: [
+      { key: 'topic', label: 'Tópico', type: 'textWithVariable' },
+      { key: 'token', label: 'Token dispositivo', type: 'textWithVariable' },
+      { key: 'title', label: 'Título', type: 'textWithVariable', required: true },
+      { key: 'body', label: 'Cuerpo', type: 'textWithVariable', required: true },
+      { key: 'data', label: 'Datos extra (JSON)', type: 'textareaWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  firebase_auth: {
+    title: 'Autenticar Usuario',
+    icon: 'fa-user-lock',
+    description: 'Operaciones de autenticación',
+    fields: [
+      { key: 'email', label: 'Email', type: 'textWithVariable' },
+      { key: 'password', label: 'Contraseña', type: 'password' },
+      { key: 'action', label: 'Acción', type: 'select', default: 'signIn', options: [{ value: 'signIn', label: 'Iniciar sesión' }, { value: 'signUp', label: 'Registrar' }, { value: 'resetPassword', label: 'Reset password' }, { value: 'verifyEmail', label: 'Verificar email' }] },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+
+  // ==========================================
+  // SUPABASE
+  // ==========================================
+  supabase_connect: {
+    title: 'Conectar Supabase',
+    icon: 'fa-plug',
+    description: 'Configura conexión con Supabase',
+    fields: [
+      { key: 'projectUrl', label: 'URL del Proyecto', type: 'textWithVariable', required: true, helpText: 'https://xxx.supabase.co' },
+      { key: 'anonKey', label: 'Anon Key', type: 'password', required: true },
+      { key: 'serviceKey', label: 'Service Role Key', type: 'password', helpText: 'Para operaciones admin' },
+      { key: 'connectionVariable', label: 'Guardar conexión en', type: 'variable', required: true }
+    ]
+  },
+  supabase_insert: {
+    title: 'Insertar Fila',
+    icon: 'fa-plus',
+    description: 'Inserta datos en una tabla',
+    fields: [
+      { key: 'table', label: 'Tabla', type: 'textWithVariable', required: true },
+      { key: 'data', label: 'Datos (JSON)', type: 'textareaWithVariable', required: true },
+      { key: 'upsert', label: 'Upsert', type: 'checkbox', default: false },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  supabase_select: {
+    title: 'Consultar Datos',
+    icon: 'fa-search',
+    description: 'Consulta datos de una tabla',
+    fields: [
+      { key: 'table', label: 'Tabla', type: 'textWithVariable', required: true },
+      { key: 'columns', label: 'Columnas', type: 'textWithVariable', default: '*' },
+      { key: 'filter', label: 'Filtro (JSON)', type: 'textareaWithVariable', helpText: '[{column, operator, value}]' },
+      { key: 'orderBy', label: 'Ordenar por', type: 'textWithVariable' },
+      { key: 'limit', label: 'Límite', type: 'number' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  supabase_update: {
+    title: 'Actualizar Fila',
+    icon: 'fa-edit',
+    description: 'Actualiza datos de una tabla',
+    fields: [
+      { key: 'table', label: 'Tabla', type: 'textWithVariable', required: true },
+      { key: 'data', label: 'Datos (JSON)', type: 'textareaWithVariable', required: true },
+      { key: 'matchColumn', label: 'Columna match', type: 'textWithVariable', required: true },
+      { key: 'matchValue', label: 'Valor match', type: 'textWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  supabase_delete: {
+    title: 'Eliminar Fila',
+    icon: 'fa-trash',
+    description: 'Elimina datos de una tabla',
+    fields: [
+      { key: 'table', label: 'Tabla', type: 'textWithVariable', required: true },
+      { key: 'matchColumn', label: 'Columna match', type: 'textWithVariable', required: true },
+      { key: 'matchValue', label: 'Valor match', type: 'textWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  supabase_rpc: {
+    title: 'Ejecutar Función RPC',
+    icon: 'fa-terminal',
+    description: 'Ejecuta una función PostgreSQL',
+    fields: [
+      { key: 'functionName', label: 'Nombre de función', type: 'textWithVariable', required: true },
+      { key: 'params', label: 'Parámetros (JSON)', type: 'textareaWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  supabase_upload: {
+    title: 'Subir a Storage',
+    icon: 'fa-upload',
+    description: 'Sube archivo a Supabase Storage',
+    fields: [
+      { key: 'bucket', label: 'Bucket', type: 'textWithVariable', required: true },
+      { key: 'filePath', label: 'Archivo local', type: 'textWithVariable', required: true },
+      { key: 'destination', label: 'Ruta destino', type: 'textWithVariable', required: true },
+      { key: 'upsert', label: 'Sobrescribir', type: 'checkbox', default: false },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  supabase_auth: {
+    title: 'Autenticar Usuario',
+    icon: 'fa-user-lock',
+    description: 'Operaciones de autenticación',
+    fields: [
+      { key: 'email', label: 'Email', type: 'textWithVariable', required: true },
+      { key: 'password', label: 'Contraseña', type: 'password', required: true },
+      { key: 'action', label: 'Acción', type: 'select', default: 'signIn', options: [{ value: 'signUp', label: 'Registrar' }, { value: 'signIn', label: 'Iniciar sesión' }, { value: 'signOut', label: 'Cerrar sesión' }, { value: 'resetPassword', label: 'Reset password' }] },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  supabase_realtime: {
+    title: 'Suscribir Realtime',
+    icon: 'fa-broadcast-tower',
+    description: 'Suscribe a cambios en tiempo real',
+    fields: [
+      { key: 'table', label: 'Tabla', type: 'textWithVariable', required: true },
+      { key: 'event', label: 'Evento', type: 'select', default: '*', options: [{ value: '*', label: 'Todos' }, { value: 'INSERT', label: 'Insert' }, { value: 'UPDATE', label: 'Update' }, { value: 'DELETE', label: 'Delete' }] },
+      { key: 'filter', label: 'Filtro', type: 'textWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+
+  // ==========================================
+  // MONGODB ATLAS
+  // ==========================================
+  mongo_connect: {
+    title: 'Conectar MongoDB',
+    icon: 'fa-plug',
+    description: 'Configura conexión con MongoDB Atlas',
+    fields: [
+      { key: 'connectionString', label: 'Connection String', type: 'password', required: true, helpText: 'mongodb+srv://user:pass@cluster' },
+      { key: 'database', label: 'Base de datos', type: 'textWithVariable', required: true },
+      { key: 'connectionVariable', label: 'Guardar conexión en', type: 'variable', required: true }
+    ]
+  },
+  mongo_find: {
+    title: 'Buscar Documentos',
+    icon: 'fa-search',
+    description: 'Busca documentos con filtros',
+    fields: [
+      { key: 'collection', label: 'Colección', type: 'textWithVariable', required: true },
+      { key: 'filter', label: 'Filtro (JSON)', type: 'textareaWithVariable', helpText: 'Filtro MongoDB' },
+      { key: 'projection', label: 'Proyección (JSON)', type: 'textareaWithVariable' },
+      { key: 'sort', label: 'Orden (JSON)', type: 'textareaWithVariable' },
+      { key: 'limit', label: 'Límite', type: 'number', default: 100 },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  mongo_insert: {
+    title: 'Insertar Documento',
+    icon: 'fa-plus',
+    description: 'Inserta uno o más documentos',
+    fields: [
+      { key: 'collection', label: 'Colección', type: 'textWithVariable', required: true },
+      { key: 'document', label: 'Documento (JSON)', type: 'textareaWithVariable', required: true },
+      { key: 'many', label: 'Insertar muchos', type: 'checkbox', default: false },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  mongo_update: {
+    title: 'Actualizar Documento',
+    icon: 'fa-edit',
+    description: 'Actualiza documentos',
+    fields: [
+      { key: 'collection', label: 'Colección', type: 'textWithVariable', required: true },
+      { key: 'filter', label: 'Filtro (JSON)', type: 'textareaWithVariable', required: true },
+      { key: 'update', label: 'Update (JSON)', type: 'textareaWithVariable', required: true, helpText: '{$set: {field: value}}' },
+      { key: 'many', label: 'Actualizar muchos', type: 'checkbox', default: false },
+      { key: 'upsert', label: 'Upsert', type: 'checkbox', default: false },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  mongo_delete: {
+    title: 'Eliminar Documento',
+    icon: 'fa-trash',
+    description: 'Elimina documentos',
+    fields: [
+      { key: 'collection', label: 'Colección', type: 'textWithVariable', required: true },
+      { key: 'filter', label: 'Filtro (JSON)', type: 'textareaWithVariable', required: true },
+      { key: 'many', label: 'Eliminar muchos', type: 'checkbox', default: false },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  mongo_aggregate: {
+    title: 'Aggregate Pipeline',
+    icon: 'fa-layer-group',
+    description: 'Ejecuta un pipeline de agregación',
+    fields: [
+      { key: 'collection', label: 'Colección', type: 'textWithVariable', required: true },
+      { key: 'pipeline', label: 'Pipeline (JSON)', type: 'textareaWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  mongo_count: {
+    title: 'Contar Documentos',
+    icon: 'fa-hashtag',
+    description: 'Cuenta documentos',
+    fields: [
+      { key: 'collection', label: 'Colección', type: 'textWithVariable', required: true },
+      { key: 'filter', label: 'Filtro (JSON)', type: 'textareaWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  mongo_create_index: {
+    title: 'Crear Índice',
+    icon: 'fa-sort-amount-up',
+    description: 'Crea un índice en la colección',
+    fields: [
+      { key: 'collection', label: 'Colección', type: 'textWithVariable', required: true },
+      { key: 'keys', label: 'Keys (JSON)', type: 'textareaWithVariable', required: true, helpText: '{field: 1}' },
+      { key: 'unique', label: 'Único', type: 'checkbox', default: false },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+
+  // ==========================================
+  // DEEPL
+  // ==========================================
+  deepl_connect: {
+    title: 'Conectar DeepL',
+    icon: 'fa-plug',
+    description: 'Configura conexión con DeepL',
+    fields: [
+      { key: 'apiKey', label: 'API Key', type: 'password', required: true },
+      { key: 'useFreeApi', label: 'Usar API gratuita', type: 'checkbox', default: false },
+      { key: 'connectionVariable', label: 'Guardar conexión en', type: 'variable', required: true }
+    ]
+  },
+  deepl_translate: {
+    title: 'Traducir Texto',
+    icon: 'fa-language',
+    description: 'Traduce texto con DeepL',
+    fields: [
+      { key: 'text', label: 'Texto', type: 'textareaWithVariable', required: true },
+      { key: 'targetLang', label: 'Idioma destino', type: 'select', default: 'ES', options: [{ value: 'ES', label: 'Español' }, { value: 'EN', label: 'Inglés' }, { value: 'DE', label: 'Alemán' }, { value: 'FR', label: 'Francés' }, { value: 'PT', label: 'Portugués' }, { value: 'IT', label: 'Italiano' }, { value: 'ZH', label: 'Chino' }, { value: 'JA', label: 'Japonés' }, { value: 'KO', label: 'Coreano' }, { value: 'RU', label: 'Ruso' }] },
+      { key: 'sourceLang', label: 'Idioma origen', type: 'select', default: 'auto', options: [{ value: 'auto', label: 'Auto-detectar' }, { value: 'ES', label: 'Español' }, { value: 'EN', label: 'Inglés' }, { value: 'DE', label: 'Alemán' }, { value: 'FR', label: 'Francés' }, { value: 'PT', label: 'Portugués' }] },
+      { key: 'formality', label: 'Formalidad', type: 'select', default: 'default', options: [{ value: 'default', label: 'Default' }, { value: 'more', label: 'Más formal' }, { value: 'less', label: 'Menos formal' }] },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  deepl_translate_doc: {
+    title: 'Traducir Documento',
+    icon: 'fa-file-alt',
+    description: 'Traduce un documento completo',
+    fields: [
+      { key: 'filePath', label: 'Ruta del documento', type: 'textWithVariable', required: true },
+      { key: 'targetLang', label: 'Idioma destino', type: 'select', default: 'ES', options: [{ value: 'ES', label: 'Español' }, { value: 'EN', label: 'Inglés' }, { value: 'DE', label: 'Alemán' }, { value: 'FR', label: 'Francés' }, { value: 'PT', label: 'Portugués' }] },
+      { key: 'outputPath', label: 'Ruta de salida', type: 'textWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  deepl_detect_lang: {
+    title: 'Detectar Idioma',
+    icon: 'fa-search',
+    description: 'Detecta el idioma de un texto',
+    fields: [
+      { key: 'text', label: 'Texto', type: 'textareaWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  deepl_glossary: {
+    title: 'Gestionar Glosario',
+    icon: 'fa-book',
+    description: 'Crea, lista o elimina glosarios',
+    fields: [
+      { key: 'action', label: 'Acción', type: 'select', default: 'list', options: [{ value: 'create', label: 'Crear' }, { value: 'list', label: 'Listar' }, { value: 'delete', label: 'Eliminar' }] },
+      { key: 'name', label: 'Nombre', type: 'textWithVariable', condition: { field: 'action', value: 'create' } },
+      { key: 'entries', label: 'Entradas', type: 'textareaWithVariable', helpText: 'Pares fuente->destino', condition: { field: 'action', value: 'create' } },
+      { key: 'glossaryId', label: 'ID Glosario', type: 'textWithVariable', condition: { field: 'action', value: 'delete' } },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  deepl_usage: {
+    title: 'Consultar Uso',
+    icon: 'fa-chart-bar',
+    description: 'Consulta uso de la API',
+    fields: [
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+
+  // ==========================================
+  // GOOGLE ANALYTICS
+  // ==========================================
+  ga_connect: {
+    title: 'Conectar Google Analytics',
+    icon: 'fa-plug',
+    description: 'Configura conexión con GA4',
+    fields: [
+      { key: 'serviceAccountKey', label: 'Service Account (JSON)', type: 'textareaWithVariable', required: true },
+      { key: 'propertyId', label: 'ID de Propiedad', type: 'textWithVariable', required: true },
+      { key: 'connectionVariable', label: 'Guardar conexión en', type: 'variable', required: true }
+    ]
+  },
+  ga_run_report: {
+    title: 'Ejecutar Reporte',
+    icon: 'fa-file-alt',
+    description: 'Ejecuta un reporte personalizado',
+    fields: [
+      { key: 'dimensions', label: 'Dimensiones', type: 'tags', helpText: 'date, city, pagePath...' },
+      { key: 'metrics', label: 'Métricas', type: 'tags', required: true, helpText: 'sessions, activeUsers...' },
+      { key: 'startDate', label: 'Desde', type: 'textWithVariable', required: true, helpText: 'YYYY-MM-DD o 7daysAgo' },
+      { key: 'endDate', label: 'Hasta', type: 'textWithVariable', required: true },
+      { key: 'limit', label: 'Límite', type: 'number', default: 1000 },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  ga_realtime: {
+    title: 'Datos en Tiempo Real',
+    icon: 'fa-broadcast-tower',
+    description: 'Obtiene datos en tiempo real',
+    fields: [
+      { key: 'dimensions', label: 'Dimensiones', type: 'tags', helpText: 'city, unifiedScreenName' },
+      { key: 'metrics', label: 'Métricas', type: 'tags', required: true, helpText: 'activeUsers' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  ga_get_metrics: {
+    title: 'Obtener Métricas',
+    icon: 'fa-chart-bar',
+    description: 'Obtiene métricas específicas',
+    fields: [
+      { key: 'metrics', label: 'Métricas', type: 'tags', required: true },
+      { key: 'startDate', label: 'Desde', type: 'textWithVariable', default: '30daysAgo' },
+      { key: 'endDate', label: 'Hasta', type: 'textWithVariable', default: 'today' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  ga_get_conversions: {
+    title: 'Obtener Conversiones',
+    icon: 'fa-bullseye',
+    description: 'Obtiene datos de conversiones',
+    fields: [
+      { key: 'startDate', label: 'Desde', type: 'textWithVariable', default: '30daysAgo' },
+      { key: 'endDate', label: 'Hasta', type: 'textWithVariable', default: 'today' },
+      { key: 'eventName', label: 'Nombre del evento', type: 'textWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  ga_get_audiences: {
+    title: 'Obtener Audiencias',
+    icon: 'fa-users',
+    description: 'Lista audiencias configuradas',
+    fields: [
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+
+  // ==========================================
+  // SENDGRID
+  // ==========================================
+  sg_connect: {
+    title: 'Conectar SendGrid',
+    icon: 'fa-plug',
+    description: 'Configura conexión con SendGrid',
+    fields: [
+      { key: 'apiKey', label: 'API Key', type: 'password', required: true },
+      { key: 'connectionVariable', label: 'Guardar conexión en', type: 'variable', required: true }
+    ]
+  },
+  sg_send_email: {
+    title: 'Enviar Email',
+    icon: 'fa-envelope',
+    description: 'Envía un email',
+    fields: [
+      { key: 'to', label: 'Para', type: 'textWithVariable', required: true },
+      { key: 'from', label: 'Desde', type: 'textWithVariable', required: true },
+      { key: 'subject', label: 'Asunto', type: 'textWithVariable', required: true },
+      { key: 'htmlContent', label: 'Contenido HTML', type: 'textareaWithVariable' },
+      { key: 'textContent', label: 'Contenido texto', type: 'textareaWithVariable' },
+      { key: 'attachments', label: 'Adjuntos', type: 'tags', helpText: 'Rutas de archivos' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  sg_send_template: {
+    title: 'Enviar con Plantilla',
+    icon: 'fa-file-alt',
+    description: 'Envía email con plantilla dinámica',
+    fields: [
+      { key: 'to', label: 'Para', type: 'textWithVariable', required: true },
+      { key: 'from', label: 'Desde', type: 'textWithVariable', required: true },
+      { key: 'templateId', label: 'ID de Plantilla', type: 'textWithVariable', required: true },
+      { key: 'dynamicData', label: 'Datos dinámicos (JSON)', type: 'textareaWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  sg_add_contact: {
+    title: 'Agregar Contacto',
+    icon: 'fa-user-plus',
+    description: 'Agrega contacto a una lista',
+    fields: [
+      { key: 'email', label: 'Email', type: 'textWithVariable', required: true },
+      { key: 'firstName', label: 'Nombre', type: 'textWithVariable' },
+      { key: 'lastName', label: 'Apellido', type: 'textWithVariable' },
+      { key: 'listIds', label: 'IDs de listas', type: 'tags' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  sg_create_list: {
+    title: 'Crear Lista',
+    icon: 'fa-list',
+    description: 'Crea una lista de contactos',
+    fields: [
+      { key: 'name', label: 'Nombre', type: 'textWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  sg_get_stats: {
+    title: 'Obtener Estadísticas',
+    icon: 'fa-chart-bar',
+    description: 'Obtiene estadísticas de envío',
+    fields: [
+      { key: 'startDate', label: 'Desde', type: 'textWithVariable', required: true },
+      { key: 'endDate', label: 'Hasta', type: 'textWithVariable' },
+      { key: 'aggregatedBy', label: 'Agrupar por', type: 'select', default: 'day', options: [{ value: 'day', label: 'Día' }, { value: 'week', label: 'Semana' }, { value: 'month', label: 'Mes' }] },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  sg_validate_email: {
+    title: 'Validar Email',
+    icon: 'fa-check',
+    description: 'Valida una dirección de email',
+    fields: [
+      { key: 'email', label: 'Email', type: 'textWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+
+  // ==========================================
+  // MAILCHIMP
+  // ==========================================
+  mc_connect: {
+    title: 'Conectar Mailchimp',
+    icon: 'fa-plug',
+    description: 'Configura conexión con Mailchimp',
+    fields: [
+      { key: 'apiKey', label: 'API Key', type: 'password', required: true },
+      { key: 'serverPrefix', label: 'Server Prefix', type: 'textWithVariable', required: true, helpText: 'Ej: us1, us2' },
+      { key: 'connectionVariable', label: 'Guardar conexión en', type: 'variable', required: true }
+    ]
+  },
+  mc_add_subscriber: {
+    title: 'Agregar Suscriptor',
+    icon: 'fa-user-plus',
+    description: 'Agrega un suscriptor a una lista',
+    fields: [
+      { key: 'listId', label: 'ID de Lista', type: 'textWithVariable', required: true },
+      { key: 'email', label: 'Email', type: 'textWithVariable', required: true },
+      { key: 'firstName', label: 'Nombre', type: 'textWithVariable' },
+      { key: 'lastName', label: 'Apellido', type: 'textWithVariable' },
+      { key: 'status', label: 'Estado', type: 'select', default: 'subscribed', options: [{ value: 'subscribed', label: 'Suscrito' }, { value: 'unsubscribed', label: 'Desuscrito' }, { value: 'pending', label: 'Pendiente' }] },
+      { key: 'tags', label: 'Tags', type: 'tags' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  mc_remove_subscriber: {
+    title: 'Remover Suscriptor',
+    icon: 'fa-user-minus',
+    description: 'Remueve un suscriptor',
+    fields: [
+      { key: 'listId', label: 'ID de Lista', type: 'textWithVariable', required: true },
+      { key: 'email', label: 'Email', type: 'textWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  mc_create_campaign: {
+    title: 'Crear Campaña',
+    icon: 'fa-bullhorn',
+    description: 'Crea una campaña de email',
+    fields: [
+      { key: 'listId', label: 'ID de Lista', type: 'textWithVariable', required: true },
+      { key: 'subject', label: 'Asunto', type: 'textWithVariable', required: true },
+      { key: 'fromName', label: 'Nombre remitente', type: 'textWithVariable', required: true },
+      { key: 'replyTo', label: 'Reply-to', type: 'textWithVariable', required: true },
+      { key: 'htmlContent', label: 'Contenido HTML', type: 'textareaWithVariable' },
+      { key: 'templateId', label: 'ID de Plantilla', type: 'textWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  mc_send_campaign: {
+    title: 'Enviar Campaña',
+    icon: 'fa-paper-plane',
+    description: 'Envía una campaña creada',
+    fields: [
+      { key: 'campaignId', label: 'ID de Campaña', type: 'textWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  mc_get_stats: {
+    title: 'Estadísticas Campaña',
+    icon: 'fa-chart-bar',
+    description: 'Obtiene estadísticas de campaña',
+    fields: [
+      { key: 'campaignId', label: 'ID de Campaña', type: 'textWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  mc_create_template: {
+    title: 'Crear Plantilla',
+    icon: 'fa-file-alt',
+    description: 'Crea una plantilla de email',
+    fields: [
+      { key: 'name', label: 'Nombre', type: 'textWithVariable', required: true },
+      { key: 'html', label: 'HTML', type: 'textareaWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  mc_add_tag: {
+    title: 'Agregar Tag',
+    icon: 'fa-tag',
+    description: 'Agrega tags a un suscriptor',
+    fields: [
+      { key: 'listId', label: 'ID de Lista', type: 'textWithVariable', required: true },
+      { key: 'email', label: 'Email', type: 'textWithVariable', required: true },
+      { key: 'tags', label: 'Tags', type: 'tags', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  mc_segment: {
+    title: 'Segmentar Audiencia',
+    icon: 'fa-filter',
+    description: 'Crea un segmento de audiencia',
+    fields: [
+      { key: 'listId', label: 'ID de Lista', type: 'textWithVariable', required: true },
+      { key: 'name', label: 'Nombre', type: 'textWithVariable', required: true },
+      { key: 'conditions', label: 'Condiciones (JSON)', type: 'textareaWithVariable', required: true, helpText: '[{field, op, value}]' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+
+  // ==========================================
+  // CALENDLY
+  // ==========================================
+  calendly_connect: {
+    title: 'Conectar Calendly',
+    icon: 'fa-plug',
+    description: 'Configura conexión con Calendly',
+    fields: [
+      { key: 'apiKey', label: 'Personal Access Token', type: 'password', required: true },
+      { key: 'connectionVariable', label: 'Guardar conexión en', type: 'variable', required: true }
+    ]
+  },
+  calendly_get_events: {
+    title: 'Obtener Eventos',
+    icon: 'fa-list',
+    description: 'Lista eventos programados',
+    fields: [
+      { key: 'minStartTime', label: 'Desde', type: 'textWithVariable', helpText: 'ISO 8601' },
+      { key: 'maxStartTime', label: 'Hasta', type: 'textWithVariable' },
+      { key: 'status', label: 'Estado', type: 'select', default: 'active', options: [{ value: 'active', label: 'Activos' }, { value: 'canceled', label: 'Cancelados' }] },
+      { key: 'count', label: 'Cantidad', type: 'number', default: 20 },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  calendly_get_invitee: {
+    title: 'Info del Invitado',
+    icon: 'fa-user',
+    description: 'Obtiene info de un invitado',
+    fields: [
+      { key: 'eventUuid', label: 'UUID del Evento', type: 'textWithVariable', required: true },
+      { key: 'inviteeUuid', label: 'UUID del Invitado', type: 'textWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  calendly_cancel_event: {
+    title: 'Cancelar Evento',
+    icon: 'fa-times',
+    description: 'Cancela un evento programado',
+    fields: [
+      { key: 'eventUuid', label: 'UUID del Evento', type: 'textWithVariable', required: true },
+      { key: 'reason', label: 'Razón', type: 'textWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  calendly_get_availability: {
+    title: 'Disponibilidad',
+    icon: 'fa-clock',
+    description: 'Obtiene disponibilidad',
+    fields: [
+      { key: 'userUri', label: 'URI del usuario', type: 'textWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  calendly_create_webhook: {
+    title: 'Crear Webhook',
+    icon: 'fa-link',
+    description: 'Crea un webhook de Calendly',
+    fields: [
+      { key: 'url', label: 'URL', type: 'textWithVariable', required: true },
+      { key: 'events', label: 'Eventos', type: 'tags', required: true, helpText: 'invitee.created, invitee.canceled' },
+      { key: 'scope', label: 'Alcance', type: 'select', default: 'user', options: [{ value: 'user', label: 'Usuario' }, { value: 'organization', label: 'Organización' }] },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+
+  // ==========================================
+  // ONESIGNAL
+  // ==========================================
+  onesignal_connect: {
+    title: 'Conectar OneSignal',
+    icon: 'fa-plug',
+    description: 'Configura conexión con OneSignal',
+    fields: [
+      { key: 'appId', label: 'App ID', type: 'textWithVariable', required: true },
+      { key: 'restApiKey', label: 'REST API Key', type: 'password', required: true },
+      { key: 'connectionVariable', label: 'Guardar conexión en', type: 'variable', required: true }
+    ]
+  },
+  onesignal_send_push: {
+    title: 'Enviar Push',
+    icon: 'fa-bell',
+    description: 'Envía notificación push',
+    fields: [
+      { key: 'heading', label: 'Título', type: 'textWithVariable', required: true },
+      { key: 'content', label: 'Contenido', type: 'textareaWithVariable', required: true },
+      { key: 'segments', label: 'Segmentos', type: 'tags', helpText: 'All, Active Users...' },
+      { key: 'playerIds', label: 'Player IDs', type: 'tags' },
+      { key: 'url', label: 'URL al hacer click', type: 'textWithVariable' },
+      { key: 'data', label: 'Datos extra (JSON)', type: 'textareaWithVariable' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  onesignal_send_email: {
+    title: 'Enviar Email',
+    icon: 'fa-envelope',
+    description: 'Envía email via OneSignal',
+    fields: [
+      { key: 'subject', label: 'Asunto', type: 'textWithVariable', required: true },
+      { key: 'body', label: 'Cuerpo HTML', type: 'textareaWithVariable', required: true },
+      { key: 'segments', label: 'Segmentos', type: 'tags' },
+      { key: 'emailAddresses', label: 'Emails directos', type: 'tags' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  onesignal_send_sms: {
+    title: 'Enviar SMS',
+    icon: 'fa-sms',
+    description: 'Envía SMS via OneSignal',
+    fields: [
+      { key: 'content', label: 'Contenido', type: 'textareaWithVariable', required: true },
+      { key: 'phoneNumbers', label: 'Números', type: 'tags', required: true, helpText: 'Con código de país' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  onesignal_create_segment: {
+    title: 'Crear Segmento',
+    icon: 'fa-filter',
+    description: 'Crea un segmento de usuarios',
+    fields: [
+      { key: 'name', label: 'Nombre', type: 'textWithVariable', required: true },
+      { key: 'filters', label: 'Filtros (JSON)', type: 'textareaWithVariable', required: true, helpText: '[{field, relation, value}]' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  onesignal_schedule: {
+    title: 'Programar Notificación',
+    icon: 'fa-clock',
+    description: 'Programa una notificación',
+    fields: [
+      { key: 'heading', label: 'Título', type: 'textWithVariable', required: true },
+      { key: 'content', label: 'Contenido', type: 'textareaWithVariable', required: true },
+      { key: 'sendAfter', label: 'Enviar después de', type: 'textWithVariable', required: true, helpText: 'ISO 8601' },
+      { key: 'segments', label: 'Segmentos', type: 'tags' },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  onesignal_get_stats: {
+    title: 'Obtener Estadísticas',
+    icon: 'fa-chart-bar',
+    description: 'Estadísticas de una notificación',
+    fields: [
+      { key: 'notificationId', label: 'ID Notificación', type: 'textWithVariable', required: true },
+      { key: 'resultVariable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  }
+
+})
+
+// ==========================================
+// AGENTES RPA, SLACK, TELEGRAM, WHATSAPP, DATATABLES, POWERPOINT
+// ==========================================
+Object.assign(BASE_ACTION_PROPERTIES, {
+  // --- AGENTES RPA ---
+  agent_start: {
+    title: 'Iniciar Agente',
+    icon: 'fa-play-circle',
+    description: 'Inicia un agente RPA autónomo',
+    fields: [
+      { key: 'agentName', label: 'Nombre del agente', type: 'text', required: true },
+      { key: 'agentType', label: 'Tipo', type: 'select', default: 'task', options: [
+        { value: 'task', label: 'Tarea específica' }, { value: 'monitor', label: 'Monitor/Observador' }, { value: 'scheduled', label: 'Programado' }
+      ]},
+      { key: 'timeout', label: 'Timeout (seg)', type: 'number', default: 300 },
+      { key: 'variable', label: 'Guardar ID en', type: 'variable' }
+    ]
+  },
+  agent_stop: {
+    title: 'Detener Agente',
+    icon: 'fa-stop-circle',
+    description: 'Detiene un agente en ejecución',
+    fields: [
+      { key: 'agentId', label: 'ID del agente', type: 'textWithVariable', required: true }
+    ]
+  },
+  agent_status: {
+    title: 'Estado del Agente',
+    icon: 'fa-info-circle',
+    description: 'Consulta el estado de un agente',
+    fields: [
+      { key: 'agentId', label: 'ID del agente', type: 'textWithVariable', required: true },
+      { key: 'variable', label: 'Guardar estado en', type: 'variable', required: true }
+    ]
+  },
+  agent_config: {
+    title: 'Configurar Agente',
+    icon: 'fa-cogs',
+    description: 'Configura parámetros de un agente',
+    fields: [
+      { key: 'agentId', label: 'ID del agente', type: 'textWithVariable', required: true },
+      { key: 'config', label: 'Configuración', type: 'keyValue', helpText: 'Pares clave-valor de configuración' }
+    ]
+  },
+  agent_execute: {
+    title: 'Ejecutar Agente',
+    icon: 'fa-bolt',
+    description: 'Ejecuta una acción específica del agente',
+    fields: [
+      { key: 'agentId', label: 'ID del agente', type: 'textWithVariable', required: true },
+      { key: 'action', label: 'Acción', type: 'text', required: true },
+      { key: 'params', label: 'Parámetros', type: 'keyValue' },
+      { key: 'variable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  agent_rest_request: {
+    title: 'Agente: REST Request',
+    icon: 'fa-exchange-alt',
+    description: 'Realiza una petición REST a través del agente',
+    fields: [
+      { key: 'method', label: 'Método', type: 'select', default: 'GET', options: [
+        { value: 'GET', label: 'GET' }, { value: 'POST', label: 'POST' }, { value: 'PUT', label: 'PUT' }, { value: 'DELETE', label: 'DELETE' }, { value: 'PATCH', label: 'PATCH' }
+      ]},
+      { key: 'url', label: 'URL', type: 'url', required: true },
+      { key: 'headers', label: 'Headers', type: 'keyValue' },
+      { key: 'body', label: 'Body', type: 'code', language: 'json' },
+      { key: 'variable', label: 'Guardar respuesta en', type: 'variable' }
+    ]
+  },
+  agent_rest_batch: {
+    title: 'Agente: REST Batch',
+    icon: 'fa-layer-group',
+    description: 'Ejecuta múltiples peticiones REST en lote',
+    fields: [
+      { key: 'requests', label: 'Peticiones (JSON array)', type: 'code', language: 'json', required: true },
+      { key: 'parallel', label: 'Ejecutar en paralelo', type: 'checkbox', default: false },
+      { key: 'variable', label: 'Guardar resultados en', type: 'variable' }
+    ]
+  },
+  agent_mysql_query: {
+    title: 'Agente: Query MySQL',
+    icon: 'fa-database',
+    description: 'Ejecuta una consulta MySQL a través del agente',
+    fields: [
+      { key: 'query', label: 'Consulta SQL', type: 'code', language: 'sql', required: true },
+      { key: 'params', label: 'Parámetros', type: 'tags', placeholder: 'Valores para ? en la consulta' },
+      { key: 'variable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  agent_mysql_schema: {
+    title: 'Agente: Schema MySQL',
+    icon: 'fa-sitemap',
+    description: 'Obtiene estructura de la base de datos',
+    fields: [
+      { key: 'database', label: 'Base de datos', type: 'text' },
+      { key: 'table', label: 'Tabla específica', type: 'text', helpText: 'Dejar vacío para todas' },
+      { key: 'variable', label: 'Guardar schema en', type: 'variable' }
+    ]
+  },
+  agent_workflow_execute: {
+    title: 'Agente: Ejecutar Workflow',
+    icon: 'fa-project-diagram',
+    description: 'Ejecuta otro workflow como sub-proceso',
+    fields: [
+      { key: 'workflowId', label: 'ID del workflow', type: 'textWithVariable', required: true },
+      { key: 'inputVariables', label: 'Variables de entrada', type: 'keyValue' },
+      { key: 'waitForCompletion', label: 'Esperar finalización', type: 'checkbox', default: true },
+      { key: 'variable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  agent_orchestrator_workflow: {
+    title: 'Agente: Orquestador',
+    icon: 'fa-network-wired',
+    description: 'Orquesta múltiples workflows en secuencia o paralelo',
+    fields: [
+      { key: 'workflows', label: 'Workflows (IDs)', type: 'tags', required: true },
+      { key: 'mode', label: 'Modo', type: 'select', default: 'sequential', options: [
+        { value: 'sequential', label: 'Secuencial' }, { value: 'parallel', label: 'Paralelo' }
+      ]},
+      { key: 'variable', label: 'Guardar resultados en', type: 'variable' }
+    ]
+  },
+  agent_whatsapp_send: {
+    title: 'Agente: Enviar WhatsApp',
+    icon: 'fa-comment',
+    description: 'Envía un mensaje de WhatsApp vía agente',
+    fields: [
+      { key: 'phone', label: 'Teléfono', type: 'textWithVariable', required: true, placeholder: '+5491112345678' },
+      { key: 'message', label: 'Mensaje', type: 'textarea', required: true, rows: 3 },
+      { key: 'variable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  agent_whatsapp_template: {
+    title: 'Agente: Template WhatsApp',
+    icon: 'fa-file-alt',
+    description: 'Envía un mensaje de plantilla de WhatsApp',
+    fields: [
+      { key: 'phone', label: 'Teléfono', type: 'textWithVariable', required: true },
+      { key: 'templateName', label: 'Nombre de plantilla', type: 'text', required: true },
+      { key: 'templateParams', label: 'Parámetros', type: 'keyValue' },
+      { key: 'variable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  agent_whatsapp_media: {
+    title: 'Agente: WhatsApp Media',
+    icon: 'fa-image',
+    description: 'Envía archivos multimedia por WhatsApp',
+    fields: [
+      { key: 'phone', label: 'Teléfono', type: 'textWithVariable', required: true },
+      { key: 'mediaType', label: 'Tipo', type: 'select', default: 'image', options: [
+        { value: 'image', label: 'Imagen' }, { value: 'document', label: 'Documento' }, { value: 'audio', label: 'Audio' }, { value: 'video', label: 'Video' }
+      ]},
+      { key: 'filePath', label: 'Archivo', type: 'fileWithVariable', required: true },
+      { key: 'caption', label: 'Texto', type: 'text' },
+      { key: 'variable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+
+  // --- SLACK ---
+  slack_connect: {
+    title: 'Conectar Slack',
+    icon: 'fa-plug',
+    description: 'Configura la conexión con Slack',
+    fields: [
+      { key: 'token', label: 'Bot Token', type: 'password', required: true, helpText: 'xoxb-... token de tu bot' },
+      { key: 'variable', label: 'Guardar conexión en', type: 'variable' }
+    ]
+  },
+  slack_send_message: {
+    title: 'Enviar Mensaje Slack',
+    icon: 'fa-paper-plane',
+    description: 'Envía un mensaje a un canal o usuario de Slack',
+    fields: [
+      { key: 'channel', label: 'Canal/Usuario', type: 'textWithVariable', required: true, placeholder: '#general o @usuario' },
+      { key: 'message', label: 'Mensaje', type: 'textarea', required: true, rows: 3 },
+      { key: 'asBot', label: 'Enviar como bot', type: 'checkbox', default: true },
+      { key: 'threadTs', label: 'Thread (responder hilo)', type: 'textWithVariable', helpText: 'Timestamp del mensaje padre', advanced: true },
+      { key: 'variable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  slack_send_blocks: {
+    title: 'Enviar Bloques Slack',
+    icon: 'fa-th-large',
+    description: 'Envía mensaje con formato rico (Block Kit)',
+    fields: [
+      { key: 'channel', label: 'Canal', type: 'textWithVariable', required: true },
+      { key: 'blocks', label: 'Bloques (JSON)', type: 'code', language: 'json', required: true },
+      { key: 'text', label: 'Texto fallback', type: 'text' },
+      { key: 'variable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  slack_read_messages: {
+    title: 'Leer Mensajes Slack',
+    icon: 'fa-inbox',
+    description: 'Lee mensajes de un canal de Slack',
+    fields: [
+      { key: 'channel', label: 'Canal', type: 'textWithVariable', required: true },
+      { key: 'limit', label: 'Cantidad', type: 'number', default: 10 },
+      { key: 'variable', label: 'Guardar mensajes en', type: 'variable', required: true }
+    ]
+  },
+  slack_upload_file: {
+    title: 'Subir Archivo a Slack',
+    icon: 'fa-upload',
+    description: 'Sube un archivo a un canal de Slack',
+    fields: [
+      { key: 'channel', label: 'Canal', type: 'textWithVariable', required: true },
+      { key: 'filePath', label: 'Archivo', type: 'fileWithVariable', required: true },
+      { key: 'title', label: 'Título', type: 'text' },
+      { key: 'comment', label: 'Comentario', type: 'text' },
+      { key: 'variable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  slack_create_channel: {
+    title: 'Crear Canal Slack',
+    icon: 'fa-plus-circle',
+    description: 'Crea un nuevo canal en Slack',
+    fields: [
+      { key: 'name', label: 'Nombre del canal', type: 'text', required: true },
+      { key: 'isPrivate', label: 'Privado', type: 'checkbox', default: false },
+      { key: 'topic', label: 'Tema', type: 'text' },
+      { key: 'variable', label: 'Guardar ID en', type: 'variable' }
+    ]
+  },
+  slack_get_users: {
+    title: 'Obtener Usuarios Slack',
+    icon: 'fa-users',
+    description: 'Lista los usuarios del workspace',
+    fields: [
+      { key: 'variable', label: 'Guardar usuarios en', type: 'variable', required: true }
+    ]
+  },
+  slack_react: {
+    title: 'Reaccionar en Slack',
+    icon: 'fa-smile',
+    description: 'Agrega una reacción emoji a un mensaje',
+    fields: [
+      { key: 'channel', label: 'Canal', type: 'textWithVariable', required: true },
+      { key: 'timestamp', label: 'Mensaje (timestamp)', type: 'textWithVariable', required: true },
+      { key: 'emoji', label: 'Emoji', type: 'text', required: true, placeholder: 'thumbsup' }
+    ]
+  },
+  slack_set_status: {
+    title: 'Establecer Estado Slack',
+    icon: 'fa-circle',
+    description: 'Cambia el estado del bot/usuario en Slack',
+    fields: [
+      { key: 'text', label: 'Texto de estado', type: 'text', required: true },
+      { key: 'emoji', label: 'Emoji', type: 'text', placeholder: ':robot_face:' }
+    ]
+  },
+
+  // --- TELEGRAM ---
+  tg_send_message: {
+    title: 'Enviar Mensaje Telegram',
+    icon: 'fa-paper-plane',
+    description: 'Envía un mensaje de texto por Telegram',
+    fields: [
+      { key: 'chatId', label: 'Chat ID', type: 'textWithVariable', required: true },
+      { key: 'text', label: 'Mensaje', type: 'textarea', required: true, rows: 3 },
+      { key: 'parseMode', label: 'Formato', type: 'select', default: 'HTML', options: [
+        { value: 'HTML', label: 'HTML' }, { value: 'Markdown', label: 'Markdown' }, { value: 'text', label: 'Texto plano' }
+      ]},
+      { key: 'disablePreview', label: 'Desactivar vista previa', type: 'checkbox', default: false },
+      { key: 'variable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  tg_send_photo: {
+    title: 'Enviar Foto Telegram',
+    icon: 'fa-image',
+    description: 'Envía una imagen por Telegram',
+    fields: [
+      { key: 'chatId', label: 'Chat ID', type: 'textWithVariable', required: true },
+      { key: 'photo', label: 'Foto', type: 'fileWithVariable', required: true, accept: '.png,.jpg,.jpeg,.gif' },
+      { key: 'caption', label: 'Texto', type: 'text' },
+      { key: 'variable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  tg_send_document: {
+    title: 'Enviar Documento Telegram',
+    icon: 'fa-file',
+    description: 'Envía un archivo por Telegram',
+    fields: [
+      { key: 'chatId', label: 'Chat ID', type: 'textWithVariable', required: true },
+      { key: 'document', label: 'Archivo', type: 'fileWithVariable', required: true },
+      { key: 'caption', label: 'Texto', type: 'text' },
+      { key: 'variable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  tg_send_video: {
+    title: 'Enviar Video Telegram',
+    icon: 'fa-video',
+    description: 'Envía un video por Telegram',
+    fields: [
+      { key: 'chatId', label: 'Chat ID', type: 'textWithVariable', required: true },
+      { key: 'video', label: 'Video', type: 'fileWithVariable', required: true, accept: '.mp4,.avi,.mov' },
+      { key: 'caption', label: 'Texto', type: 'text' },
+      { key: 'variable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  tg_send_audio: {
+    title: 'Enviar Audio Telegram',
+    icon: 'fa-music',
+    description: 'Envía un archivo de audio por Telegram',
+    fields: [
+      { key: 'chatId', label: 'Chat ID', type: 'textWithVariable', required: true },
+      { key: 'audio', label: 'Audio', type: 'fileWithVariable', required: true, accept: '.mp3,.ogg,.wav' },
+      { key: 'caption', label: 'Texto', type: 'text' },
+      { key: 'variable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  tg_send_voice: {
+    title: 'Enviar Nota de Voz Telegram',
+    icon: 'fa-microphone',
+    description: 'Envía una nota de voz por Telegram',
+    fields: [
+      { key: 'chatId', label: 'Chat ID', type: 'textWithVariable', required: true },
+      { key: 'voice', label: 'Archivo de voz', type: 'fileWithVariable', required: true, accept: '.ogg' },
+      { key: 'variable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  tg_send_location: {
+    title: 'Enviar Ubicación Telegram',
+    icon: 'fa-map-marker-alt',
+    description: 'Envía una ubicación geográfica',
+    fields: [
+      { key: 'chatId', label: 'Chat ID', type: 'textWithVariable', required: true },
+      { key: 'latitude', label: 'Latitud', type: 'text', required: true },
+      { key: 'longitude', label: 'Longitud', type: 'text', required: true },
+      { key: 'variable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  tg_send_poll: {
+    title: 'Enviar Encuesta Telegram',
+    icon: 'fa-poll',
+    description: 'Crea una encuesta en un chat',
+    fields: [
+      { key: 'chatId', label: 'Chat ID', type: 'textWithVariable', required: true },
+      { key: 'question', label: 'Pregunta', type: 'text', required: true },
+      { key: 'options', label: 'Opciones', type: 'tags', required: true, placeholder: 'Agrega opciones de respuesta' },
+      { key: 'isAnonymous', label: 'Anónima', type: 'checkbox', default: true },
+      { key: 'variable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  tg_get_updates: {
+    title: 'Obtener Updates Telegram',
+    icon: 'fa-download',
+    description: 'Obtiene mensajes/updates nuevos del bot',
+    fields: [
+      { key: 'offset', label: 'Offset', type: 'number', default: 0, helpText: 'ID del último update procesado' },
+      { key: 'limit', label: 'Cantidad', type: 'number', default: 10 },
+      { key: 'variable', label: 'Guardar updates en', type: 'variable', required: true }
+    ]
+  },
+  tg_get_chat: {
+    title: 'Info de Chat Telegram',
+    icon: 'fa-info-circle',
+    description: 'Obtiene información de un chat',
+    fields: [
+      { key: 'chatId', label: 'Chat ID', type: 'textWithVariable', required: true },
+      { key: 'variable', label: 'Guardar info en', type: 'variable', required: true }
+    ]
+  },
+  tg_get_member: {
+    title: 'Info de Miembro Telegram',
+    icon: 'fa-user',
+    description: 'Obtiene información de un miembro del chat',
+    fields: [
+      { key: 'chatId', label: 'Chat ID', type: 'textWithVariable', required: true },
+      { key: 'userId', label: 'User ID', type: 'textWithVariable', required: true },
+      { key: 'variable', label: 'Guardar info en', type: 'variable', required: true }
+    ]
+  },
+  tg_edit_message: {
+    title: 'Editar Mensaje Telegram',
+    icon: 'fa-edit',
+    description: 'Edita un mensaje ya enviado',
+    fields: [
+      { key: 'chatId', label: 'Chat ID', type: 'textWithVariable', required: true },
+      { key: 'messageId', label: 'Message ID', type: 'textWithVariable', required: true },
+      { key: 'text', label: 'Nuevo texto', type: 'textarea', required: true, rows: 3 }
+    ]
+  },
+  tg_delete_message: {
+    title: 'Eliminar Mensaje Telegram',
+    icon: 'fa-trash',
+    description: 'Elimina un mensaje del chat',
+    fields: [
+      { key: 'chatId', label: 'Chat ID', type: 'textWithVariable', required: true },
+      { key: 'messageId', label: 'Message ID', type: 'textWithVariable', required: true }
+    ]
+  },
+  tg_answer_callback: {
+    title: 'Responder Callback Telegram',
+    icon: 'fa-reply',
+    description: 'Responde a un callback query (botón inline)',
+    fields: [
+      { key: 'callbackQueryId', label: 'Callback Query ID', type: 'textWithVariable', required: true },
+      { key: 'text', label: 'Texto de respuesta', type: 'text' },
+      { key: 'showAlert', label: 'Mostrar alerta', type: 'checkbox', default: false }
+    ]
+  },
+
+  // --- WHATSAPP ---
+  wa_connect: {
+    title: 'Conectar WhatsApp',
+    icon: 'fa-plug',
+    description: 'Configura conexión con la API de WhatsApp Business',
+    fields: [
+      { key: 'token', label: 'Access Token', type: 'password', required: true },
+      { key: 'phoneNumberId', label: 'Phone Number ID', type: 'text', required: true },
+      { key: 'variable', label: 'Guardar conexión en', type: 'variable' }
+    ]
+  },
+  wa_send_message: {
+    title: 'Enviar Mensaje WhatsApp',
+    icon: 'fa-paper-plane',
+    description: 'Envía un mensaje de texto por WhatsApp',
+    fields: [
+      { key: 'phone', label: 'Teléfono', type: 'textWithVariable', required: true, placeholder: '+5491112345678' },
+      { key: 'message', label: 'Mensaje', type: 'textarea', required: true, rows: 3 },
+      { key: 'variable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  wa_send_template: {
+    title: 'Enviar Template WhatsApp',
+    icon: 'fa-file-alt',
+    description: 'Envía un mensaje de plantilla aprobada',
+    fields: [
+      { key: 'phone', label: 'Teléfono', type: 'textWithVariable', required: true },
+      { key: 'templateName', label: 'Nombre plantilla', type: 'text', required: true },
+      { key: 'language', label: 'Idioma', type: 'select', default: 'es', options: [
+        { value: 'es', label: 'Español' }, { value: 'en', label: 'Inglés' }, { value: 'pt_BR', label: 'Portugués' }
+      ]},
+      { key: 'params', label: 'Parámetros', type: 'keyValue' },
+      { key: 'variable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  wa_send_media: {
+    title: 'Enviar Media WhatsApp',
+    icon: 'fa-image',
+    description: 'Envía imagen, documento, audio o video por WhatsApp',
+    fields: [
+      { key: 'phone', label: 'Teléfono', type: 'textWithVariable', required: true },
+      { key: 'mediaType', label: 'Tipo', type: 'select', default: 'image', options: [
+        { value: 'image', label: 'Imagen' }, { value: 'document', label: 'Documento' }, { value: 'audio', label: 'Audio' }, { value: 'video', label: 'Video' }
+      ]},
+      { key: 'filePath', label: 'Archivo', type: 'fileWithVariable', required: true },
+      { key: 'caption', label: 'Texto', type: 'text' },
+      { key: 'variable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  wa_send_buttons: {
+    title: 'Enviar Botones WhatsApp',
+    icon: 'fa-hand-pointer',
+    description: 'Envía un mensaje con botones interactivos',
+    fields: [
+      { key: 'phone', label: 'Teléfono', type: 'textWithVariable', required: true },
+      { key: 'headerText', label: 'Encabezado', type: 'text' },
+      { key: 'bodyText', label: 'Cuerpo', type: 'textarea', required: true, rows: 2 },
+      { key: 'footerText', label: 'Pie', type: 'text' },
+      { key: 'buttons', label: 'Botones', type: 'tags', required: true, placeholder: 'Texto de cada botón (max 3)' },
+      { key: 'variable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  wa_send_list: {
+    title: 'Enviar Lista WhatsApp',
+    icon: 'fa-list',
+    description: 'Envía un mensaje con lista de opciones',
+    fields: [
+      { key: 'phone', label: 'Teléfono', type: 'textWithVariable', required: true },
+      { key: 'bodyText', label: 'Mensaje', type: 'textarea', required: true, rows: 2 },
+      { key: 'buttonText', label: 'Texto del botón', type: 'text', required: true, placeholder: 'Ver opciones' },
+      { key: 'sections', label: 'Secciones (JSON)', type: 'code', language: 'json', required: true },
+      { key: 'variable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  wa_send_location: {
+    title: 'Enviar Ubicación WhatsApp',
+    icon: 'fa-map-marker-alt',
+    description: 'Envía una ubicación geográfica por WhatsApp',
+    fields: [
+      { key: 'phone', label: 'Teléfono', type: 'textWithVariable', required: true },
+      { key: 'latitude', label: 'Latitud', type: 'text', required: true },
+      { key: 'longitude', label: 'Longitud', type: 'text', required: true },
+      { key: 'name', label: 'Nombre del lugar', type: 'text' },
+      { key: 'address', label: 'Dirección', type: 'text' }
+    ]
+  },
+  wa_send_contact: {
+    title: 'Enviar Contacto WhatsApp',
+    icon: 'fa-address-book',
+    description: 'Envía una tarjeta de contacto',
+    fields: [
+      { key: 'phone', label: 'Teléfono destino', type: 'textWithVariable', required: true },
+      { key: 'contactName', label: 'Nombre del contacto', type: 'text', required: true },
+      { key: 'contactPhone', label: 'Teléfono del contacto', type: 'text', required: true },
+      { key: 'contactEmail', label: 'Email', type: 'email' }
+    ]
+  },
+  wa_read_messages: {
+    title: 'Leer Mensajes WhatsApp',
+    icon: 'fa-inbox',
+    description: 'Lee mensajes recibidos de WhatsApp',
+    fields: [
+      { key: 'phone', label: 'Filtrar por teléfono', type: 'text', helpText: 'Vacío = todos' },
+      { key: 'limit', label: 'Cantidad', type: 'number', default: 10 },
+      { key: 'variable', label: 'Guardar mensajes en', type: 'variable', required: true }
+    ]
+  },
+  wa_mark_read: {
+    title: 'Marcar Leído WhatsApp',
+    icon: 'fa-check-double',
+    description: 'Marca un mensaje como leído',
+    fields: [
+      { key: 'messageId', label: 'Message ID', type: 'textWithVariable', required: true }
+    ]
+  },
+
+  // --- DATATABLES ---
+  dt_create: {
+    title: 'Crear DataTable',
+    icon: 'fa-table',
+    description: 'Crea una nueva tabla de datos en memoria',
+    fields: [
+      { key: 'columns', label: 'Columnas', type: 'tags', required: true, placeholder: 'Nombre, Edad, Email...' },
+      { key: 'variable', label: 'Guardar tabla en', type: 'variable', required: true }
+    ]
+  },
+  dt_add_row: {
+    title: 'Agregar Fila',
+    icon: 'fa-plus',
+    description: 'Agrega una fila a la DataTable',
+    fields: [
+      { key: 'table', label: 'DataTable', type: 'variableSelect', required: true },
+      { key: 'values', label: 'Valores', type: 'keyValue', required: true, helpText: 'Columna → Valor' }
+    ]
+  },
+  dt_filter: {
+    title: 'Filtrar DataTable',
+    icon: 'fa-filter',
+    description: 'Filtra filas según una condición',
+    fields: [
+      { key: 'table', label: 'DataTable', type: 'variableSelect', required: true },
+      { key: 'column', label: 'Columna', type: 'text', required: true },
+      { key: 'operator', label: 'Operador', type: 'select', default: 'equals', options: [
+        { value: 'equals', label: 'Igual a' }, { value: 'contains', label: 'Contiene' }, { value: 'greater', label: 'Mayor que' }, { value: 'less', label: 'Menor que' }, { value: 'startsWith', label: 'Empieza con' }, { value: 'endsWith', label: 'Termina en' }
+      ]},
+      { key: 'value', label: 'Valor', type: 'textWithVariable', required: true },
+      { key: 'variable', label: 'Guardar resultado en', type: 'variable', required: true }
+    ]
+  },
+  dt_sort: {
+    title: 'Ordenar DataTable',
+    icon: 'fa-sort',
+    description: 'Ordena una DataTable por una columna',
+    fields: [
+      { key: 'table', label: 'DataTable', type: 'variableSelect', required: true },
+      { key: 'column', label: 'Columna', type: 'text', required: true },
+      { key: 'order', label: 'Orden', type: 'select', default: 'asc', options: [
+        { value: 'asc', label: 'Ascendente' }, { value: 'desc', label: 'Descendente' }
+      ]},
+      { key: 'variable', label: 'Guardar resultado en', type: 'variable' }
+    ]
+  },
+  dt_get_row: {
+    title: 'Obtener Fila',
+    icon: 'fa-search',
+    description: 'Obtiene una fila por índice',
+    fields: [
+      { key: 'table', label: 'DataTable', type: 'variableSelect', required: true },
+      { key: 'index', label: 'Índice (desde 0)', type: 'number', default: 0 },
+      { key: 'variable', label: 'Guardar fila en', type: 'variable', required: true }
+    ]
+  },
+  dt_update_row: {
+    title: 'Actualizar Fila',
+    icon: 'fa-edit',
+    description: 'Actualiza valores de una fila',
+    fields: [
+      { key: 'table', label: 'DataTable', type: 'variableSelect', required: true },
+      { key: 'index', label: 'Índice', type: 'number', required: true },
+      { key: 'values', label: 'Valores', type: 'keyValue', required: true }
+    ]
+  },
+  dt_delete_row: {
+    title: 'Eliminar Fila',
+    icon: 'fa-trash',
+    description: 'Elimina una fila de la DataTable',
+    fields: [
+      { key: 'table', label: 'DataTable', type: 'variableSelect', required: true },
+      { key: 'index', label: 'Índice', type: 'number', required: true }
+    ]
+  },
+  dt_count: {
+    title: 'Contar Filas',
+    icon: 'fa-calculator',
+    description: 'Cuenta las filas de una DataTable',
+    fields: [
+      { key: 'table', label: 'DataTable', type: 'variableSelect', required: true },
+      { key: 'variable', label: 'Guardar conteo en', type: 'variable', required: true }
+    ]
+  },
+  dt_to_json: {
+    title: 'DataTable a JSON',
+    icon: 'fa-code',
+    description: 'Convierte la DataTable a formato JSON',
+    fields: [
+      { key: 'table', label: 'DataTable', type: 'variableSelect', required: true },
+      { key: 'variable', label: 'Guardar JSON en', type: 'variable', required: true }
+    ]
+  },
+  dt_from_json: {
+    title: 'JSON a DataTable',
+    icon: 'fa-table',
+    description: 'Crea una DataTable desde datos JSON',
+    fields: [
+      { key: 'json', label: 'Datos JSON', type: 'code', language: 'json', required: true },
+      { key: 'variable', label: 'Guardar tabla en', type: 'variable', required: true }
+    ]
+  },
+  dt_to_csv: {
+    title: 'DataTable a CSV',
+    icon: 'fa-file-csv',
+    description: 'Exporta la DataTable a archivo CSV',
+    fields: [
+      { key: 'table', label: 'DataTable', type: 'variableSelect', required: true },
+      { key: 'filePath', label: 'Ruta de archivo', type: 'file', required: true, fileType: 'save', accept: '.csv' },
+      { key: 'delimiter', label: 'Delimitador', type: 'select', default: ',', options: [
+        { value: ',', label: 'Coma (,)' }, { value: ';', label: 'Punto y coma (;)' }, { value: '\t', label: 'Tab' }
+      ]}
+    ]
+  },
+  dt_from_csv: {
+    title: 'CSV a DataTable',
+    icon: 'fa-file-csv',
+    description: 'Importa un archivo CSV como DataTable',
+    fields: [
+      { key: 'filePath', label: 'Archivo CSV', type: 'file', required: true, fileType: 'open', accept: '.csv' },
+      { key: 'delimiter', label: 'Delimitador', type: 'select', default: ',', options: [
+        { value: ',', label: 'Coma (,)' }, { value: ';', label: 'Punto y coma (;)' }, { value: '\t', label: 'Tab' }
+      ]},
+      { key: 'hasHeaders', label: 'Primera fila es encabezado', type: 'checkbox', default: true },
+      { key: 'variable', label: 'Guardar tabla en', type: 'variable', required: true }
+    ]
+  },
+
+  // --- POWERPOINT ---
+  ppt_open: {
+    title: 'Abrir PowerPoint',
+    icon: 'fa-file-powerpoint',
+    description: 'Abre una presentación de PowerPoint',
+    fields: [
+      { key: 'filePath', label: 'Archivo', type: 'fileWithVariable', required: true, accept: '.pptx,.ppt' },
+      { key: 'variable', label: 'Guardar referencia en', type: 'variable' }
+    ]
+  },
+  ppt_create: {
+    title: 'Crear PowerPoint',
+    icon: 'fa-plus-circle',
+    description: 'Crea una nueva presentación vacía',
+    fields: [
+      { key: 'template', label: 'Plantilla', type: 'file', fileType: 'open', accept: '.pptx', helpText: 'Opcional - usar como base' },
+      { key: 'variable', label: 'Guardar referencia en', type: 'variable' }
+    ]
+  },
+  ppt_add_slide: {
+    title: 'Agregar Diapositiva',
+    icon: 'fa-plus-square',
+    description: 'Agrega una nueva diapositiva',
+    fields: [
+      { key: 'layout', label: 'Diseño', type: 'select', default: 'blank', options: [
+        { value: 'blank', label: 'En blanco' }, { value: 'title', label: 'Título' }, { value: 'titleContent', label: 'Título y contenido' }, { value: 'twoColumn', label: 'Dos columnas' }
+      ]},
+      { key: 'position', label: 'Posición', type: 'number', helpText: 'Dejar vacío = al final' }
+    ]
+  },
+  ppt_add_text: {
+    title: 'Agregar Texto a PPT',
+    icon: 'fa-font',
+    description: 'Agrega un cuadro de texto a la diapositiva',
+    fields: [
+      { key: 'slide', label: 'Número de diapositiva', type: 'number', required: true, default: 1 },
+      { key: 'text', label: 'Texto', type: 'textarea', required: true, rows: 3 },
+      { key: 'x', label: 'Posición X', type: 'number', default: 100 },
+      { key: 'y', label: 'Posición Y', type: 'number', default: 100 },
+      { key: 'fontSize', label: 'Tamaño fuente', type: 'number', default: 18 },
+      { key: 'bold', label: 'Negrita', type: 'checkbox', default: false }
+    ]
+  },
+  ppt_add_image: {
+    title: 'Agregar Imagen a PPT',
+    icon: 'fa-image',
+    description: 'Inserta una imagen en la diapositiva',
+    fields: [
+      { key: 'slide', label: 'Número de diapositiva', type: 'number', required: true, default: 1 },
+      { key: 'imagePath', label: 'Imagen', type: 'fileWithVariable', required: true, accept: '.png,.jpg,.jpeg,.gif,.bmp' },
+      { key: 'x', label: 'Posición X', type: 'number', default: 50 },
+      { key: 'y', label: 'Posición Y', type: 'number', default: 50 },
+      { key: 'width', label: 'Ancho', type: 'number', helpText: 'Dejar vacío = original' },
+      { key: 'height', label: 'Alto', type: 'number' }
+    ]
+  },
+  ppt_add_chart: {
+    title: 'Agregar Gráfico a PPT',
+    icon: 'fa-chart-bar',
+    description: 'Inserta un gráfico en la diapositiva',
+    fields: [
+      { key: 'slide', label: 'Diapositiva', type: 'number', required: true, default: 1 },
+      { key: 'chartType', label: 'Tipo', type: 'select', default: 'bar', options: [
+        { value: 'bar', label: 'Barras' }, { value: 'line', label: 'Líneas' }, { value: 'pie', label: 'Circular' }, { value: 'area', label: 'Área' }
+      ]},
+      { key: 'data', label: 'Datos (JSON)', type: 'code', language: 'json', required: true },
+      { key: 'title', label: 'Título del gráfico', type: 'text' }
+    ]
+  },
+  ppt_add_table: {
+    title: 'Agregar Tabla a PPT',
+    icon: 'fa-table',
+    description: 'Inserta una tabla en la diapositiva',
+    fields: [
+      { key: 'slide', label: 'Diapositiva', type: 'number', required: true, default: 1 },
+      { key: 'data', label: 'Datos (JSON array)', type: 'code', language: 'json', required: true },
+      { key: 'x', label: 'Posición X', type: 'number', default: 50 },
+      { key: 'y', label: 'Posición Y', type: 'number', default: 50 }
+    ]
+  },
+  ppt_save: {
+    title: 'Guardar PowerPoint',
+    icon: 'fa-save',
+    description: 'Guarda la presentación',
+    fields: [
+      { key: 'filePath', label: 'Guardar como', type: 'file', fileType: 'save', accept: '.pptx', helpText: 'Dejar vacío = sobrescribir original' }
+    ]
+  },
+  ppt_close: {
+    title: 'Cerrar PowerPoint',
+    icon: 'fa-times-circle',
+    description: 'Cierra la presentación',
+    fields: [
+      { key: 'save', label: 'Guardar antes de cerrar', type: 'checkbox', default: true }
+    ]
+  },
+  ppt_delete_slide: {
+    title: 'Eliminar Diapositiva',
+    icon: 'fa-trash',
+    description: 'Elimina una diapositiva de la presentación',
+    fields: [
+      { key: 'slide', label: 'Número de diapositiva', type: 'number', required: true }
+    ]
+  },
+
+  // --- CAPTCHA ---
+  captcha_solve_image: {
+    title: 'Resolver Captcha Imagen',
+    icon: 'fa-image',
+    description: 'Resuelve un captcha basado en imagen',
+    fields: [
+      { key: 'provider', label: 'Servicio', type: 'select', default: '2captcha', options: [
+        { value: '2captcha', label: '2Captcha' }, { value: 'anticaptcha', label: 'Anti-Captcha' }, { value: 'capsolver', label: 'CapSolver' }
+      ]},
+      { key: 'apiKey', label: 'API Key', type: 'password', required: true },
+      { key: 'imageSource', label: 'Origen', type: 'select', default: 'screenshot', options: [
+        { value: 'screenshot', label: 'Captura de pantalla' }, { value: 'file', label: 'Archivo' }, { value: 'base64', label: 'Base64' }
+      ]},
+      { key: 'imagePath', label: 'Imagen', type: 'fileWithVariable', condition: { field: 'imageSource', value: 'file' } },
+      { key: 'variable', label: 'Guardar solución en', type: 'variable', required: true }
+    ]
+  },
+  captcha_solve_recaptcha: {
+    title: 'Resolver reCAPTCHA',
+    icon: 'fa-shield-alt',
+    description: 'Resuelve un reCAPTCHA v2/v3',
+    fields: [
+      { key: 'provider', label: 'Servicio', type: 'select', default: '2captcha', options: [
+        { value: '2captcha', label: '2Captcha' }, { value: 'anticaptcha', label: 'Anti-Captcha' }, { value: 'capsolver', label: 'CapSolver' }
+      ]},
+      { key: 'apiKey', label: 'API Key', type: 'password', required: true },
+      { key: 'siteKey', label: 'Site Key', type: 'text', required: true, helpText: 'data-sitekey del reCAPTCHA' },
+      { key: 'pageUrl', label: 'URL de la página', type: 'url', required: true },
+      { key: 'version', label: 'Versión', type: 'select', default: 'v2', options: [
+        { value: 'v2', label: 'reCAPTCHA v2' }, { value: 'v3', label: 'reCAPTCHA v3' }
+      ]},
+      { key: 'variable', label: 'Guardar token en', type: 'variable', required: true }
+    ]
+  },
+  captcha_solve_hcaptcha: {
+    title: 'Resolver hCaptcha',
+    icon: 'fa-robot',
+    description: 'Resuelve un hCaptcha',
+    fields: [
+      { key: 'provider', label: 'Servicio', type: 'select', default: '2captcha', options: [
+        { value: '2captcha', label: '2Captcha' }, { value: 'anticaptcha', label: 'Anti-Captcha' }
+      ]},
+      { key: 'apiKey', label: 'API Key', type: 'password', required: true },
+      { key: 'siteKey', label: 'Site Key', type: 'text', required: true },
+      { key: 'pageUrl', label: 'URL de la página', type: 'url', required: true },
+      { key: 'variable', label: 'Guardar token en', type: 'variable', required: true }
     ]
   }
 })

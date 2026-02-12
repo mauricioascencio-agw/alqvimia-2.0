@@ -6,8 +6,6 @@ function LanguageSelector() {
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef(null)
 
-  const currentLang = availableLanguages.find(l => l.code === language)
-
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -25,7 +23,7 @@ function LanguageSelector() {
         onClick={() => setIsOpen(!isOpen)}
         title={t('lang_select')}
       >
-        <span className="lang-flag">{currentLang?.flag}</span>
+        <i className="fas fa-globe"></i>
         <span className="lang-code">{language.toUpperCase()}</span>
         <i className={`fas fa-chevron-${isOpen ? 'up' : 'down'}`}></i>
       </button>
@@ -33,7 +31,7 @@ function LanguageSelector() {
       {isOpen && (
         <div className="language-dropdown">
           <div className="language-dropdown-header">
-            <i className="fas fa-globe"></i>
+            <i className="fas fa-language"></i>
             <span>{t('lang_select')}</span>
           </div>
           {availableLanguages.map(lang => (
@@ -45,7 +43,7 @@ function LanguageSelector() {
                 setIsOpen(false)
               }}
             >
-              <span className="lang-flag">{lang.flag}</span>
+              <span className="lang-badge">{lang.code.toUpperCase()}</span>
               <span className="lang-name">{lang.name}</span>
               {language === lang.code && (
                 <i className="fas fa-check"></i>

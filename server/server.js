@@ -34,6 +34,7 @@ import usersRoutes from './routes/users.js'
 import mcpDatabaseRoutes from './routes/mcp-database.js'
 import aiRoutes from './routes/ai.js'
 import apiKeysRoutes from './routes/apiKeys.js'
+import dashboardRoutes from './routes/dashboards.js'
 
 // Servicios
 import {
@@ -56,21 +57,22 @@ const httpServer = createServer(app)
 const PORT = parseInt(process.env.BACKEND_PORT) || 4000
 const FRONTEND_PORT = parseInt(process.env.VITE_PORT) || 4200
 
-// URLs del frontend permitidas
-const allowedOrigins = [
-  `http://localhost:${FRONTEND_PORT}`,
-  `http://127.0.0.1:${FRONTEND_PORT}`,
-  'http://localhost:4200',
-  'http://localhost:5173'  // fallback
-]
-
-// Configuración CORS
+// Configuración CORS - permitir cualquier localhost en desarrollo
 app.use(cors({
-  origin: allowedOrigins,
+  origin: function (origin, callback) {
+    // Permitir requests sin origin (Postman, curl, etc.)
+    if (!origin) return callback(null, true)
+    // Permitir cualquier localhost o 127.0.0.1 en desarrollo
+    if (origin.match(/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/)) {
+      return callback(null, true)
+    }
+    callback(new Error('Not allowed by CORS'))
+  },
   credentials: true
 }))
 
-app.use(express.json())
+app.use(express.json({ limit: '50mb' }))
+app.use(express.urlencoded({ extended: true, limit: '50mb' }))
 
 // Servir archivos estáticos públicos (para spy-injector.js)
 app.use(express.static(path.resolve(__dirname, '../public')))
@@ -83,11 +85,18 @@ app.use('/api/users', usersRoutes)
 app.use('/api/mcp', mcpDatabaseRoutes)
 app.use('/api/ai', aiRoutes)
 app.use('/api/api-keys', apiKeysRoutes)
+app.use('/api/dashboards', dashboardRoutes)
 
 // Socket.IO
 const io = new Server(httpServer, {
   cors: {
-    origin: allowedOrigins,
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true)
+      if (origin.match(/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/)) {
+        return callback(null, true)
+      }
+      callback(new Error('Not allowed by CORS'))
+    },
     methods: ['GET', 'POST'],
     credentials: true
   }

@@ -64,15 +64,43 @@ if not exist "server\node_modules" (
     echo  [2/4] Dependencias del servidor OK
 )
 
+:: Matar proceso que ocupe el puerto del backend
+echo  [3/6] Liberando puerto %BACKEND_PORT%...
+for /f "tokens=5" %%p in ('netstat -ano ^| findstr ":%BACKEND_PORT%" ^| findstr "LISTENING"') do (
+    taskkill /F /PID %%p > nul 2>&1
+)
+
+:: Levantar MySQL con Docker si no esta corriendo
+echo  [4/6] Verificando MySQL (Docker)...
+docker ps --filter "name=alqvimia-mysql" --format "{{.Status}}" 2>nul | findstr /i "healthy" > nul 2>&1
+if errorlevel 1 (
+    echo       Iniciando MySQL y phpMyAdmin con Docker...
+    docker-compose up -d mysql phpmyadmin
+    echo       Esperando a que MySQL este listo...
+    :wait_mysql
+    timeout /t 3 /nobreak > nul
+    docker ps --filter "name=alqvimia-mysql" --format "{{.Status}}" 2>nul | findstr /i "healthy" > nul 2>&1
+    if errorlevel 1 goto :wait_mysql
+    echo       MySQL listo.
+) else (
+    echo       MySQL ya esta corriendo.
+)
+
 echo.
-echo  [3/4] Iniciando Backend (Puerto %BACKEND_PORT%)...
+echo  [5/6] Iniciando Backend (Puerto %BACKEND_PORT%)...
 start "Alqvimia Backend" cmd /k "cd /d "%~dp0server" && npm start"
 
 :: Esperar a que el servidor inicie
 timeout /t 3 /nobreak > nul
 
-echo  [4/4] Iniciando Frontend (Puerto %VITE_PORT%)...
+echo  [6/6] Iniciando Frontend (Puerto %VITE_PORT%)...
 start "Alqvimia Frontend" cmd /k "cd /d "%~dp0" && npm run dev"
+
+:: Esperar a que Vite inicie y abrir navegador
+echo.
+echo  Abriendo navegador...
+timeout /t 4 /nobreak > nul
+start "" http://localhost:%VITE_PORT%
 
 echo.
 echo  ========================================
@@ -93,6 +121,10 @@ pause > nul
 :: Cerrar ventanas de los servicios
 taskkill /FI "WINDOWTITLE eq Alqvimia Backend*" /F > nul 2>&1
 taskkill /FI "WINDOWTITLE eq Alqvimia Frontend*" /F > nul 2>&1
+:: Liberar puerto del backend por si quedo un proceso huerfano
+for /f "tokens=5" %%p in ('netstat -ano ^| findstr ":%BACKEND_PORT%" ^| findstr "LISTENING"') do (
+    taskkill /F /PID %%p > nul 2>&1
+)
 
 echo.
 echo  Servicios detenidos.

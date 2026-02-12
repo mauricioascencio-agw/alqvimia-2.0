@@ -895,4 +895,149 @@ router.get('/status', (req, res) => {
   })
 })
 
+/**
+ * POST /api/ai/chat
+ * Chat interactivo con IA - soporta texto + imágenes (Claude Vision)
+ */
+router.post('/chat', async (req, res) => {
+  try {
+    const { message, images, history } = req.body
+    const userId = req.headers['x-user-id'] || 1
+
+    if (!message && (!images || images.length === 0)) {
+      return res.status(400).json({ success: false, error: 'Mensaje o imagen requerido' })
+    }
+
+    // Obtener cliente de Anthropic
+    const { client: anthropicClient, keyId, source } = await getAnthropicClient(userId)
+
+    if (!anthropicClient) {
+      return res.json({
+        success: true,
+        data: {
+          response: '**API Key no configurada.** Para usar el chat con IA, configura tu clave de Anthropic en Configuración > API Keys.\n\nMientras tanto, puedes explorar los demás módulos del dashboard.',
+          usage: { inputTokens: 0, outputTokens: 0 },
+          provider: 'none'
+        }
+      })
+    }
+
+    console.log(`[AI Chat] Procesando mensaje... (source: ${source}, images: ${images?.length || 0})`)
+
+    // Construir mensajes para Claude
+    const claudeMessages = []
+
+    // Agregar historial de conversación
+    if (history && Array.isArray(history)) {
+      for (const msg of history.slice(-20)) { // Últimos 20 mensajes
+        const content = []
+
+        // Si el mensaje tiene imágenes
+        if (msg.images && msg.images.length > 0) {
+          for (const img of msg.images) {
+            if (img.data) {
+              const base64Data = img.data.replace(/^data:image\/\w+;base64,/, '')
+              const mediaType = img.data.match(/^data:(image\/\w+);/)?.[1] || 'image/png'
+              content.push({
+                type: 'image',
+                source: { type: 'base64', media_type: mediaType, data: base64Data }
+              })
+            }
+          }
+        }
+
+        content.push({ type: 'text', text: msg.content })
+        claudeMessages.push({ role: msg.role === 'user' ? 'user' : 'assistant', content })
+      }
+    }
+
+    // Construir mensaje actual
+    const currentContent = []
+
+    // Agregar imágenes del mensaje actual
+    if (images && images.length > 0) {
+      for (const img of images) {
+        if (img.data) {
+          const base64Data = img.data.replace(/^data:image\/\w+;base64,/, '')
+          const mediaType = img.data.match(/^data:(image\/\w+);/)?.[1] || 'image/png'
+          currentContent.push({
+            type: 'image',
+            source: { type: 'base64', media_type: mediaType, data: base64Data }
+          })
+        }
+      }
+    }
+
+    currentContent.push({ type: 'text', text: message || 'Analiza esta imagen.' })
+    claudeMessages.push({ role: 'user', content: currentContent })
+
+    const model = 'claude-sonnet-4-20250514'
+    const startTime = Date.now()
+
+    const response = await anthropicClient.messages.create({
+      model,
+      max_tokens: 4096,
+      system: `Eres Alqvimia IA, un asistente experto en automatización RPA, análisis de datos, y productividad empresarial.
+Responde siempre en español de forma clara y profesional.
+Puedes analizar imágenes, generar textos, código, análisis, resúmenes y más.
+Usa formato Markdown para estructurar tus respuestas cuando sea apropiado.
+Si el usuario pega una imagen, analízala detalladamente.`,
+      messages: claudeMessages
+    })
+
+    const responseTime = Date.now() - startTime
+    const responseText = response.content[0]?.text || 'Sin respuesta'
+
+    // Trackear uso
+    await trackUsage({
+      userId,
+      apiKeyId: keyId,
+      provider: 'anthropic',
+      model,
+      endpoint: '/chat',
+      inputTokens: response.usage?.input_tokens || 0,
+      outputTokens: response.usage?.output_tokens || 0,
+      responseTimeMs: responseTime,
+      status: 'success',
+      metadata: { hasImages: (images?.length || 0) > 0, historyLength: history?.length || 0 }
+    })
+
+    res.json({
+      success: true,
+      data: {
+        response: responseText,
+        usage: {
+          inputTokens: response.usage?.input_tokens || 0,
+          outputTokens: response.usage?.output_tokens || 0
+        },
+        provider: source,
+        model,
+        responseTime
+      }
+    })
+
+  } catch (error) {
+    console.error('[AI Chat] Error:', error.message, error.status || '')
+
+    // Devolver errores informativos según el tipo
+    const status = error.status || 500
+    let errorMsg = error.message || 'Error al procesar el mensaje'
+
+    if (status === 401 || errorMsg.includes('authentication') || errorMsg.includes('api_key')) {
+      errorMsg = 'API Key invalida o expirada. Ve a Configuracion > API Keys para actualizarla.'
+    } else if (status === 429) {
+      errorMsg = 'Limite de uso excedido. Espera un momento o verifica tu plan en la consola del proveedor.'
+    } else if (status === 404 || errorMsg.includes('model')) {
+      errorMsg = `Modelo no disponible. Verifica que tu API Key tenga acceso al modelo configurado.`
+    } else if (errorMsg.includes('Could not process image') || errorMsg.includes('invalid_image')) {
+      errorMsg = 'No se pudo procesar la imagen. Intenta con otro formato (PNG o JPG).'
+    }
+
+    res.status(status).json({
+      success: false,
+      error: errorMsg
+    })
+  }
+})
+
 export default router

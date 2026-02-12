@@ -24,6 +24,7 @@ import OnboardingWizard from './views/OnboardingWizard'
 import AdminDashboard from './views/AdminDashboard'
 import AgentCatalogView from './views/AgentCatalogView'
 import WorkflowTemplatesView from './views/WorkflowTemplatesView'
+import DashboardCreatorView from './views/DashboardCreatorView'
 
 function App() {
   const [currentView, setCurrentView] = useState('spy')
@@ -108,6 +109,17 @@ function App() {
     }
   }, [isAuthenticated])
 
+  // Escuchar navegacion desde otras vistas
+  useEffect(() => {
+    const handleNavigate = (e) => {
+      if (e.detail?.view) {
+        setCurrentView(e.detail.view)
+      }
+    }
+    window.addEventListener('alqvimia-navigate', handleNavigate)
+    return () => window.removeEventListener('alqvimia-navigate', handleNavigate)
+  }, [])
+
   // Si está cargando, mostrar spinner
   if (loading) {
     return (
@@ -137,24 +149,20 @@ function App() {
   }
 
   const navItems = [
-    { id: 'spy', icon: 'fa-search', labelKey: 'nav_spy' },
-    { id: 'recorder', icon: 'fa-video', labelKey: 'nav_recorder' },
-    { id: 'workflows', icon: 'fa-project-diagram', labelKey: 'nav_workflows' },
-    { id: 'workflow-templates', icon: 'fa-file-code', labelKey: 'nav_workflow_templates' },
-    { id: 'executor', icon: 'fa-play-circle', labelKey: 'nav_executor' },
-    { id: 'scheduler', icon: 'fa-calendar-alt', labelKey: 'nav_scheduler' },
-    { id: 'code-editor', icon: 'fa-code', labelKey: 'nav_code_editor' },
-    { id: 'agents', icon: 'fa-robot', labelKey: 'nav_agents' },
-    { id: 'agent-catalog', icon: 'fa-layer-group', labelKey: 'nav_agent_catalog' },
-    { id: 'mcp', icon: 'fa-plug', labelKey: 'nav_mcp' },
-    { id: 'marketplace', icon: 'fa-store', labelKey: 'nav_marketplace' },
-    { id: 'onboarding', icon: 'fa-magic', labelKey: 'nav_onboarding' },
-    { id: 'admin', icon: 'fa-shield-alt', labelKey: 'nav_admin' },
-    { id: 'library', icon: 'fa-folder-open', labelKey: 'nav_library' },
-    { id: 'ai-dashboard', icon: 'fa-brain', labelKey: 'nav_ai_dashboard' },
-    { id: 'omnichannel', icon: 'fa-comments', labelKey: 'nav_omnichannel' },
-    { id: 'videoconference', icon: 'fa-video', labelKey: 'nav_videoconference' },
-    { id: 'settings', icon: 'fa-cog', labelKey: 'nav_settings' }
+    { id: 'spy', icon: 'fa-search', labelKey: 'nav_spy', hint: 'Inspecciona elementos de la pantalla' },
+    { id: 'recorder', icon: 'fa-video', labelKey: 'nav_recorder', hint: 'Graba acciones del usuario' },
+    { id: 'workflows', icon: 'fa-project-diagram', labelKey: 'nav_workflows', hint: 'Diseña flujos de automatización' },
+    { id: 'workflow-templates', icon: 'fa-file-code', labelKey: 'nav_workflow_templates', hint: 'Plantillas listas para usar' },
+    { id: 'executor', icon: 'fa-play-circle', labelKey: 'nav_executor', hint: 'Ejecuta workflows en tiempo real' },
+    { id: 'agents', icon: 'fa-robot', labelKey: 'nav_agents', hint: 'Gestiona agentes inteligentes' },
+    { id: 'agent-catalog', icon: 'fa-layer-group', labelKey: 'nav_agent_catalog', hint: 'Catálogo de agentes disponibles' },
+    { id: 'mcp', icon: 'fa-plug', labelKey: 'nav_mcp', hint: 'Conecta servicios externos' },
+    { id: 'onboarding', icon: 'fa-magic', labelKey: 'nav_onboarding', hint: 'Asistente de configuración inicial' },
+    { id: 'library', icon: 'fa-folder-open', labelKey: 'nav_library', hint: 'Biblioteca de componentes' },
+    { id: 'ai-dashboard', icon: 'fa-brain', labelKey: 'nav_ai_dashboard', hint: 'Panel de inteligencia artificial' },
+    { id: 'omnichannel', icon: 'fa-comments', labelKey: 'nav_omnichannel', hint: 'Comunicación multicanal' },
+    { id: 'dashboard-creator', icon: 'fa-tachometer-alt', labelKey: 'nav_dashboard_creator', hint: 'Crea dashboards personalizados' },
+    { id: 'settings', icon: 'fa-cog', labelKey: 'nav_settings', hint: 'Ajustes de la aplicación' }
   ]
 
   const renderView = () => {
@@ -176,6 +184,7 @@ function App() {
       case 'ai-dashboard': return <AIDashboardView />
       case 'omnichannel': return <OmnichannelView />
       case 'videoconference': return <VideoConferenceView />
+      case 'dashboard-creator': return <DashboardCreatorView />
       case 'settings': return <SettingsView />
       default: return <SpyView />
     }
@@ -189,6 +198,26 @@ function App() {
           <i className="fas fa-robot"></i>
           <h1>Alqvimia</h1>
           <span className="version">v2.0</span>
+        </div>
+        <div className="header-shortcuts">
+          {[
+            { id: 'admin', icon: 'fa-shield-alt', labelKey: 'nav_admin', hint: 'Panel de administración' },
+            { id: 'code-editor', icon: 'fa-code', labelKey: 'nav_code_editor', hint: 'Editor de código con IA' },
+            { id: 'marketplace', icon: 'fa-store', labelKey: 'nav_marketplace', hint: 'Tienda de agentes y plugins' },
+            { id: 'scheduler', icon: 'fa-calendar-alt', labelKey: 'nav_scheduler', hint: 'Programa tareas automáticas' },
+            { id: 'videoconference', icon: 'fa-video', labelKey: 'nav_videoconference', hint: 'Videollamadas en tiempo real' },
+            { id: 'settings', icon: 'fa-cog', labelKey: 'nav_settings', hint: 'Ajustes de la aplicación' },
+          ].map(item => (
+            <button
+              key={item.id}
+              className={`header-shortcut-btn ${currentView === item.id ? 'active' : ''}`}
+              onClick={() => setCurrentView(item.id)}
+              title={item.hint}
+            >
+              <i className={`fas ${item.icon}`}></i>
+              <span>{t(item.labelKey)}</span>
+            </button>
+          ))}
         </div>
         <div className="header-right">
           <div className="connection-toggle-container">
@@ -248,6 +277,7 @@ function App() {
                 className={`nav-item ${currentView === item.id ? 'active' : ''}`}
                 data-view={item.id}
                 data-tooltip={t(item.labelKey)}
+                title={item.hint}
                 onClick={() => setCurrentView(item.id)}
               >
                 <i className={`fas ${item.icon}`}></i>

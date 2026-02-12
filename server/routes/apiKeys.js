@@ -111,18 +111,11 @@ router.post('/', authMiddleware, async (req, res) => {
       })
     }
 
-    // Validar formato según provider
-    if (provider === 'anthropic' && !validateAnthropicKey(apiKey)) {
+    // Validar longitud minima (la validacion estricta de formato se hace en test)
+    if (apiKey.length < 10) {
       return res.status(400).json({
         success: false,
-        error: 'Formato de API key de Anthropic inválido. Debe comenzar con sk-ant-'
-      })
-    }
-
-    if (provider === 'openai' && !validateOpenAIKey(apiKey)) {
-      return res.status(400).json({
-        success: false,
-        error: 'Formato de API key de OpenAI inválido. Debe comenzar con sk-'
+        error: 'API key demasiado corta. Verifica que sea correcta.'
       })
     }
 
@@ -247,6 +240,12 @@ router.delete('/:id', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params
 
+    // Obtener provider antes de eliminar
+    const [keyToDelete] = await db.query(
+      'SELECT provider, activo FROM api_keys_ia WHERE id = ? AND usuario_id = ?',
+      [id, req.userId]
+    )
+
     const result = await db.query(
       'DELETE FROM api_keys_ia WHERE id = ? AND usuario_id = ?',
       [id, req.userId]
@@ -257,6 +256,16 @@ router.delete('/:id', authMiddleware, async (req, res) => {
         success: false,
         error: 'API key no encontrada'
       })
+    }
+
+    // Si se elimino la key activa, reactivar la mas reciente del mismo provider
+    if (keyToDelete?.activo) {
+      await db.query(
+        `UPDATE api_keys_ia SET activo = TRUE
+         WHERE usuario_id = ? AND provider = ?
+         ORDER BY created_at DESC LIMIT 1`,
+        [req.userId, keyToDelete.provider]
+      )
     }
 
     res.json({

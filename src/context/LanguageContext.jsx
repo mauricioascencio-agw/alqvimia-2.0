@@ -524,7 +524,43 @@ const translations = {
     rec_workflow_name: 'Nombre del Workflow',
     rec_workflow_desc: 'Descripción',
     rec_summary: 'Resumen',
-    rec_actions_count: 'acciones'
+    rec_actions_count: 'acciones',
+
+    // Dashboard Creator
+    nav_dashboard_creator: 'Dashboard Creator',
+    dash_title: 'Dashboard Creator',
+    dash_my_dashboards: 'Mis Dashboards',
+    dash_new: 'Nuevo Dashboard',
+    dash_edit: 'Editar Dashboard',
+    dash_delete: 'Eliminar Dashboard',
+    dash_duplicate: 'Duplicar',
+    dash_save: 'Guardar',
+    dash_preview: 'Vista previa',
+    dash_share: 'Compartir',
+    dash_add_widget: 'Agregar Widget',
+    dash_widget_kpi: 'KPI',
+    dash_widget_chart: 'Gráfico',
+    dash_widget_table: 'Tabla',
+    dash_widget_monitor: 'Monitor Workflows',
+    dash_widget_agents: 'Estado Agentes',
+    dash_widget_html: 'HTML Personalizado',
+    dash_widget_clock: 'Reloj',
+    dash_config_widget: 'Configurar Widget',
+    dash_tipo_personal: 'Personal',
+    dash_tipo_compartido: 'Compartido',
+    dash_tipo_minisite: 'Mini-sitio',
+    dash_estado_activo: 'Activo',
+    dash_estado_borrador: 'Borrador',
+    dash_estado_inactivo: 'Inactivo',
+    dash_no_dashboards: 'No tienes dashboards aún',
+    dash_create_first: 'Crea tu primer dashboard',
+    dash_permisos_title: 'Permisos de Dashboards',
+    dash_perm_ver: 'Ver',
+    dash_perm_crear: 'Crear',
+    dash_perm_editar: 'Editar',
+    dash_perm_compartir: 'Compartir',
+    dash_perm_minisite: 'Mini-sitio',
+    dash_perm_max: 'Máx'
   },
 
   en: {
@@ -1049,7 +1085,43 @@ const translations = {
     rec_workflow_name: 'Workflow Name',
     rec_workflow_desc: 'Description',
     rec_summary: 'Summary',
-    rec_actions_count: 'actions'
+    rec_actions_count: 'actions',
+
+    // Dashboard Creator
+    nav_dashboard_creator: 'Dashboard Creator',
+    dash_title: 'Dashboard Creator',
+    dash_my_dashboards: 'My Dashboards',
+    dash_new: 'New Dashboard',
+    dash_edit: 'Edit Dashboard',
+    dash_delete: 'Delete Dashboard',
+    dash_duplicate: 'Duplicate',
+    dash_save: 'Save',
+    dash_preview: 'Preview',
+    dash_share: 'Share',
+    dash_add_widget: 'Add Widget',
+    dash_widget_kpi: 'KPI',
+    dash_widget_chart: 'Chart',
+    dash_widget_table: 'Table',
+    dash_widget_monitor: 'Workflow Monitor',
+    dash_widget_agents: 'Agent Status',
+    dash_widget_html: 'Custom HTML',
+    dash_widget_clock: 'Clock',
+    dash_config_widget: 'Configure Widget',
+    dash_tipo_personal: 'Personal',
+    dash_tipo_compartido: 'Shared',
+    dash_tipo_minisite: 'Mini-site',
+    dash_estado_activo: 'Active',
+    dash_estado_borrador: 'Draft',
+    dash_estado_inactivo: 'Inactive',
+    dash_no_dashboards: 'No dashboards yet',
+    dash_create_first: 'Create your first dashboard',
+    dash_permisos_title: 'Dashboard Permissions',
+    dash_perm_ver: 'View',
+    dash_perm_crear: 'Create',
+    dash_perm_editar: 'Edit',
+    dash_perm_compartir: 'Share',
+    dash_perm_minisite: 'Mini-site',
+    dash_perm_max: 'Max'
   },
 
   pt: {
@@ -1574,7 +1646,43 @@ const translations = {
     rec_workflow_name: 'Nome do Workflow',
     rec_workflow_desc: 'Descrição',
     rec_summary: 'Resumo',
-    rec_actions_count: 'ações'
+    rec_actions_count: 'ações',
+
+    // Dashboard Creator
+    nav_dashboard_creator: 'Dashboard Creator',
+    dash_title: 'Dashboard Creator',
+    dash_my_dashboards: 'Meus Dashboards',
+    dash_new: 'Novo Dashboard',
+    dash_edit: 'Editar Dashboard',
+    dash_delete: 'Excluir Dashboard',
+    dash_duplicate: 'Duplicar',
+    dash_save: 'Salvar',
+    dash_preview: 'Visualizar',
+    dash_share: 'Compartilhar',
+    dash_add_widget: 'Adicionar Widget',
+    dash_widget_kpi: 'KPI',
+    dash_widget_chart: 'Gráfico',
+    dash_widget_table: 'Tabela',
+    dash_widget_monitor: 'Monitor de Workflows',
+    dash_widget_agents: 'Status dos Agentes',
+    dash_widget_html: 'HTML Personalizado',
+    dash_widget_clock: 'Relógio',
+    dash_config_widget: 'Configurar Widget',
+    dash_tipo_personal: 'Pessoal',
+    dash_tipo_compartido: 'Compartilhado',
+    dash_tipo_minisite: 'Mini-site',
+    dash_estado_activo: 'Ativo',
+    dash_estado_borrador: 'Rascunho',
+    dash_estado_inactivo: 'Inativo',
+    dash_no_dashboards: 'Sem dashboards ainda',
+    dash_create_first: 'Crie seu primeiro dashboard',
+    dash_permisos_title: 'Permissões de Dashboards',
+    dash_perm_ver: 'Ver',
+    dash_perm_crear: 'Criar',
+    dash_perm_editar: 'Editar',
+    dash_perm_compartir: 'Compartilhar',
+    dash_perm_minisite: 'Mini-site',
+    dash_perm_max: 'Máx'
   }
 }
 
@@ -1615,9 +1723,9 @@ export function LanguageProvider({ children }) {
   }
 
   const availableLanguages = [
-    { code: 'es', name: 'Español', flag: '🇪🇸' },
-    { code: 'en', name: 'English', flag: '🇺🇸' },
-    { code: 'pt', name: 'Português', flag: '🇧🇷' }
+    { code: 'es', name: 'Español' },
+    { code: 'en', name: 'English' },
+    { code: 'pt', name: 'Português' }
   ]
 
   return (

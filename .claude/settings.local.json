@@ -48,7 +48,18 @@
       "Bash(cmd /c \"taskkill /PID 35008 /F\")",
       "Bash(pip install:*)",
       "Bash(docker-compose logs:*)",
-      "Bash(docker volume:*)"
+      "Bash(docker volume:*)",
+      "Bash(docker inspect:*)",
+      "Bash(docker restart:*)",
+      "Bash(docker network prune:*)",
+      "Bash(docker rm:*)",
+      "Bash(npx vite build:*)",
+      "Bash(node --input-type=module -e:*)",
+      "WebFetch(domain:www.w3schools.com)",
+      "WebFetch(domain:fontawesome.com)",
+      "Bash(find:*)",
+      "Bash(comm:*)",
+      "Bash(if not exist \"c:\\\\Git\\\\alqvimia-2.0\\\\prompts\" mkdir \"c:\\\\Git\\\\alqvimia-2.0\\\\prompts\")"
     ]
   }
 }

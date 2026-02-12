@@ -5,7 +5,7 @@ import { useLanguage } from '../context/LanguageContext'
 import { useSocket } from '../context/SocketContext'
 import { resolveVariables } from '../components/workflow/VariableInput'
 import { systemService } from '../services/api'
-import { importers, exporters } from '../utils/workflowMigration'
+import { importers, exporters, autoParseFile } from '../utils/workflowMigration'
 import { getActionProperties } from '../utils/actionProperties'
 
 // Categorías expandidas con más acciones
@@ -1123,6 +1123,634 @@ const WORKFLOW_CATEGORIES = [
       { action: 'agent_whatsapp_media', icon: 'fa-image', label: 'WhatsApp: Enviar Media' },
       { action: 'agent_workflow_execute', icon: 'fa-project-diagram', label: 'Ejecutar Sub-Workflow' },
       { action: 'agent_orchestrator_workflow', icon: 'fa-sitemap', label: 'Workflow Multi-Agente' }
+    ]
+  },
+  // ==========================================
+  // PROJECT MANAGEMENT
+  // ==========================================
+  {
+    id: 'jira',
+    name: 'Jira',
+    icon: 'fa-jira',
+    isBrand: true,
+    description: 'Gestión de proyectos Atlassian',
+    actions: [
+      { action: 'jira_connect', icon: 'fa-plug', label: 'Conectar Jira' },
+      { action: 'jira_create_issue', icon: 'fa-plus', label: 'Crear Issue' },
+      { action: 'jira_update_issue', icon: 'fa-edit', label: 'Actualizar Issue' },
+      { action: 'jira_get_issue', icon: 'fa-file-alt', label: 'Obtener Issue' },
+      { action: 'jira_search', icon: 'fa-search', label: 'Buscar Issues (JQL)' },
+      { action: 'jira_transition', icon: 'fa-exchange-alt', label: 'Transicionar Estado' },
+      { action: 'jira_add_comment', icon: 'fa-comment', label: 'Agregar Comentario' },
+      { action: 'jira_assign', icon: 'fa-user-check', label: 'Asignar Issue' },
+      { action: 'jira_add_attachment', icon: 'fa-paperclip', label: 'Adjuntar Archivo' },
+      { action: 'jira_get_projects', icon: 'fa-list', label: 'Listar Proyectos' },
+      { action: 'jira_create_sprint', icon: 'fa-running', label: 'Crear Sprint' },
+      { action: 'jira_log_work', icon: 'fa-clock', label: 'Registrar Trabajo' }
+    ]
+  },
+  {
+    id: 'trello',
+    name: 'Trello',
+    icon: 'fa-trello',
+    isBrand: true,
+    description: 'Tableros Kanban',
+    actions: [
+      { action: 'trello_connect', icon: 'fa-plug', label: 'Conectar Trello' },
+      { action: 'trello_create_card', icon: 'fa-plus', label: 'Crear Tarjeta' },
+      { action: 'trello_move_card', icon: 'fa-arrows-alt', label: 'Mover Tarjeta' },
+      { action: 'trello_update_card', icon: 'fa-edit', label: 'Actualizar Tarjeta' },
+      { action: 'trello_add_label', icon: 'fa-tag', label: 'Agregar Etiqueta' },
+      { action: 'trello_add_checklist', icon: 'fa-check-square', label: 'Agregar Checklist' },
+      { action: 'trello_add_comment', icon: 'fa-comment', label: 'Agregar Comentario' },
+      { action: 'trello_add_member', icon: 'fa-user-plus', label: 'Agregar Miembro' },
+      { action: 'trello_create_list', icon: 'fa-list', label: 'Crear Lista' },
+      { action: 'trello_get_boards', icon: 'fa-th-large', label: 'Obtener Tableros' },
+      { action: 'trello_archive_card', icon: 'fa-archive', label: 'Archivar Tarjeta' },
+      { action: 'trello_attach_file', icon: 'fa-paperclip', label: 'Adjuntar Archivo' }
+    ]
+  },
+  {
+    id: 'asana',
+    name: 'Asana',
+    icon: 'fa-list-check',
+    description: 'Gestión de tareas',
+    actions: [
+      { action: 'asana_connect', icon: 'fa-plug', label: 'Conectar Asana' },
+      { action: 'asana_create_task', icon: 'fa-plus', label: 'Crear Tarea' },
+      { action: 'asana_update_task', icon: 'fa-edit', label: 'Actualizar Tarea' },
+      { action: 'asana_assign_task', icon: 'fa-user-check', label: 'Asignar Tarea' },
+      { action: 'asana_add_subtask', icon: 'fa-level-down-alt', label: 'Agregar Subtarea' },
+      { action: 'asana_add_comment', icon: 'fa-comment', label: 'Agregar Comentario' },
+      { action: 'asana_move_section', icon: 'fa-arrows-alt', label: 'Mover a Sección' },
+      { action: 'asana_create_project', icon: 'fa-folder-plus', label: 'Crear Proyecto' },
+      { action: 'asana_search_tasks', icon: 'fa-search', label: 'Buscar Tareas' },
+      { action: 'asana_set_due_date', icon: 'fa-calendar', label: 'Establecer Fecha' }
+    ]
+  },
+  {
+    id: 'monday',
+    name: 'Monday.com',
+    icon: 'fa-columns',
+    description: 'Work OS',
+    actions: [
+      { action: 'monday_connect', icon: 'fa-plug', label: 'Conectar Monday' },
+      { action: 'monday_create_item', icon: 'fa-plus', label: 'Crear Item' },
+      { action: 'monday_update_item', icon: 'fa-edit', label: 'Actualizar Item' },
+      { action: 'monday_update_column', icon: 'fa-columns', label: 'Actualizar Columna' },
+      { action: 'monday_move_item', icon: 'fa-arrows-alt', label: 'Mover Item' },
+      { action: 'monday_create_subitem', icon: 'fa-level-down-alt', label: 'Crear Subitem' },
+      { action: 'monday_add_update', icon: 'fa-comment', label: 'Agregar Update' },
+      { action: 'monday_create_board', icon: 'fa-th-large', label: 'Crear Tablero' },
+      { action: 'monday_get_items', icon: 'fa-list', label: 'Obtener Items' },
+      { action: 'monday_archive_item', icon: 'fa-archive', label: 'Archivar Item' }
+    ]
+  },
+  // ==========================================
+  // ZOHO SUITE
+  // ==========================================
+  {
+    id: 'zoho-crm',
+    name: 'Zoho CRM',
+    icon: 'fa-address-book',
+    description: 'CRM de Zoho',
+    actions: [
+      { action: 'zoho_crm_connect', icon: 'fa-plug', label: 'Conectar Zoho CRM' },
+      { action: 'zoho_crm_create_record', icon: 'fa-plus', label: 'Crear Registro' },
+      { action: 'zoho_crm_update_record', icon: 'fa-edit', label: 'Actualizar Registro' },
+      { action: 'zoho_crm_get_record', icon: 'fa-file-alt', label: 'Obtener Registro' },
+      { action: 'zoho_crm_search', icon: 'fa-search', label: 'Buscar Registros' },
+      { action: 'zoho_crm_delete_record', icon: 'fa-trash', label: 'Eliminar Registro' },
+      { action: 'zoho_crm_create_lead', icon: 'fa-user-plus', label: 'Crear Lead' },
+      { action: 'zoho_crm_convert_lead', icon: 'fa-exchange-alt', label: 'Convertir Lead' },
+      { action: 'zoho_crm_create_deal', icon: 'fa-handshake', label: 'Crear Negocio' },
+      { action: 'zoho_crm_add_note', icon: 'fa-sticky-note', label: 'Agregar Nota' },
+      { action: 'zoho_crm_create_task', icon: 'fa-tasks', label: 'Crear Tarea' },
+      { action: 'zoho_crm_send_email', icon: 'fa-envelope', label: 'Enviar Email' }
+    ]
+  },
+  {
+    id: 'zoho-desk',
+    name: 'Zoho Desk',
+    icon: 'fa-headset',
+    description: 'Soporte al cliente Zoho',
+    actions: [
+      { action: 'zoho_desk_connect', icon: 'fa-plug', label: 'Conectar Zoho Desk' },
+      { action: 'zoho_desk_create_ticket', icon: 'fa-ticket-alt', label: 'Crear Ticket' },
+      { action: 'zoho_desk_update_ticket', icon: 'fa-edit', label: 'Actualizar Ticket' },
+      { action: 'zoho_desk_get_ticket', icon: 'fa-file-alt', label: 'Obtener Ticket' },
+      { action: 'zoho_desk_search', icon: 'fa-search', label: 'Buscar Tickets' },
+      { action: 'zoho_desk_assign', icon: 'fa-user-check', label: 'Asignar Agente' },
+      { action: 'zoho_desk_add_comment', icon: 'fa-comment', label: 'Agregar Comentario' },
+      { action: 'zoho_desk_change_status', icon: 'fa-exchange-alt', label: 'Cambiar Estado' },
+      { action: 'zoho_desk_add_attachment', icon: 'fa-paperclip', label: 'Adjuntar Archivo' }
+    ]
+  },
+  {
+    id: 'zoho-books',
+    name: 'Zoho Books',
+    icon: 'fa-book',
+    description: 'Contabilidad Zoho',
+    actions: [
+      { action: 'zoho_books_connect', icon: 'fa-plug', label: 'Conectar Zoho Books' },
+      { action: 'zoho_books_create_invoice', icon: 'fa-file-invoice', label: 'Crear Factura' },
+      { action: 'zoho_books_create_estimate', icon: 'fa-file-alt', label: 'Crear Presupuesto' },
+      { action: 'zoho_books_create_contact', icon: 'fa-user-plus', label: 'Crear Contacto' },
+      { action: 'zoho_books_record_payment', icon: 'fa-money-bill', label: 'Registrar Pago' },
+      { action: 'zoho_books_create_expense', icon: 'fa-receipt', label: 'Registrar Gasto' },
+      { action: 'zoho_books_create_bill', icon: 'fa-file-invoice-dollar', label: 'Crear Factura Proveedor' },
+      { action: 'zoho_books_get_reports', icon: 'fa-chart-bar', label: 'Obtener Reportes' }
+    ]
+  },
+  {
+    id: 'pipedrive',
+    name: 'Pipedrive',
+    icon: 'fa-handshake',
+    description: 'CRM de ventas',
+    actions: [
+      { action: 'pipedrive_connect', icon: 'fa-plug', label: 'Conectar Pipedrive' },
+      { action: 'pipedrive_create_deal', icon: 'fa-plus', label: 'Crear Deal' },
+      { action: 'pipedrive_update_deal', icon: 'fa-edit', label: 'Actualizar Deal' },
+      { action: 'pipedrive_move_stage', icon: 'fa-exchange-alt', label: 'Mover Etapa' },
+      { action: 'pipedrive_create_person', icon: 'fa-user-plus', label: 'Crear Persona' },
+      { action: 'pipedrive_create_org', icon: 'fa-building', label: 'Crear Organización' },
+      { action: 'pipedrive_add_activity', icon: 'fa-calendar-plus', label: 'Agregar Actividad' },
+      { action: 'pipedrive_add_note', icon: 'fa-sticky-note', label: 'Agregar Nota' },
+      { action: 'pipedrive_search', icon: 'fa-search', label: 'Buscar Deals' },
+      { action: 'pipedrive_get_pipeline', icon: 'fa-stream', label: 'Obtener Pipeline' }
+    ]
+  },
+  // ==========================================
+  // ANTI-CAPTCHA SERVICES
+  // ==========================================
+  {
+    id: 'anticaptcha',
+    name: 'Anti-Captcha',
+    icon: 'fa-shield-alt',
+    description: '2Captcha, Anti-Captcha, CapMonster, Capsolver',
+    actions: [
+      { action: 'captcha_connect', icon: 'fa-plug', label: 'Conectar Servicio' },
+      { action: 'captcha_solve_recaptcha_v2', icon: 'fa-puzzle-piece', label: 'Resolver reCAPTCHA v2' },
+      { action: 'captcha_solve_recaptcha_v3', icon: 'fa-puzzle-piece', label: 'Resolver reCAPTCHA v3' },
+      { action: 'captcha_solve_hcaptcha', icon: 'fa-shield-alt', label: 'Resolver hCaptcha' },
+      { action: 'captcha_solve_image', icon: 'fa-image', label: 'Resolver Captcha Imagen' },
+      { action: 'captcha_solve_funcaptcha', icon: 'fa-gamepad', label: 'Resolver FunCaptcha' },
+      { action: 'captcha_solve_turnstile', icon: 'fa-cloud', label: 'Resolver Turnstile' },
+      { action: 'captcha_solve_geetest', icon: 'fa-cog', label: 'Resolver GeeTest' },
+      { action: 'captcha_solve_aws_waf', icon: 'fa-lock', label: 'Resolver AWS WAF' },
+      { action: 'captcha_get_balance', icon: 'fa-wallet', label: 'Consultar Saldo' },
+      { action: 'captcha_get_result', icon: 'fa-check-circle', label: 'Obtener Resultado' },
+      { action: 'captcha_report', icon: 'fa-flag', label: 'Reportar Solución' }
+    ]
+  },
+  // ==========================================
+  // PAYMENT / FINANCE
+  // ==========================================
+  {
+    id: 'stripe',
+    name: 'Stripe',
+    icon: 'fa-stripe',
+    isBrand: true,
+    description: 'Pagos y suscripciones',
+    actions: [
+      { action: 'stripe_connect', icon: 'fa-plug', label: 'Conectar Stripe' },
+      { action: 'stripe_create_payment', icon: 'fa-credit-card', label: 'Crear Payment Intent' },
+      { action: 'stripe_create_customer', icon: 'fa-user-plus', label: 'Crear Cliente' },
+      { action: 'stripe_get_customer', icon: 'fa-user', label: 'Obtener Cliente' },
+      { action: 'stripe_create_subscription', icon: 'fa-sync', label: 'Crear Suscripción' },
+      { action: 'stripe_cancel_subscription', icon: 'fa-times-circle', label: 'Cancelar Suscripción' },
+      { action: 'stripe_create_invoice', icon: 'fa-file-invoice', label: 'Crear Factura' },
+      { action: 'stripe_refund', icon: 'fa-undo', label: 'Reembolsar' },
+      { action: 'stripe_list_charges', icon: 'fa-list', label: 'Listar Cobros' },
+      { action: 'stripe_create_product', icon: 'fa-box', label: 'Crear Producto' },
+      { action: 'stripe_create_checkout', icon: 'fa-shopping-cart', label: 'Crear Checkout Session' },
+      { action: 'stripe_get_balance', icon: 'fa-wallet', label: 'Obtener Balance' }
+    ]
+  },
+  {
+    id: 'paypal',
+    name: 'PayPal',
+    icon: 'fa-paypal',
+    isBrand: true,
+    description: 'Pagos internacionales',
+    actions: [
+      { action: 'paypal_connect', icon: 'fa-plug', label: 'Conectar PayPal' },
+      { action: 'paypal_create_order', icon: 'fa-plus', label: 'Crear Orden' },
+      { action: 'paypal_capture_payment', icon: 'fa-check', label: 'Capturar Pago' },
+      { action: 'paypal_refund', icon: 'fa-undo', label: 'Reembolsar' },
+      { action: 'paypal_create_payout', icon: 'fa-money-bill-wave', label: 'Crear Payout' },
+      { action: 'paypal_create_subscription', icon: 'fa-sync', label: 'Crear Suscripción' },
+      { action: 'paypal_create_invoice', icon: 'fa-file-invoice', label: 'Crear Factura' },
+      { action: 'paypal_get_transactions', icon: 'fa-list', label: 'Obtener Transacciones' }
+    ]
+  },
+  // ==========================================
+  // E-COMMERCE
+  // ==========================================
+  {
+    id: 'shopify',
+    name: 'Shopify',
+    icon: 'fa-shopify',
+    isBrand: true,
+    description: 'Tienda online',
+    actions: [
+      { action: 'shopify_connect', icon: 'fa-plug', label: 'Conectar Shopify' },
+      { action: 'shopify_create_product', icon: 'fa-plus', label: 'Crear Producto' },
+      { action: 'shopify_update_product', icon: 'fa-edit', label: 'Actualizar Producto' },
+      { action: 'shopify_get_products', icon: 'fa-list', label: 'Obtener Productos' },
+      { action: 'shopify_get_orders', icon: 'fa-shopping-cart', label: 'Obtener Órdenes' },
+      { action: 'shopify_fulfill_order', icon: 'fa-truck', label: 'Cumplir Orden' },
+      { action: 'shopify_update_inventory', icon: 'fa-boxes', label: 'Actualizar Inventario' },
+      { action: 'shopify_create_customer', icon: 'fa-user-plus', label: 'Crear Cliente' },
+      { action: 'shopify_create_discount', icon: 'fa-percentage', label: 'Crear Descuento' },
+      { action: 'shopify_refund_order', icon: 'fa-undo', label: 'Reembolsar Orden' },
+      { action: 'shopify_get_analytics', icon: 'fa-chart-line', label: 'Obtener Analíticas' }
+    ]
+  },
+  {
+    id: 'woocommerce',
+    name: 'WooCommerce',
+    icon: 'fa-wordpress',
+    isBrand: true,
+    description: 'E-commerce WordPress',
+    actions: [
+      { action: 'woo_connect', icon: 'fa-plug', label: 'Conectar WooCommerce' },
+      { action: 'woo_create_product', icon: 'fa-plus', label: 'Crear Producto' },
+      { action: 'woo_update_product', icon: 'fa-edit', label: 'Actualizar Producto' },
+      { action: 'woo_get_products', icon: 'fa-list', label: 'Obtener Productos' },
+      { action: 'woo_get_orders', icon: 'fa-shopping-cart', label: 'Obtener Órdenes' },
+      { action: 'woo_update_order', icon: 'fa-edit', label: 'Actualizar Orden' },
+      { action: 'woo_create_coupon', icon: 'fa-ticket-alt', label: 'Crear Cupón' },
+      { action: 'woo_update_inventory', icon: 'fa-boxes', label: 'Actualizar Inventario' },
+      { action: 'woo_create_customer', icon: 'fa-user-plus', label: 'Crear Cliente' },
+      { action: 'woo_get_reports', icon: 'fa-chart-bar', label: 'Obtener Reportes' }
+    ]
+  },
+  {
+    id: 'amazon-sp',
+    name: 'Amazon SP-API',
+    icon: 'fa-amazon',
+    isBrand: true,
+    description: 'Marketplace Amazon',
+    actions: [
+      { action: 'amz_connect', icon: 'fa-plug', label: 'Conectar Amazon' },
+      { action: 'amz_get_orders', icon: 'fa-shopping-cart', label: 'Obtener Órdenes' },
+      { action: 'amz_get_order_items', icon: 'fa-list', label: 'Items de Orden' },
+      { action: 'amz_create_listing', icon: 'fa-plus', label: 'Crear Listado' },
+      { action: 'amz_update_inventory', icon: 'fa-boxes', label: 'Actualizar Inventario FBA' },
+      { action: 'amz_get_pricing', icon: 'fa-dollar-sign', label: 'Obtener Precios' },
+      { action: 'amz_request_report', icon: 'fa-file-alt', label: 'Solicitar Reporte' },
+      { action: 'amz_get_catalog', icon: 'fa-th', label: 'Buscar Catálogo' },
+      { action: 'amz_get_financials', icon: 'fa-chart-line', label: 'Eventos Financieros' }
+    ]
+  },
+  {
+    id: 'mercadolibre',
+    name: 'Mercado Libre',
+    icon: 'fa-store',
+    description: 'Marketplace LATAM',
+    actions: [
+      { action: 'meli_connect', icon: 'fa-plug', label: 'Conectar Mercado Libre' },
+      { action: 'meli_create_listing', icon: 'fa-plus', label: 'Crear Publicación' },
+      { action: 'meli_update_listing', icon: 'fa-edit', label: 'Actualizar Publicación' },
+      { action: 'meli_get_orders', icon: 'fa-shopping-cart', label: 'Obtener Ventas' },
+      { action: 'meli_update_order', icon: 'fa-truck', label: 'Actualizar Estado Orden' },
+      { action: 'meli_get_questions', icon: 'fa-question-circle', label: 'Obtener Preguntas' },
+      { action: 'meli_answer_question', icon: 'fa-reply', label: 'Responder Pregunta' },
+      { action: 'meli_update_stock', icon: 'fa-boxes', label: 'Actualizar Stock' },
+      { action: 'meli_get_categories', icon: 'fa-sitemap', label: 'Obtener Categorías' }
+    ]
+  },
+  // ==========================================
+  // DEVOPS
+  // ==========================================
+  {
+    id: 'github',
+    name: 'GitHub',
+    icon: 'fa-github',
+    isBrand: true,
+    description: 'Repositorios y CI/CD',
+    actions: [
+      { action: 'gh_connect', icon: 'fa-plug', label: 'Conectar GitHub' },
+      { action: 'gh_create_issue', icon: 'fa-plus', label: 'Crear Issue' },
+      { action: 'gh_update_issue', icon: 'fa-edit', label: 'Actualizar Issue' },
+      { action: 'gh_create_pr', icon: 'fa-code-branch', label: 'Crear Pull Request' },
+      { action: 'gh_merge_pr', icon: 'fa-check-circle', label: 'Merge Pull Request' },
+      { action: 'gh_create_branch', icon: 'fa-code-branch', label: 'Crear Branch' },
+      { action: 'gh_commit_file', icon: 'fa-file-upload', label: 'Commit Archivo' },
+      { action: 'gh_get_file', icon: 'fa-file-code', label: 'Obtener Archivo' },
+      { action: 'gh_create_release', icon: 'fa-tag', label: 'Crear Release' },
+      { action: 'gh_trigger_workflow', icon: 'fa-play', label: 'Trigger Actions' },
+      { action: 'gh_add_comment', icon: 'fa-comment', label: 'Agregar Comentario' },
+      { action: 'gh_list_repos', icon: 'fa-list', label: 'Listar Repositorios' },
+      { action: 'gh_create_gist', icon: 'fa-file-alt', label: 'Crear Gist' }
+    ]
+  },
+  {
+    id: 'gitlab',
+    name: 'GitLab',
+    icon: 'fa-gitlab',
+    isBrand: true,
+    description: 'DevOps completo',
+    actions: [
+      { action: 'gl_connect', icon: 'fa-plug', label: 'Conectar GitLab' },
+      { action: 'gl_create_issue', icon: 'fa-plus', label: 'Crear Issue' },
+      { action: 'gl_create_mr', icon: 'fa-code-branch', label: 'Crear Merge Request' },
+      { action: 'gl_merge_mr', icon: 'fa-check-circle', label: 'Merge MR' },
+      { action: 'gl_create_branch', icon: 'fa-code-branch', label: 'Crear Branch' },
+      { action: 'gl_trigger_pipeline', icon: 'fa-play', label: 'Trigger Pipeline' },
+      { action: 'gl_get_pipeline', icon: 'fa-stream', label: 'Estado Pipeline' },
+      { action: 'gl_list_projects', icon: 'fa-list', label: 'Listar Proyectos' },
+      { action: 'gl_create_tag', icon: 'fa-tag', label: 'Crear Tag' },
+      { action: 'gl_set_variable', icon: 'fa-key', label: 'Variable CI/CD' }
+    ]
+  },
+  {
+    id: 'jenkins',
+    name: 'Jenkins',
+    icon: 'fa-cogs',
+    description: 'CI/CD Server',
+    actions: [
+      { action: 'jenkins_connect', icon: 'fa-plug', label: 'Conectar Jenkins' },
+      { action: 'jenkins_trigger_build', icon: 'fa-play', label: 'Trigger Build' },
+      { action: 'jenkins_get_status', icon: 'fa-info-circle', label: 'Estado del Build' },
+      { action: 'jenkins_get_log', icon: 'fa-terminal', label: 'Obtener Log' },
+      { action: 'jenkins_list_jobs', icon: 'fa-list', label: 'Listar Jobs' },
+      { action: 'jenkins_create_job', icon: 'fa-plus', label: 'Crear Job' },
+      { action: 'jenkins_cancel_build', icon: 'fa-stop', label: 'Cancelar Build' },
+      { action: 'jenkins_get_queue', icon: 'fa-clock', label: 'Ver Cola' }
+    ]
+  },
+  {
+    id: 'docker',
+    name: 'Docker',
+    icon: 'fa-docker',
+    isBrand: true,
+    description: 'Contenedores',
+    actions: [
+      { action: 'docker_connect', icon: 'fa-plug', label: 'Conectar Docker' },
+      { action: 'docker_list_containers', icon: 'fa-list', label: 'Listar Contenedores' },
+      { action: 'docker_start_container', icon: 'fa-play', label: 'Iniciar Contenedor' },
+      { action: 'docker_stop_container', icon: 'fa-stop', label: 'Detener Contenedor' },
+      { action: 'docker_run', icon: 'fa-terminal', label: 'Docker Run' },
+      { action: 'docker_build', icon: 'fa-hammer', label: 'Docker Build' },
+      { action: 'docker_pull', icon: 'fa-download', label: 'Docker Pull' },
+      { action: 'docker_push', icon: 'fa-upload', label: 'Docker Push' },
+      { action: 'docker_logs', icon: 'fa-file-alt', label: 'Obtener Logs' },
+      { action: 'docker_exec', icon: 'fa-terminal', label: 'Ejecutar Comando' }
+    ]
+  },
+  // ==========================================
+  // SOCIAL MEDIA (FALTANTES)
+  // ==========================================
+  {
+    id: 'youtube',
+    name: 'YouTube',
+    icon: 'fa-youtube',
+    isBrand: true,
+    description: 'Videos y analytics',
+    actions: [
+      { action: 'yt_connect', icon: 'fa-plug', label: 'Conectar YouTube' },
+      { action: 'yt_upload_video', icon: 'fa-upload', label: 'Subir Video' },
+      { action: 'yt_search', icon: 'fa-search', label: 'Buscar Videos' },
+      { action: 'yt_get_video', icon: 'fa-film', label: 'Obtener Video' },
+      { action: 'yt_get_channel', icon: 'fa-tv', label: 'Info del Canal' },
+      { action: 'yt_get_comments', icon: 'fa-comments', label: 'Obtener Comentarios' },
+      { action: 'yt_create_playlist', icon: 'fa-list', label: 'Crear Playlist' },
+      { action: 'yt_get_analytics', icon: 'fa-chart-line', label: 'Obtener Analíticas' },
+      { action: 'yt_update_video', icon: 'fa-edit', label: 'Actualizar Metadata' }
+    ]
+  },
+  {
+    id: 'tiktok',
+    name: 'TikTok',
+    icon: 'fa-tiktok',
+    isBrand: true,
+    description: 'Videos cortos',
+    actions: [
+      { action: 'tt_connect', icon: 'fa-plug', label: 'Conectar TikTok' },
+      { action: 'tt_upload_video', icon: 'fa-upload', label: 'Subir Video' },
+      { action: 'tt_get_videos', icon: 'fa-film', label: 'Obtener Videos' },
+      { action: 'tt_get_user', icon: 'fa-user', label: 'Info de Usuario' },
+      { action: 'tt_get_insights', icon: 'fa-chart-bar', label: 'Obtener Insights' },
+      { action: 'tt_search', icon: 'fa-search', label: 'Buscar Videos' },
+      { action: 'tt_create_ad', icon: 'fa-bullhorn', label: 'Crear Anuncio' }
+    ]
+  },
+  // ==========================================
+  // WEB SCRAPING / PROXIES
+  // ==========================================
+  {
+    id: 'scraping',
+    name: 'Web Scraping',
+    icon: 'fa-spider',
+    description: 'Bright Data, ScraperAPI, Apify',
+    actions: [
+      { action: 'scraper_connect', icon: 'fa-plug', label: 'Conectar Servicio' },
+      { action: 'scraper_fetch_url', icon: 'fa-globe', label: 'Scrape URL' },
+      { action: 'scraper_render_js', icon: 'fa-code', label: 'Render con JavaScript' },
+      { action: 'scraper_extract_data', icon: 'fa-table', label: 'Extraer Datos' },
+      { action: 'scraper_screenshot', icon: 'fa-camera', label: 'Screenshot de URL' },
+      { action: 'scraper_batch', icon: 'fa-layer-group', label: 'Scrape en Lote' },
+      { action: 'scraper_set_proxy', icon: 'fa-shield-alt', label: 'Configurar Proxy' },
+      { action: 'scraper_set_geo', icon: 'fa-map-marker-alt', label: 'Geolocalización' },
+      { action: 'scraper_run_actor', icon: 'fa-play', label: 'Ejecutar Actor (Apify)' },
+      { action: 'scraper_get_dataset', icon: 'fa-database', label: 'Obtener Dataset' }
+    ]
+  },
+  // ==========================================
+  // DOCS, SIGNATURE, NOTIFICATIONS
+  // ==========================================
+  {
+    id: 'docusign',
+    name: 'DocuSign',
+    icon: 'fa-file-signature',
+    description: 'Firma digital',
+    actions: [
+      { action: 'docusign_connect', icon: 'fa-plug', label: 'Conectar DocuSign' },
+      { action: 'docusign_send_envelope', icon: 'fa-paper-plane', label: 'Enviar Sobre' },
+      { action: 'docusign_get_status', icon: 'fa-info-circle', label: 'Estado del Sobre' },
+      { action: 'docusign_download', icon: 'fa-download', label: 'Descargar Firmado' },
+      { action: 'docusign_create_template', icon: 'fa-file-alt', label: 'Crear Plantilla' },
+      { action: 'docusign_void', icon: 'fa-times-circle', label: 'Anular Sobre' },
+      { action: 'docusign_remind', icon: 'fa-bell', label: 'Enviar Recordatorio' },
+      { action: 'docusign_embedded', icon: 'fa-window-restore', label: 'Firma Embebida' }
+    ]
+  },
+  {
+    id: 'notion',
+    name: 'Notion',
+    icon: 'fa-book-open',
+    description: 'Workspace colaborativo',
+    actions: [
+      { action: 'notion_connect', icon: 'fa-plug', label: 'Conectar Notion' },
+      { action: 'notion_create_page', icon: 'fa-plus', label: 'Crear Página' },
+      { action: 'notion_update_page', icon: 'fa-edit', label: 'Actualizar Página' },
+      { action: 'notion_query_db', icon: 'fa-search', label: 'Query Database' },
+      { action: 'notion_create_db', icon: 'fa-database', label: 'Crear Database' },
+      { action: 'notion_add_block', icon: 'fa-cube', label: 'Agregar Bloque' },
+      { action: 'notion_search', icon: 'fa-search', label: 'Buscar Páginas' },
+      { action: 'notion_get_page', icon: 'fa-file-alt', label: 'Obtener Página' },
+      { action: 'notion_archive', icon: 'fa-archive', label: 'Archivar Página' }
+    ]
+  },
+  {
+    id: 'airtable',
+    name: 'Airtable',
+    icon: 'fa-th',
+    description: 'Base de datos visual',
+    actions: [
+      { action: 'airtable_connect', icon: 'fa-plug', label: 'Conectar Airtable' },
+      { action: 'airtable_list_records', icon: 'fa-list', label: 'Listar Registros' },
+      { action: 'airtable_create_record', icon: 'fa-plus', label: 'Crear Registro' },
+      { action: 'airtable_update_record', icon: 'fa-edit', label: 'Actualizar Registro' },
+      { action: 'airtable_delete_record', icon: 'fa-trash', label: 'Eliminar Registro' },
+      { action: 'airtable_search', icon: 'fa-search', label: 'Buscar Registros' },
+      { action: 'airtable_upload', icon: 'fa-paperclip', label: 'Subir Adjunto' },
+      { action: 'airtable_batch', icon: 'fa-layer-group', label: 'Operación en Lote' }
+    ]
+  },
+  {
+    id: 'firebase',
+    name: 'Firebase',
+    icon: 'fa-fire',
+    description: 'Backend as a Service',
+    actions: [
+      { action: 'firebase_connect', icon: 'fa-plug', label: 'Conectar Firebase' },
+      { action: 'firebase_set_doc', icon: 'fa-plus', label: 'Crear/Actualizar Doc' },
+      { action: 'firebase_get_doc', icon: 'fa-file-alt', label: 'Obtener Documento' },
+      { action: 'firebase_query', icon: 'fa-search', label: 'Query Firestore' },
+      { action: 'firebase_delete_doc', icon: 'fa-trash', label: 'Eliminar Documento' },
+      { action: 'firebase_push_rtdb', icon: 'fa-database', label: 'Push Realtime DB' },
+      { action: 'firebase_read_rtdb', icon: 'fa-eye', label: 'Leer Realtime DB' },
+      { action: 'firebase_upload', icon: 'fa-upload', label: 'Subir a Storage' },
+      { action: 'firebase_send_push', icon: 'fa-bell', label: 'Enviar Push (FCM)' },
+      { action: 'firebase_auth', icon: 'fa-user-lock', label: 'Autenticar Usuario' }
+    ]
+  },
+  {
+    id: 'supabase',
+    name: 'Supabase',
+    icon: 'fa-database',
+    description: 'Open source Firebase',
+    actions: [
+      { action: 'supabase_connect', icon: 'fa-plug', label: 'Conectar Supabase' },
+      { action: 'supabase_insert', icon: 'fa-plus', label: 'Insertar Fila' },
+      { action: 'supabase_select', icon: 'fa-search', label: 'Consultar Datos' },
+      { action: 'supabase_update', icon: 'fa-edit', label: 'Actualizar Fila' },
+      { action: 'supabase_delete', icon: 'fa-trash', label: 'Eliminar Fila' },
+      { action: 'supabase_rpc', icon: 'fa-terminal', label: 'Ejecutar Función RPC' },
+      { action: 'supabase_upload', icon: 'fa-upload', label: 'Subir a Storage' },
+      { action: 'supabase_auth', icon: 'fa-user-lock', label: 'Autenticar Usuario' },
+      { action: 'supabase_realtime', icon: 'fa-broadcast-tower', label: 'Suscribir Realtime' }
+    ]
+  },
+  {
+    id: 'mongodb',
+    name: 'MongoDB Atlas',
+    icon: 'fa-leaf',
+    description: 'NoSQL en la nube',
+    actions: [
+      { action: 'mongo_connect', icon: 'fa-plug', label: 'Conectar MongoDB' },
+      { action: 'mongo_find', icon: 'fa-search', label: 'Buscar Documentos' },
+      { action: 'mongo_insert', icon: 'fa-plus', label: 'Insertar Documento' },
+      { action: 'mongo_update', icon: 'fa-edit', label: 'Actualizar Documento' },
+      { action: 'mongo_delete', icon: 'fa-trash', label: 'Eliminar Documento' },
+      { action: 'mongo_aggregate', icon: 'fa-layer-group', label: 'Aggregate Pipeline' },
+      { action: 'mongo_count', icon: 'fa-hashtag', label: 'Contar Documentos' },
+      { action: 'mongo_create_index', icon: 'fa-sort-amount-up', label: 'Crear Índice' }
+    ]
+  },
+  // ==========================================
+  // TRANSLATION / ANALYTICS / EMAIL MARKETING
+  // ==========================================
+  {
+    id: 'deepl',
+    name: 'DeepL',
+    icon: 'fa-language',
+    description: 'Traducción con IA',
+    actions: [
+      { action: 'deepl_connect', icon: 'fa-plug', label: 'Conectar DeepL' },
+      { action: 'deepl_translate', icon: 'fa-language', label: 'Traducir Texto' },
+      { action: 'deepl_translate_doc', icon: 'fa-file-alt', label: 'Traducir Documento' },
+      { action: 'deepl_detect_lang', icon: 'fa-search', label: 'Detectar Idioma' },
+      { action: 'deepl_glossary', icon: 'fa-book', label: 'Gestionar Glosario' },
+      { action: 'deepl_usage', icon: 'fa-chart-bar', label: 'Consultar Uso' }
+    ]
+  },
+  {
+    id: 'google-analytics',
+    name: 'Google Analytics',
+    icon: 'fa-chart-line',
+    description: 'Analytics GA4',
+    actions: [
+      { action: 'ga_connect', icon: 'fa-plug', label: 'Conectar Analytics' },
+      { action: 'ga_run_report', icon: 'fa-file-alt', label: 'Ejecutar Reporte' },
+      { action: 'ga_realtime', icon: 'fa-broadcast-tower', label: 'Datos en Tiempo Real' },
+      { action: 'ga_get_metrics', icon: 'fa-chart-bar', label: 'Obtener Métricas' },
+      { action: 'ga_get_conversions', icon: 'fa-bullseye', label: 'Obtener Conversiones' },
+      { action: 'ga_get_audiences', icon: 'fa-users', label: 'Obtener Audiencias' }
+    ]
+  },
+  {
+    id: 'sendgrid',
+    name: 'SendGrid',
+    icon: 'fa-paper-plane',
+    description: 'Email transaccional',
+    actions: [
+      { action: 'sg_connect', icon: 'fa-plug', label: 'Conectar SendGrid' },
+      { action: 'sg_send_email', icon: 'fa-envelope', label: 'Enviar Email' },
+      { action: 'sg_send_template', icon: 'fa-file-alt', label: 'Enviar con Plantilla' },
+      { action: 'sg_add_contact', icon: 'fa-user-plus', label: 'Agregar Contacto' },
+      { action: 'sg_create_list', icon: 'fa-list', label: 'Crear Lista' },
+      { action: 'sg_get_stats', icon: 'fa-chart-bar', label: 'Obtener Estadísticas' },
+      { action: 'sg_validate_email', icon: 'fa-check', label: 'Validar Email' }
+    ]
+  },
+  {
+    id: 'mailchimp',
+    name: 'Mailchimp',
+    icon: 'fa-mail-bulk',
+    description: 'Email marketing',
+    actions: [
+      { action: 'mc_connect', icon: 'fa-plug', label: 'Conectar Mailchimp' },
+      { action: 'mc_add_subscriber', icon: 'fa-user-plus', label: 'Agregar Suscriptor' },
+      { action: 'mc_remove_subscriber', icon: 'fa-user-minus', label: 'Remover Suscriptor' },
+      { action: 'mc_create_campaign', icon: 'fa-bullhorn', label: 'Crear Campaña' },
+      { action: 'mc_send_campaign', icon: 'fa-paper-plane', label: 'Enviar Campaña' },
+      { action: 'mc_get_stats', icon: 'fa-chart-bar', label: 'Estadísticas Campaña' },
+      { action: 'mc_create_template', icon: 'fa-file-alt', label: 'Crear Plantilla' },
+      { action: 'mc_add_tag', icon: 'fa-tag', label: 'Agregar Tag' },
+      { action: 'mc_segment', icon: 'fa-filter', label: 'Segmentar Audiencia' }
+    ]
+  },
+  {
+    id: 'calendly',
+    name: 'Calendly',
+    icon: 'fa-calendar-check',
+    description: 'Programación de citas',
+    actions: [
+      { action: 'calendly_connect', icon: 'fa-plug', label: 'Conectar Calendly' },
+      { action: 'calendly_get_events', icon: 'fa-list', label: 'Obtener Eventos' },
+      { action: 'calendly_get_invitee', icon: 'fa-user', label: 'Info del Invitado' },
+      { action: 'calendly_cancel_event', icon: 'fa-times', label: 'Cancelar Evento' },
+      { action: 'calendly_get_availability', icon: 'fa-clock', label: 'Disponibilidad' },
+      { action: 'calendly_create_webhook', icon: 'fa-link', label: 'Crear Webhook' }
+    ]
+  },
+  {
+    id: 'onesignal',
+    name: 'OneSignal',
+    icon: 'fa-bell',
+    description: 'Push notifications',
+    actions: [
+      { action: 'onesignal_connect', icon: 'fa-plug', label: 'Conectar OneSignal' },
+      { action: 'onesignal_send_push', icon: 'fa-bell', label: 'Enviar Push' },
+      { action: 'onesignal_send_email', icon: 'fa-envelope', label: 'Enviar Email' },
+      { action: 'onesignal_send_sms', icon: 'fa-sms', label: 'Enviar SMS' },
+      { action: 'onesignal_create_segment', icon: 'fa-filter', label: 'Crear Segmento' },
+      { action: 'onesignal_schedule', icon: 'fa-clock', label: 'Programar Notificación' },
+      { action: 'onesignal_get_stats', icon: 'fa-chart-bar', label: 'Obtener Estadísticas' }
     ]
   }
 ]
@@ -2950,25 +3578,55 @@ function WorkflowsView() {
   const importWorkflow = () => {
     const input = document.createElement('input')
     input.type = 'file'
-    input.accept = '.json,.alq'
+    input.accept = '.json,.alq,.xaml,.xml,.py,.js,.ts,.cs,.java,.rb,.go,.php,.sh,.ps1,.bash,.txt,.mjs'
+    input.multiple = true
     input.onchange = (e) => {
-      const file = e.target.files[0]
-      if (!file) return
-      const reader = new FileReader()
-      reader.onload = (event) => {
-        try {
-          const data = JSON.parse(event.target.result)
-          if (data.steps) {
-            setWorkflowName(data.name || 'Workflow Importado')
-            setWorkflowSteps(data.steps || [])
-            setVariables(data.variables || [])
-            alert('Workflow importado exitosamente!')
+      const files = Array.from(e.target.files)
+      if (!files.length) return
+
+      // Si es un solo archivo JSON/ALQ, intentar formato nativo Alqvimia primero
+      if (files.length === 1) {
+        const file = files[0]
+        const ext = file.name.split('.').pop().toLowerCase()
+        const reader = new FileReader()
+        reader.onload = (event) => {
+          const content = event.target.result
+
+          // Formato nativo Alqvimia (.alq o .json con steps)
+          if (ext === 'alq' || ext === 'json') {
+            try {
+              const data = JSON.parse(content)
+              if (data.steps) {
+                setWorkflowName(data.name || 'Workflow Importado')
+                setWorkflowSteps(data.steps || [])
+                setVariables(data.variables || [])
+                alert('Workflow importado exitosamente!')
+                return
+              }
+            } catch { /* No es JSON nativo, continuar con parsers */ }
           }
-        } catch (err) {
-          alert('Error al importar: El archivo no es válido')
+
+          // Abrir el modal de migración con auto-detección
+          const formatMap = { 'xaml': 'uipath', 'xml': 'uipath', 'json': 'power-automate', 'py': 'python', 'js': 'javascript', 'ts': 'javascript', 'cs': 'csharp' }
+          const format = formatMap[ext] || 'generic'
+
+          setMigrateMode('import')
+          setMigrateFormat(format)
+          setImportFileContent(content)
+          setShowMigrateModal(true)
+          setMigrateStep(3)
+          handleMigration(content, file.name)
         }
+        reader.readAsText(file)
+      } else {
+        // Múltiples archivos: detectar formato del primero y abrir modal
+        const ext = files[0].name.split('.').pop().toLowerCase()
+        const formatMap = { 'xaml': 'uipath', 'xml': 'uipath', 'json': 'power-automate', 'py': 'python', 'js': 'javascript', 'ts': 'javascript', 'cs': 'csharp' }
+        setMigrateMode('import')
+        setMigrateFormat(formatMap[ext] || 'generic')
+        setShowMigrateModal(true)
+        handleMultiFileMigration(files)
       }
-      reader.readAsText(file)
     }
     input.click()
   }
@@ -3343,52 +4001,155 @@ function WorkflowsView() {
   const migrateFileInputRef = useRef(null)
 
   // Funciones de migración
-  const handleMigration = async (content) => {
+  const handleMigration = async (content, fileName = '') => {
     setMigrateProgress(0)
     setMigrateStatus('Analizando archivo...')
 
     try {
-      // Simular progreso
-      for (let i = 0; i <= 30; i += 10) {
-        await new Promise(r => setTimeout(r, 200))
+      for (let i = 0; i <= 20; i += 10) {
+        await new Promise(r => setTimeout(r, 150))
         setMigrateProgress(i)
       }
       setMigrateStatus('Parseando contenido...')
 
-      // Obtener el parser correcto
-      const parser = importers[migrateFormat]
-      if (!parser) {
-        throw new Error(`Formato no soportado: ${migrateFormat}`)
-      }
-
-      for (let i = 30; i <= 70; i += 10) {
-        await new Promise(r => setTimeout(r, 150))
+      for (let i = 20; i <= 50; i += 10) {
+        await new Promise(r => setTimeout(r, 120))
         setMigrateProgress(i)
       }
-      setMigrateStatus('Convirtiendo acciones...')
+      const ext = fileName.split('.').pop().toLowerCase()
+      setMigrateStatus(`Detectando actividades (.${ext})...`)
 
-      // Parsear el contenido
-      const parsedSteps = parser(content)
+      // Auto-detectar parser por extension y parsear
+      const parsed = autoParseFile(content, fileName)
 
-      for (let i = 70; i <= 100; i += 10) {
+      for (let i = 50; i <= 80; i += 10) {
         await new Promise(r => setTimeout(r, 100))
         setMigrateProgress(i)
       }
-      setMigrateStatus('Completado')
+      setMigrateStatus('Generando análisis...')
+
+      // Normalizar resultado (formato nuevo vs viejo)
+      let steps, analysisVariables, summary
+      if (parsed && parsed.steps && parsed.summary) {
+        steps = parsed.steps
+        analysisVariables = parsed.variables || []
+        summary = parsed.summary
+      } else {
+        // Formato viejo (array plano)
+        steps = Array.isArray(parsed) ? parsed : []
+        analysisVariables = []
+        summary = {
+          workflowName: fileName || 'Workflow Importado',
+          totalSteps: steps.length,
+          totalVariables: 0,
+          categories: {},
+          conclusions: [`Se detectaron ${steps.length} paso(s) del archivo importado.`]
+        }
+      }
+
+      setMigrateProgress(100)
+      setMigrateStatus('Análisis completado')
 
       setMigrateResult({
         success: true,
-        steps: parsedSteps,
-        format: migrateFormat
+        steps,
+        variables: analysisVariables,
+        summary,
+        format: migrateFormat,
+        fileName: fileName || summary.workflowName || 'Workflow'
       })
       setMigrateStep(4)
 
     } catch (error) {
       console.error('Error en migración:', error)
+      setMigrateResult({ success: false, error: error.message })
+      setMigrateStep(4)
+    }
+  }
+
+  // Multi-archivo: procesa varios archivos secuencialmente
+  const handleMultiFileMigration = async (files) => {
+    const allSteps = []
+    const allVariables = []
+    const allSummaries = []
+    let totalCategories = {}
+
+    setMigrateStep(3)
+    setMigrateProgress(0)
+
+    try {
+      for (let fileIdx = 0; fileIdx < files.length; fileIdx++) {
+        const file = files[fileIdx]
+        const progress = Math.round((fileIdx / files.length) * 100)
+        setMigrateProgress(progress)
+        setMigrateStatus(`Procesando archivo ${fileIdx + 1} de ${files.length}: ${file.name}`)
+
+        const content = await new Promise((resolve, reject) => {
+          const reader = new FileReader()
+          reader.onload = (e) => resolve(e.target.result)
+          reader.onerror = reject
+          reader.readAsText(file)
+        })
+
+        // Auto-detectar parser por extension del archivo
+        const parsed = autoParseFile(content, file.name)
+
+        let steps, vars, summary
+        if (parsed && parsed.steps && parsed.summary) {
+          steps = parsed.steps
+          vars = parsed.variables || []
+          summary = parsed.summary
+        } else {
+          steps = Array.isArray(parsed) ? parsed : []
+          vars = []
+          summary = { workflowName: file.name, totalSteps: steps.length, totalVariables: 0, categories: {}, conclusions: [] }
+        }
+
+        // Reindex step IDs para evitar colisiones
+        const offset = allSteps.length
+        steps.forEach((s, i) => { s.id = `step_${offset + i + 1}` })
+
+        allSteps.push(...steps)
+        allVariables.push(...vars)
+        allSummaries.push({ fileName: file.name, ...summary })
+
+        // Merge categories
+        if (summary.categories) {
+          Object.entries(summary.categories).forEach(([cat, count]) => {
+            totalCategories[cat] = (totalCategories[cat] || 0) + count
+          })
+        }
+      }
+
+      setMigrateProgress(100)
+      setMigrateStatus('Análisis completado')
+
+      const combinedSummary = {
+        workflowName: allSummaries[0]?.workflowName || 'Workflow Migrado',
+        totalSteps: allSteps.length,
+        totalVariables: allVariables.length,
+        categories: totalCategories,
+        filesProcessed: files.length,
+        fileSummaries: allSummaries,
+        conclusions: [
+          `Se procesaron ${files.length} archivo(s) con un total de ${allSteps.length} actividades.`,
+          ...allSummaries.flatMap(s => s.conclusions || [])
+        ]
+      }
+
       setMigrateResult({
-        success: false,
-        error: error.message
+        success: true,
+        steps: allSteps,
+        variables: allVariables,
+        summary: combinedSummary,
+        format: migrateFormat,
+        fileName: allSummaries[0]?.workflowName || 'Workflow'
       })
+      setMigrateStep(4)
+
+    } catch (error) {
+      console.error('Error en migración multi-archivo:', error)
+      setMigrateResult({ success: false, error: error.message })
       setMigrateStep(4)
     }
   }
@@ -3459,6 +4220,10 @@ function WorkflowsView() {
   const [aiPrompt, setAIPrompt] = useState('')
   const [isGeneratingAI, setIsGeneratingAI] = useState(false)
   const [showCodeEditorModal, setShowCodeEditorModal] = useState(false)
+
+  // Estado para ayuda de componentes
+  const [showHelpModal, setShowHelpModal] = useState(false)
+  const [helpAction, setHelpAction] = useState(null)
 
   // Estados para importación de video
   const [showVideoImportModal, setShowVideoImportModal] = useState(false)
@@ -3554,6 +4319,71 @@ function WorkflowsView() {
       html: '#e34f26', css: '#1572b6', sql: '#336791', shell: '#4eaa25'
     }
     return colors[lang] || '#888'
+  }
+
+  // ============================================================
+  // AYUDA DE COMPONENTES - Genera ejemplo en el workflow
+  // ============================================================
+  const handleActionHelp = (action) => {
+    const props = getActionProperties(action.action)
+    setHelpAction({ ...action, props })
+    setShowHelpModal(true)
+  }
+
+  const handleInsertExample = () => {
+    if (!helpAction) return
+    const timestamp = Date.now()
+    const action = helpAction.action
+    const props = helpAction.props
+    const exampleSteps = []
+    let idx = 1
+
+    const makeStep = (act, icon, label, params = {}) => ({
+      id: `example_${timestamp}_${idx++}`,
+      action: act,
+      icon,
+      label,
+      params
+    })
+
+    // Generar ejemplo contextual según la categoría de la acción
+    const actionLower = action.toLowerCase()
+
+    if (actionLower.startsWith('browser_') || actionLower === 'navigate' || actionLower === 'click' || actionLower === 'type' || actionLower === 'extract_text' || actionLower === 'screenshot') {
+      // Ejemplo de automatización web
+      exampleSteps.push(makeStep('browser_open', 'fa-window-maximize', 'Abrir Navegador', { browser: 'chrome', maximized: true }))
+      exampleSteps.push(makeStep('navigate', 'fa-globe', 'Ir a Google', { url: 'https://www.google.com' }))
+      exampleSteps.push(makeStep(action, helpAction.icon, `Ejemplo: ${helpAction.label}`, {}))
+      if (action !== 'browser_close') exampleSteps.push(makeStep('browser_close', 'fa-times', 'Cerrar Navegador', {}))
+    } else if (actionLower.startsWith('excel_') || actionLower.startsWith('excel_bg_')) {
+      exampleSteps.push(makeStep('excel_bg_open', 'fa-file-excel', 'Abrir Excel', { filePath: 'C:\\ejemplo\\datos.xlsx' }))
+      exampleSteps.push(makeStep(action, helpAction.icon, `Ejemplo: ${helpAction.label}`, {}))
+      exampleSteps.push(makeStep('excel_bg_save', 'fa-save', 'Guardar Excel', {}))
+    } else if (actionLower.startsWith('db_')) {
+      exampleSteps.push(makeStep('db_connect', 'fa-plug', 'Conectar BD', { dbType: 'mysql', host: 'localhost', port: 3306 }))
+      exampleSteps.push(makeStep(action, helpAction.icon, `Ejemplo: ${helpAction.label}`, {}))
+      exampleSteps.push(makeStep('db_disconnect', 'fa-unlink', 'Desconectar BD', {}))
+    } else if (actionLower.startsWith('email_') || actionLower.startsWith('inbox_')) {
+      exampleSteps.push(makeStep(action, helpAction.icon, `Ejemplo: ${helpAction.label}`, {}))
+    } else if (actionLower.startsWith('file_') || actionLower.startsWith('folder_')) {
+      exampleSteps.push(makeStep(action, helpAction.icon, `Ejemplo: ${helpAction.label}`, {}))
+    } else if (actionLower.startsWith('pdf_')) {
+      exampleSteps.push(makeStep(action, helpAction.icon, `Ejemplo: ${helpAction.label}`, {}))
+    } else if (actionLower.startsWith('ai_')) {
+      exampleSteps.push(makeStep(action, helpAction.icon, `Ejemplo: ${helpAction.label}`, {}))
+    } else if (actionLower.startsWith('ocr_') || actionLower.includes('image')) {
+      exampleSteps.push(makeStep(action, helpAction.icon, `Ejemplo: ${helpAction.label}`, {}))
+    } else if (actionLower === 'if_condition' || actionLower === 'for_loop' || actionLower === 'while_loop' || actionLower === 'try_catch' || actionLower === 'switch') {
+      exampleSteps.push(makeStep(action, helpAction.icon, `Ejemplo: ${helpAction.label}`, {}))
+    } else {
+      // Ejemplo genérico - solo el paso
+      exampleSteps.push(makeStep(action, helpAction.icon, `Ejemplo: ${helpAction.label}`, {}))
+    }
+
+    // Agregar pasos de ejemplo al workflow
+    setWorkflowSteps(prev => [...prev, ...exampleSteps])
+    setShowHelpModal(false)
+    setHelpAction(null)
   }
 
   const handleAIGenerate = async () => {
@@ -5143,7 +5973,9 @@ function WorkflowsView() {
               {step.params?.url && <span className="step-param-preview">: {step.params.url}</span>}
               {step.params?.message && <span className="step-param-preview">: "{step.params.message}"</span>}
               {step.params?.variable && <span className="step-param-preview"> → ${step.params.variable}</span>}
-              {step.params?.description && <span className="step-description"> - {step.params.description}</span>}
+              {step.params?.description && !step.params?.url && !step.params?.name && !step.params?.message && !step.params?.variable && (
+                <span className="step-description"> - {step.params.description.length > 50 ? step.params.description.substring(0, 50) + '...' : step.params.description}</span>
+              )}
             </span>
           </div>
           <div className="step-indicators">
@@ -5254,7 +6086,7 @@ function WorkflowsView() {
           {/* Mostrar descripción si existe */}
           {step.params?.description && (
             <div className="flow-step-description">
-              <i className="fas fa-info-circle"></i> {step.params.description}
+              <i className="fas fa-info-circle"></i> {step.params.description.length > 60 ? step.params.description.substring(0, 60) + '...' : step.params.description}
             </div>
           )}
           {isContainer && isExpanded && (
@@ -5345,6 +6177,16 @@ function WorkflowsView() {
                         <div key={action.action} className={`action-item ${action.isContainer ? 'is-container' : ''} ${action.isCustom ? 'is-custom' : ''}`} draggable="true" onDragStart={(e) => handleDragStart(e, action)}>
                           <i className={`fas ${action.icon}`}></i>
                           <span>{action.label}</span>
+                          <button
+                            className="btn-help-action"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleActionHelp(action)
+                            }}
+                            title={`Ayuda: ${action.label}`}
+                          >
+                            <i className="fas fa-question-circle"></i>
+                          </button>
                           {action.isCustom && (
                             <button
                               className="btn-delete-custom"
@@ -5551,18 +6393,24 @@ function WorkflowsView() {
                   type="file"
                   ref={migrateFileInputRef}
                   style={{ display: 'none' }}
-                  accept={migrateFormat === 'uipath' ? '.xaml,.xml' : migrateFormat === 'power-automate' || migrateFormat === 'rpa-platform' ? '.json' : '.py,.js,.txt'}
+                  multiple
+                  accept=".xaml,.xml,.json,.js,.ts,.py,.cs,.java,.rb,.go,.php,.sh,.ps1,.bash,.txt,.mjs"
                   onChange={(e) => {
-                    const file = e.target.files[0]
-                    if (file) {
+                    const files = e.target.files
+                    if (!files || files.length === 0) return
+                    if (files.length === 1) {
+                      const file = files[0]
                       const reader = new FileReader()
                       reader.onload = (event) => {
                         setImportFileContent(event.target.result)
                         setMigrateStep(3)
-                        handleMigration(event.target.result)
+                        handleMigration(event.target.result, file.name)
                       }
                       reader.readAsText(file)
+                    } else {
+                      handleMultiFileMigration(Array.from(files))
                     }
+                    e.target.value = ''
                   }}
                 />
 
@@ -5590,31 +6438,37 @@ function WorkflowsView() {
                         <button className="migrate-option" onClick={() => { setMigrateMode('import'); setMigrateFormat('javascript'); setMigrateStep(2); }}>
                           <i className="fas fa-file-code" style={{color: '#f7df1e'}}></i><span>JavaScript</span>
                         </button>
+                        <button className="migrate-option" onClick={() => { setMigrateMode('import'); setMigrateFormat('csharp'); setMigrateStep(2); }}>
+                          <i className="fas fa-hashtag" style={{color: '#68217a'}}></i><span>C# / .NET</span>
+                        </button>
+                        <button className="migrate-option" onClick={() => { setMigrateMode('import'); setMigrateFormat('generic'); setMigrateStep(2); }}>
+                          <i className="fas fa-file-code" style={{color: '#6c757d'}}></i><span>Cualquier Código</span>
+                        </button>
                       </div>
                     </div>
                     <div className="migrate-section">
                       <h4><i className="fas fa-file-export"></i> Exportar a</h4>
                       <div className="migrate-grid">
-                        <button className="migrate-option" onClick={() => { setMigrateMode('export'); setMigrateFormat('uipath'); setMigrateStep(2); }} disabled={steps.length === 0}>
+                        <button className="migrate-option" onClick={() => { setMigrateMode('export'); setMigrateFormat('uipath'); setMigrateStep(2); }} disabled={workflowSteps.length === 0}>
                           <i className="fas fa-robot" style={{color: '#ff6d00'}}></i><span>UiPath XAML</span>
                         </button>
-                        <button className="migrate-option" onClick={() => { setMigrateMode('export'); setMigrateFormat('power-automate'); setMigrateStep(2); }} disabled={steps.length === 0}>
+                        <button className="migrate-option" onClick={() => { setMigrateMode('export'); setMigrateFormat('power-automate'); setMigrateStep(2); }} disabled={workflowSteps.length === 0}>
                           <i className="fas fa-cogs" style={{color: '#0078d4'}}></i><span>Power Automate</span>
                         </button>
-                        <button className="migrate-option" onClick={() => { setMigrateMode('export'); setMigrateFormat('python'); setMigrateStep(2); }} disabled={steps.length === 0}>
+                        <button className="migrate-option" onClick={() => { setMigrateMode('export'); setMigrateFormat('python'); setMigrateStep(2); }} disabled={workflowSteps.length === 0}>
                           <i className="fas fa-code" style={{color: '#3776ab'}}></i><span>Python</span>
                         </button>
-                        <button className="migrate-option" onClick={() => { setMigrateMode('export'); setMigrateFormat('javascript'); setMigrateStep(2); }} disabled={steps.length === 0}>
+                        <button className="migrate-option" onClick={() => { setMigrateMode('export'); setMigrateFormat('javascript'); setMigrateStep(2); }} disabled={workflowSteps.length === 0}>
                           <i className="fas fa-file-code" style={{color: '#f7df1e'}}></i><span>JavaScript</span>
                         </button>
-                        <button className="migrate-option" onClick={() => { setMigrateMode('export'); setMigrateFormat('bash'); setMigrateStep(2); }} disabled={steps.length === 0}>
+                        <button className="migrate-option" onClick={() => { setMigrateMode('export'); setMigrateFormat('bash'); setMigrateStep(2); }} disabled={workflowSteps.length === 0}>
                           <i className="fas fa-terminal" style={{color: '#4eaa25'}}></i><span>Bash Script</span>
                         </button>
-                        <button className="migrate-option" onClick={() => { setMigrateMode('export'); setMigrateFormat('pseudocode'); setMigrateStep(2); }} disabled={steps.length === 0}>
+                        <button className="migrate-option" onClick={() => { setMigrateMode('export'); setMigrateFormat('pseudocode'); setMigrateStep(2); }} disabled={workflowSteps.length === 0}>
                           <i className="fas fa-file-alt" style={{color: '#6c757d'}}></i><span>Pseudocódigo</span>
                         </button>
                       </div>
-                      {steps.length === 0 && (
+                      {workflowSteps.length === 0 && (
                         <p style={{ color: 'var(--warning-color)', fontSize: '0.85rem', marginTop: '0.5rem' }}>
                           <i className="fas fa-exclamation-triangle"></i> Necesitas tener un workflow con pasos para exportar
                         </p>
@@ -5632,7 +6486,7 @@ function WorkflowsView() {
                       </div>
                       <h4>Importar desde {migrateFormat?.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</h4>
                       <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>
-                        Selecciona el archivo de workflow que deseas importar
+                        Selecciona uno o más archivos de workflow para analizar
                       </p>
                       <button
                         className="btn btn-primary btn-lg"
@@ -5672,7 +6526,7 @@ function WorkflowsView() {
                       </div>
                       <h4>Exportar a {migrateFormat?.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</h4>
                       <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>
-                        Se exportará el workflow actual: <strong>{workflowName}</strong> ({steps.length} pasos)
+                        Se exportará el workflow actual: <strong>{workflowName}</strong> ({workflowSteps.length} pasos)
                       </p>
                       <div style={{ marginBottom: '1rem' }}>
                         <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>
@@ -5713,7 +6567,7 @@ function WorkflowsView() {
                     <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>
                       <i className="fas fa-cogs fa-spin" style={{ color: 'var(--primary-color)' }}></i>
                     </div>
-                    <h4>{migrateMode === 'import' ? 'Importando workflow...' : 'Exportando workflow...'}</h4>
+                    <h4>{migrateMode === 'import' ? 'Analizando workflow...' : 'Exportando workflow...'}</h4>
                     <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>{migrateStatus}</p>
                     <div style={{
                       width: '100%',
@@ -5738,61 +6592,182 @@ function WorkflowsView() {
                   </div>
                 )}
 
-                {/* PASO 4: Resultado */}
+                {/* PASO 4: Resultado con análisis y conclusiones */}
                 {migrateStep === 4 && (
                   <div className="migrate-result" style={{ padding: '1rem' }}>
                     {migrateResult?.success ? (
                       <>
-                        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-                          <div style={{ fontSize: '4rem', color: 'var(--success-color)' }}>
-                            <i className="fas fa-check-circle"></i>
-                          </div>
-                          <h4 style={{ color: 'var(--success-color)' }}>
-                            {migrateMode === 'import' ? 'Importación completada' : 'Exportación completada'}
-                          </h4>
-                        </div>
-                        {migrateMode === 'import' && migrateResult.steps && (
-                          <div style={{
-                            background: 'var(--bg-secondary)',
-                            borderRadius: '8px',
-                            padding: '1rem',
-                            maxHeight: '300px',
-                            overflow: 'auto'
-                          }}>
-                            <p style={{ marginBottom: '0.5rem' }}>
-                              <strong>{migrateResult.steps.length}</strong> pasos importados:
-                            </p>
-                            <ul style={{ margin: 0, paddingLeft: '1.5rem' }}>
-                              {migrateResult.steps.slice(0, 10).map((step, i) => (
-                                <li key={i} style={{ marginBottom: '0.25rem', fontSize: '0.9rem' }}>
-                                  <i className={`fas ${step.icon || 'fa-cog'}`} style={{ marginRight: '0.5rem', color: 'var(--primary-color)' }}></i>
-                                  {step.label || step.type}
-                                </li>
-                              ))}
-                              {migrateResult.steps.length > 10 && (
-                                <li style={{ color: 'var(--text-secondary)' }}>... y {migrateResult.steps.length - 10} más</li>
-                              )}
-                            </ul>
-                          </div>
-                        )}
-                        {migrateMode === 'export' && migrateResult.code && (
-                          <div style={{
-                            background: '#1e1e1e',
-                            borderRadius: '8px',
-                            padding: '1rem',
-                            maxHeight: '300px',
-                            overflow: 'auto'
-                          }}>
-                            <pre style={{
-                              margin: 0,
-                              fontSize: '0.8rem',
-                              color: '#d4d4d4',
-                              whiteSpace: 'pre-wrap',
-                              wordBreak: 'break-word'
+                        {/* IMPORTACION: Análisis completo */}
+                        {migrateMode === 'import' && (
+                          <>
+                            {/* Header con icono */}
+                            <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
+                              <div style={{ fontSize: '3rem', color: 'var(--success-color)' }}>
+                                <i className="fas fa-search-plus"></i>
+                              </div>
+                              <h4 style={{ color: 'var(--text-primary)', margin: '0.5rem 0' }}>
+                                Análisis de "{migrateResult.summary?.workflowName || migrateResult.fileName}"
+                              </h4>
+                            </div>
+
+                            {/* Grid de estadísticas */}
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem', marginBottom: '1rem' }}>
+                              <div style={{ background: 'var(--bg-secondary)', borderRadius: '8px', padding: '0.75rem', textAlign: 'center', border: '1px solid var(--border-color)' }}>
+                                <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--primary-color)' }}>{migrateResult.steps?.length || 0}</div>
+                                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Actividades</div>
+                              </div>
+                              <div style={{ background: 'var(--bg-secondary)', borderRadius: '8px', padding: '0.75rem', textAlign: 'center', border: '1px solid var(--border-color)' }}>
+                                <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--accent-color)' }}>{migrateResult.variables?.length || 0}</div>
+                                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Variables</div>
+                              </div>
+                              <div style={{ background: 'var(--bg-secondary)', borderRadius: '8px', padding: '0.75rem', textAlign: 'center', border: '1px solid var(--border-color)' }}>
+                                <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--warning-color)' }}>{Object.keys(migrateResult.summary?.categories || {}).length}</div>
+                                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Categorías</div>
+                              </div>
+                            </div>
+
+                            {/* Multi-archivo info */}
+                            {migrateResult.summary?.filesProcessed > 1 && (
+                              <div style={{ background: 'rgba(59,130,246,0.1)', borderRadius: '8px', padding: '0.75rem', marginBottom: '1rem', border: '1px solid rgba(59,130,246,0.3)' }}>
+                                <i className="fas fa-copy" style={{ color: '#3b82f6', marginRight: '0.5rem' }}></i>
+                                <strong>{migrateResult.summary.filesProcessed}</strong> archivos procesados:
+                                {migrateResult.summary.fileSummaries?.map((fs, i) => (
+                                  <span key={i} style={{ marginLeft: '0.5rem', fontSize: '0.85rem' }}>
+                                    {fs.fileName} ({fs.totalSteps} pasos){i < migrateResult.summary.fileSummaries.length - 1 ? ',' : ''}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+
+                            {/* Conclusiones */}
+                            {migrateResult.summary?.conclusions?.length > 0 && (
+                              <div style={{ background: 'var(--bg-secondary)', borderRadius: '8px', padding: '1rem', marginBottom: '1rem', border: '1px solid var(--border-color)' }}>
+                                <h5 style={{ margin: '0 0 0.5rem', color: 'var(--text-primary)' }}>
+                                  <i className="fas fa-lightbulb" style={{ color: 'var(--warning-color)', marginRight: '0.5rem' }}></i>
+                                  Conclusiones del análisis
+                                </h5>
+                                <ul style={{ margin: 0, paddingLeft: '1.25rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                                  {migrateResult.summary.conclusions.map((c, i) => (
+                                    <li key={i} style={{ marginBottom: '0.25rem' }}>{c}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+
+                            {/* Categorías detectadas */}
+                            {Object.keys(migrateResult.summary?.categories || {}).length > 0 && (
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginBottom: '1rem' }}>
+                                {Object.entries(migrateResult.summary.categories).sort((a, b) => b[1] - a[1]).map(([cat, count]) => (
+                                  <span key={cat} style={{
+                                    background: 'var(--bg-tertiary)',
+                                    borderRadius: '12px',
+                                    padding: '0.25rem 0.75rem',
+                                    fontSize: '0.8rem',
+                                    color: 'var(--text-secondary)',
+                                    border: '1px solid var(--border-color)'
+                                  }}>
+                                    {cat} <strong>({count})</strong>
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+
+                            {/* Lista de actividades detectadas */}
+                            <div style={{
+                              background: 'var(--bg-secondary)',
+                              borderRadius: '8px',
+                              padding: '0.75rem',
+                              maxHeight: '250px',
+                              overflow: 'auto',
+                              border: '1px solid var(--border-color)'
                             }}>
-                              {migrateResult.code.substring(0, 2000)}{migrateResult.code.length > 2000 ? '\n\n... (truncado)' : ''}
-                            </pre>
-                          </div>
+                              <h5 style={{ margin: '0 0 0.5rem', color: 'var(--text-primary)', fontSize: '0.9rem' }}>
+                                <i className="fas fa-list" style={{ marginRight: '0.5rem' }}></i>
+                                Pasos a crear en Alqvimia ({migrateResult.steps?.length || 0})
+                              </h5>
+                              {migrateResult.steps?.map((step, i) => (
+                                <div key={i} style={{
+                                  display: 'flex',
+                                  alignItems: 'flex-start',
+                                  padding: '0.4rem 0',
+                                  borderBottom: i < migrateResult.steps.length - 1 ? '1px solid var(--border-color)' : 'none',
+                                  gap: '0.5rem'
+                                }}>
+                                  <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', minWidth: '24px', textAlign: 'right' }}>{i + 1}.</span>
+                                  <i className={`fas ${step.icon || 'fa-puzzle-piece'}`} style={{
+                                    color: step.isCustomAction ? 'var(--warning-color)' : 'var(--primary-color)',
+                                    fontSize: '0.85rem',
+                                    marginTop: '2px',
+                                    minWidth: '16px'
+                                  }}></i>
+                                  <div style={{ flex: 1, minWidth: 0 }}>
+                                    <div style={{ fontSize: '0.85rem', color: 'var(--text-primary)' }}>
+                                      {step.label || step.type}
+                                      {step.isCustomAction && (
+                                        <span style={{ fontSize: '0.7rem', color: 'var(--warning-color)', marginLeft: '0.5rem' }}>(personalizado)</span>
+                                      )}
+                                    </div>
+                                    {step.description && (
+                                      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                        {step.description}
+                                      </div>
+                                    )}
+                                  </div>
+                                  <span style={{
+                                    fontSize: '0.65rem',
+                                    background: 'var(--bg-tertiary)',
+                                    borderRadius: '4px',
+                                    padding: '0.1rem 0.4rem',
+                                    color: 'var(--text-secondary)',
+                                    whiteSpace: 'nowrap'
+                                  }}>
+                                    {step.category || 'General'}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+
+                            {/* Nombre para el workflow en Alqvimia */}
+                            <div style={{ marginTop: '1rem' }}>
+                              <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                                <i className="fas fa-tag" style={{ marginRight: '0.25rem' }}></i> Nombre del workflow en Alqvimia:
+                              </label>
+                              <input
+                                type="text"
+                                value={exportWorkflowName || migrateResult.summary?.workflowName || ''}
+                                onChange={(e) => setExportWorkflowName(e.target.value)}
+                                placeholder={migrateResult.summary?.workflowName || 'Workflow Migrado'}
+                                style={{
+                                  width: '100%',
+                                  padding: '0.6rem',
+                                  borderRadius: '8px',
+                                  border: '1px solid var(--border-color)',
+                                  background: 'var(--bg-secondary)',
+                                  color: 'var(--text-primary)',
+                                  fontSize: '0.9rem'
+                                }}
+                              />
+                            </div>
+                          </>
+                        )}
+
+                        {/* EXPORTACION: resultado original */}
+                        {migrateMode === 'export' && (
+                          <>
+                            <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+                              <div style={{ fontSize: '4rem', color: 'var(--success-color)' }}>
+                                <i className="fas fa-check-circle"></i>
+                              </div>
+                              <h4 style={{ color: 'var(--success-color)' }}>Exportación completada</h4>
+                            </div>
+                            {migrateResult.code && (
+                              <div style={{ background: '#1e1e1e', borderRadius: '8px', padding: '1rem', maxHeight: '300px', overflow: 'auto' }}>
+                                <pre style={{ margin: 0, fontSize: '0.8rem', color: '#d4d4d4', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                                  {migrateResult.code.substring(0, 2000)}{migrateResult.code.length > 2000 ? '\n\n... (truncado)' : ''}
+                                </pre>
+                              </div>
+                            )}
+                          </>
                         )}
                       </>
                     ) : (
@@ -5815,23 +6790,109 @@ function WorkflowsView() {
                 )}
                 {migrateStep === 4 && migrateResult?.success && migrateMode === 'import' && (
                   <button className="btn btn-primary" onClick={() => {
-                    // Aplicar los pasos importados al workflow actual
                     if (migrateResult.steps) {
-                      migrateResult.steps.forEach(step => {
-                        addStep({
-                          action: step.type,
-                          label: step.label,
-                          icon: step.icon || 'fa-cog',
-                          params: step.properties
-                        })
+                      // Crear pasos con IDs unicos y estructura correcta para Alqvimia
+                      const timestamp = Date.now()
+                      const newSteps = migrateResult.steps.map((step, i) => ({
+                        id: timestamp + i,
+                        action: step.action || step.type,
+                        icon: step.icon || 'fa-puzzle-piece',
+                        label: step.label,
+                        params: step.params || step.properties || {},
+                        isContainer: step.isContainer || false,
+                        children: step.isContainer ? [] : undefined,
+                        isCustomAction: step.isCustomAction || false,
+                        description: step.description || ''
+                      }))
+
+                      // Registrar componentes personalizados con el mismo action ID del paso
+                      const newCustoms = []
+                      newSteps.forEach(step => {
+                        if (step.isCustomAction && !actionExists(step.action) && !customComponents.find(c => c.action === step.action)) {
+                          if (!newCustoms.find(c => c.action === step.action)) {
+                            const comp = createCustomComponent(step.label, step.description, step.params)
+                            comp.action = step.action // Usar el action ID original del parser, no el generado
+                            comp.icon = step.icon // Usar el icono del parser
+                            newCustoms.push(comp)
+                          }
+                        }
                       })
+                      if (newCustoms.length > 0) {
+                        setCustomComponents(prev => [...prev, ...newCustoms])
+                      }
+
+                      // Agregar pasos al workflow
+                      setWorkflowSteps(prev => [...prev, ...newSteps])
+
+                      // Agregar variables si existen
+                      if (migrateResult.variables?.length > 0) {
+                        setVariables(prev => [...prev, ...migrateResult.variables.map((v, i) => ({
+                          id: `var_${timestamp}_${i}`,
+                          name: v.name,
+                          type: v.type || 'string',
+                          value: v.defaultValue || '',
+                          source: 'migration'
+                        }))])
+                      }
+
+                      // Actualizar nombre del workflow si se especifico
+                      const wfName = exportWorkflowName || migrateResult.summary?.workflowName
+                      if (wfName) setWorkflowName(wfName)
                     }
                     setShowMigrateModal(false)
                     setMigrateStep(1)
                     setMigrateMode(null)
                     setMigrateFormat(null)
+                    setExportWorkflowName('')
                   }}>
-                    <i className="fas fa-check"></i> Aplicar al Workflow
+                    <i className="fas fa-plus-circle"></i> Crear Workflow en Alqvimia
+                  </button>
+                )}
+                {migrateStep === 4 && migrateResult?.success && migrateMode === 'import' && (
+                  <button className="btn btn-secondary" style={{ marginLeft: '0.5rem' }} onClick={async () => {
+                    // Guardar workflow en carpeta via API
+                    const wfName = exportWorkflowName || migrateResult.summary?.workflowName || 'Workflow Migrado'
+                    try {
+                      // Crear carpeta
+                      const folderRes = await fetch(`http://localhost:${import.meta.env.VITE_BACKEND_PORT || 4000}/api/workflows/meta/folders`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ nombre: wfName, descripcion: `Migrado desde ${migrateFormat}`, color: '#f59e0b', icono: 'fa-file-import' })
+                      })
+                      const folderData = await folderRes.json()
+
+                      // Guardar workflow
+                      const steps = migrateResult.steps.map((step, i) => ({
+                        id: Date.now() + i,
+                        action: step.action || step.type,
+                        icon: step.icon || 'fa-puzzle-piece',
+                        label: step.label,
+                        params: step.params || step.properties || {},
+                        isContainer: step.isContainer || false,
+                        children: step.isContainer ? [] : undefined,
+                        description: step.description || ''
+                      }))
+
+                      await fetch(`http://localhost:${import.meta.env.VITE_BACKEND_PORT || 4000}/api/workflows`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          nombre: wfName,
+                          descripcion: migrateResult.summary?.conclusions?.join(' ') || `Workflow migrado desde ${migrateFormat}`,
+                          categoria: 'migrado',
+                          pasos: steps,
+                          variables: migrateResult.variables || [],
+                          carpeta_id: folderData?.data?.id || null
+                        })
+                      })
+
+                      alert(`Workflow "${wfName}" guardado exitosamente en carpeta "${wfName}"`)
+                    } catch (err) {
+                      console.error('Error guardando workflow:', err)
+                      alert('Error al guardar: ' + err.message)
+                    }
+                  }}>
+                    <i className="fas fa-folder-plus"></i> Guardar en Carpeta
                   </button>
                 )}
                 {migrateStep === 4 && migrateResult?.success && migrateMode === 'export' && (
@@ -7342,6 +8403,79 @@ function WorkflowsView() {
                   }}
                 >
                   <i className="fas fa-arrow-right"></i> Ir al primer error
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal de Ayuda de Componente */}
+        {showHelpModal && helpAction && (
+          <div className="modal-overlay" onClick={() => setShowHelpModal(false)}>
+            <div className="modal-content modal-help-action" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header" style={{ background: 'linear-gradient(135deg, var(--primary-color), #6366f1)' }}>
+                <h3 style={{ color: 'white' }}>
+                  <i className={`fas ${helpAction.icon}`}></i> {helpAction.label}
+                </h3>
+                <button className="modal-close" onClick={() => setShowHelpModal(false)} style={{ color: 'white' }}>
+                  <i className="fas fa-times"></i>
+                </button>
+              </div>
+              <div className="modal-body" style={{ padding: '1.5rem' }}>
+                <div className="help-description">
+                  <div className="help-icon-big">
+                    <i className={`fas ${helpAction.icon}`}></i>
+                  </div>
+                  <p className="help-desc-text">{helpAction.props?.description || 'Componente de automatización'}</p>
+                </div>
+
+                {helpAction.props?.fields?.length > 0 && (
+                  <div className="help-properties-section">
+                    <h4><i className="fas fa-sliders-h"></i> Propiedades configurables</h4>
+                    <div className="help-properties-list">
+                      {helpAction.props.fields.filter(f => !f.advanced).slice(0, 8).map((field, i) => (
+                        <div key={i} className="help-property-item">
+                          <span className="help-prop-name">
+                            {field.required && <i className="fas fa-asterisk" style={{ color: '#ef4444', fontSize: '0.5rem', marginRight: 4 }}></i>}
+                            {field.label}
+                          </span>
+                          <span className="help-prop-type">{field.type}</span>
+                        </div>
+                      ))}
+                      {helpAction.props.fields.filter(f => f.advanced).length > 0 && (
+                        <div className="help-property-item advanced-hint">
+                          <span style={{ color: 'var(--text-secondary)', fontStyle: 'italic', fontSize: '0.75rem' }}>
+                            + {helpAction.props.fields.filter(f => f.advanced).length} opciones avanzadas
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {(!helpAction.props?.fields || helpAction.props.fields.length === 0) && (
+                  <div className="help-no-props">
+                    <i className="fas fa-info-circle"></i>
+                    <span>Este componente no requiere configuración adicional</span>
+                  </div>
+                )}
+
+                <div className="help-learn-section">
+                  <div className="help-learn-icon">
+                    <i className="fas fa-graduation-cap"></i>
+                  </div>
+                  <div className="help-learn-text">
+                    <strong>¿Quieres aprender a usar este componente?</strong>
+                    <p>Se insertará un ejemplo funcional en tu workflow actual para que puedas ver cómo se configura y usar como referencia.</p>
+                  </div>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button className="btn btn-secondary" onClick={() => setShowHelpModal(false)}>
+                  Cerrar
+                </button>
+                <button className="btn btn-primary" onClick={handleInsertExample}>
+                  <i className="fas fa-plus-circle"></i> Insertar Ejemplo en Workflow
                 </button>
               </div>
             </div>
